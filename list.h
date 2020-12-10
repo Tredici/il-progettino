@@ -8,6 +8,7 @@
 #define LIST
 
 #include <stdlib.h> /* Definisce NULL */
+#include <errno.h>
 
 struct list;
 
@@ -37,7 +38,7 @@ void list_destroy(struct list*);
 /** Fornisce il numero di elementi nella lista
  * 
  */
-int list_size(const struct list*);
+size_t list_size(const struct list*);
 
 /** Per specificare l'eventuale funzione di cleanup
  * 
@@ -49,22 +50,22 @@ void (*list_set_cleanup(struct list*, void(*)(void)))(void*);
 /**  Restituisce la funzione di cleanup corrente
  * 
  */
-void (*list_get_cleanup(const struct list*))(void*);
+void (*list_get_cleanup(struct list*))(void*);
 
 
 /** Accede all'elemento i esimo della lista e restituisce il puntatore a esso
  * 
  */
-void* list_get_item(const struct list*, int);
+void* list_get_item(struct list*, size_t);
 
 /** Imposta un nuovo valore per l'elemento n-esimo della lista e ritorna il valore precedente 
  * 
  */ 
-void* list_set_item(struct list*, int, void*);
+void* list_set_item(struct list*, size_t, void*);
 
 /** Itera lungo la lista ed applica ad ogni elemento una data funzione.
  * 
  */
-void list_foreach(void (*)(void*));
+void list_foreach(struct list*, void (*)(void*));
 
 #endif
