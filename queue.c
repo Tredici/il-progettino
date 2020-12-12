@@ -76,6 +76,7 @@ struct queue* queue_init(struct queue* q, enum q_flag flag) {
         ans->cond = malloc(sizeof(pthread_cond_t));
         if (ans->cond == NULL)
         {
+            pthread_mutex_destroy(ans->mutex);
             free(ans->mutex);
             if (q == NULL)
                 free(ans);
@@ -87,6 +88,7 @@ struct queue* queue_init(struct queue* q, enum q_flag flag) {
         if(err)
         {
             free(ans->cond);
+            pthread_mutex_destroy(ans->mutex);
             free(ans->mutex);
             if (q == NULL)
                 free(ans);
@@ -137,7 +139,7 @@ int queue_push(struct queue* q, void* data)
     {
         q->last = q->last->next = new_elem;
     }
-    
+
     q->len++;
 
     if (q->mutex != NULL)
