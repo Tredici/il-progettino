@@ -113,12 +113,36 @@ struct queue* queue_init(struct queue* q, enum q_flag flag) {
 
 int queue_push(struct queue* q, void* data)
 {
+    elem* new_elem;
+
     if (q == NULL) 
         return -1;
     
+    new_elem = elem_init(data);
+    if (new_elem == NULL)
+    {
+        return NULL;
+    }
+
     if (q->mutex != NULL)
     {
-        
+        pthread_mutex_lock(q->mutex);   
+    }
+
+    if (q->last == NULL)
+    {
+        q->first = q->last = new_elem;
+    }
+    else
+    {
+        q->last = q->last->next = new_elem;
+    }
+    
+    q->len++;
+
+    if (q->mutex != NULL)
+    {
+        pthread_mutex_unlock(q->mutex);   
     }
 
     return 0;
