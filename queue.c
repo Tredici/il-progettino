@@ -152,3 +152,55 @@ int queue_push(struct queue* q, void* data)
 }
 
 
+int queue_pop(struct queue* q, void** data, int flag)
+{
+    void* ans;
+    elem* old_elem;
+    int err;
+
+    if (q == NULL)
+    {
+        return -1;
+    }
+
+    if (q->mutex != NULL)
+    {
+        pthread_mutex_lock(q->mutex);
+
+        while (q->len == 0)
+        {
+            /* si blocca sulla variabile di condizione */
+            pthread_cond_wait(q->cond, q->mutex);
+        }
+    }
+    else if (q->len == 0)
+    {
+        /* Non ci sono dati e la concorrenza non è supportata */
+        return -1;
+    }
+
+    q->len--;
+
+    old_elem = q->first;
+    if (q->len == 0)
+    {
+        q->first = q->last = NULL;
+    }
+    else
+    {
+        q->first = old_elem->next;
+    }
+
+    old_elem->next = NULL;
+    ans = old_elem->val;
+    *data = ans;
+
+    free(old_elem);
+
+    if (q->mutex != NULL)
+    {
+        pthread_mutex_unlock(q->mutex);
+    }
+
+    return 0;
+}
