@@ -14,7 +14,7 @@
 struct queue;
 
 enum q_flag {
-    Q_CONCURRENT,   /*  */
+    Q_CONCURRENT = 0,   /*  */
     Q_SYNC,
     Q_DEFAULT = Q_CONCURRENT
 };
