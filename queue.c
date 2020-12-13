@@ -134,6 +134,7 @@ int queue_push(struct queue* q, void* data)
     if (q->last == NULL)
     {
         q->first = q->last = new_elem;
+        pthread_cond_broadcast(q->cond);
     }
     else
     {
