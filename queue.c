@@ -112,6 +112,20 @@ struct queue* queue_init(struct queue* q, enum q_flag flag) {
     return ans;
 }
 
+void (*queue_set_cleanup_f(struct queue* q, void(*cleanup_f)(void)))(void*)
+{
+    void(*ans)(void);
+
+    if (q == NULL)
+    {
+        return NULL;
+    }
+
+    ans = q->cleanup_f;
+    q->cleanup_f = cleanup_f;
+
+    return ans;
+}
 
 int queue_push(struct queue* q, void* data)
 {
