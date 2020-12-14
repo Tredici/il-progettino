@@ -164,6 +164,30 @@ void queue_destroy(struct queue* q)
     free(q);
 }
 
+size_t queue_get_size(const struct queue* q)
+{
+    size_t ans = 0;
+
+    if (q == NULL)
+    {
+        return 0;
+    }
+    
+    if (q->mutex)
+    {
+        pthread_mutex_lock(q->mutex);
+    }
+
+    ans = q->len;
+
+    if (q->mutex)
+    {
+        pthread_mutex_unlock(q->mutex);
+    }
+
+    return ans;
+}
+
 void (*queue_set_cleanup_f(struct queue* q, void(*cleanup_f)(void*)))(void*)
 {
     void(*ans)(void*);

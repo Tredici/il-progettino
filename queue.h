@@ -29,6 +29,8 @@ struct queue* queue_init(struct queue*, enum q_flag);
 struct queue* queue_clear(struct queue*);
 void queue_destroy(struct queue*);
 
+size_t queue_get_size(const struct queue*);
+
 void (*queue_set_cleanup_f(struct queue*, void(*)(void*)))(void*);
 void (*queue_get_cleanup_f(struct queue*))(void*);
 
