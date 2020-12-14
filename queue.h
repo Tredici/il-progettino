@@ -30,6 +30,7 @@ struct queue* queue_clear(struct queue*);
 void queue_destroy(struct queue*);
 
 void (*queue_set_cleanup_f(struct queue*, void(*)(void*)))(void*);
+void (*queue_get_cleanup_f(struct queue*))(void*);
 
 /** Inserisce un nuovo elemento nella queue
  * 

@@ -179,6 +179,15 @@ void (*queue_set_cleanup_f(struct queue* q, void(*cleanup_f)(void*)))(void*)
     return ans;
 }
 
+void (*queue_get_cleanup_f(struct queue* q))(void*)
+{
+    if (q == NULL)
+    {
+        return NULL;
+    }
+    return q->cleanup_f;
+}
+
 int queue_push(struct queue* q, void* data)
 {
     elem* new_elem;
