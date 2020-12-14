@@ -2,7 +2,7 @@
 
 typedef struct elem
 {
-    elem* next;
+    struct elem* next;
     void* val;
 } elem;
 
@@ -166,7 +166,7 @@ void queue_destroy(struct queue* q)
 
 void (*queue_set_cleanup_f(struct queue* q, void(*cleanup_f)(void*)))(void*)
 {
-    void(*ans)(void);
+    void(*ans)(void*);
 
     if (q == NULL)
     {
@@ -198,7 +198,7 @@ int queue_push(struct queue* q, void* data)
     new_elem = elem_init(data);
     if (new_elem == NULL)
     {
-        return NULL;
+        return 0;
     }
 
     if (q->mutex != NULL)
