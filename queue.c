@@ -145,6 +145,25 @@ struct queue* queue_clear(struct queue* q)
     }
 }
 
+void queue_destroy(struct queue* q)
+{
+    /* Non thread-safe! */
+    destroy_list(q->first, q->cleanup_f);
+    q->first = NULL;
+    q->last = NULL;
+    q->len = 0;
+
+    if (q->mutex != NULL)
+    {
+        pthread_cond_destroy(q->cond);
+        free(q->cond);
+        pthread_mutex_destroy(q->mutex);
+        free(q->mutex);
+    }
+
+    free(q);
+}
+
 void (*queue_set_cleanup_f(struct queue* q, void(*cleanup_f)(void*)))(void*)
 {
     void(*ans)(void);
