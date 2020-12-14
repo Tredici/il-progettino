@@ -19,6 +19,7 @@ typedef struct elem
 
 struct rb_tree {
     elem* root;
+    size_t len;
 };
 
 /** Ruota un nodo con il suo figlio sinistro
