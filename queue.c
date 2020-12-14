@@ -112,7 +112,40 @@ struct queue* queue_init(struct queue* q, enum q_flag flag) {
     return ans;
 }
 
-void (*queue_set_cleanup_f(struct queue* q, void(*cleanup_f)(void)))(void*)
+inline static void destroy_list(elem* e, void(*cleanup_f)(void*))
+{
+    elem* next;
+
+    while (e != NULL)
+    {
+        next = e->next;
+        if (cleanup_f != NULL)
+            cleanup_f(e->val);
+        free(e);
+        e = next;
+    }
+}
+
+struct queue* queue_clear(struct queue* q)
+{
+    /* thread-safe */
+    if (q->mutex != NULL)
+    {
+        pthread_mutex_lock(q->mutex);
+    }
+
+    destroy_list(q->first, q->cleanup_f);
+    q->first = NULL;
+    q->last = NULL;
+    q->len = 0;
+
+    if (q->mutex != NULL)
+    {
+        pthread_mutex_unlock(q->mutex);
+    }
+}
+
+void (*queue_set_cleanup_f(struct queue* q, void(*cleanup_f)(void*)))(void*)
 {
     void(*ans)(void);
 
