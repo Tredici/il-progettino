@@ -22,6 +22,24 @@ struct rb_tree {
     size_t len;
 };
 
+static elem* elem_init(long int key, void* value)
+{
+    elem* ans;
+
+    ans = malloc(sizeof(elem));
+    if (ans == NULL)
+    {
+        return ans;
+    }
+    memset(ans, 0, sizeof(elem));
+
+    ans->col = RED;
+    ans->key = key;
+    ans->value = value;
+
+    return ans;
+}
+
 /** Ruota un nodo con il suo figlio sinistro
  *  LEFT-ROTATE pag. 259
  */
