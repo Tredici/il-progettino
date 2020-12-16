@@ -40,6 +40,20 @@ static elem* elem_init(long int key, void* value)
     return ans;
 }
 
+/** Libera la memoria occupata da p e da tutti i suoi discendenti.
+ * Se specificata, invoca la funzione di cleanup fornita sui valori salvati.
+ */
+static void elem_destroy(elem* p, void (*cleanup_f) (void*))
+{
+    if (p == NULL) 
+        return;
+    if (cleanup_f != NULL)
+        cleanup_f(p->value);
+    elem_destroy(p->left,  cleanup_f);
+    elem_destroy(p->right, cleanup_f);
+    free(p);
+}
+
 /** Ruota un nodo con il suo figlio sinistro
  *  LEFT-ROTATE pag. 259
  */
