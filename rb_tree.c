@@ -55,6 +55,29 @@ static void elem_destroy(elem* p, void (*cleanup_f) (void*))
     free(p);
 }
 
+/** Inizializza un albero rosso nero
+ *
+ */
+struct rb_tree* rb_tree_init(struct rb_tree* tree)
+{
+    struct rb_tree* ans;
+
+    if (tree == NULL)
+    {
+        ans = malloc(sizeof(struct rb_tree));
+        if (ans == NULL)
+        {
+            return NULL;
+        }
+    }
+    else
+    {
+        ans = tree;
+    }
+    memset(ans, 0, sizeof(struct rb_tree));
+
+    return ans;
+}
 
 void (*rb_set_cleanup_f(struct rb_tree* tree, void (*cleanup_f)(void*)))(void*)
 {
