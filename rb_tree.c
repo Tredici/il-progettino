@@ -18,6 +18,7 @@ typedef struct elem
 } elem;
 
 struct rb_tree {
+    void (*cleanup_f)(void*);
     elem* root;
     size_t len;
 };
@@ -53,6 +54,32 @@ static void elem_destroy(elem* p, void (*cleanup_f) (void*))
     elem_destroy(p->right, cleanup_f);
     free(p);
 }
+
+
+void (*rb_set_cleanup_f(struct rb_tree* tree, void (*cleanup_f)(void*)))(void*)
+{
+    void (*ans)(void*);
+
+    if (tree == NULL)
+    {
+        return NULL;
+    }
+    ans = tree->cleanup_f;
+    tree->cleanup_f = cleanup_f;
+
+    return ans;
+}
+
+void (*rb_get_cleanup_f(struct rb_tree* tree))(void*)
+{
+    if (tree == NULL)
+    {
+        return NULL;
+    }
+
+    return tree->cleanup_f;
+}
+
 
 /** Ruota un nodo con il suo figlio sinistro
  *  LEFT-ROTATE pag. 259
