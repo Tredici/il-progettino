@@ -14,6 +14,6 @@ struct rb_tree* rb_tree_clear(struct rb_tree*);
 void rb_tree_destroy(struct rb_tree*);
 
 int rb_tree_set(struct rb_tree*, long int, void*);
-
+int rb_tree_get(struct rb_tree*, long int, void**);
 
 #endif

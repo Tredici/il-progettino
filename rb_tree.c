@@ -280,4 +280,37 @@ int rb_tree_set(struct rb_tree* tree, long int key, void* val)
     return 0;
 }
 
+/** Cerca un valore nell'albero e lo restituisce tramite il terzo argomento
+ *
+ *  Ritorna 0 in caso di successo, un valore non nullo in caso di errore.
+ */
+int rb_tree_get(struct rb_tree* tree, long int key, void** val)
+{
+    elem* curr, *next;
+
+    curr = NULL;
+    next = tree->root;
+
+    while (next != NULL)
+    {
+        curr = next;
+
+        if (curr->key < key)
+        {
+            next = curr->right;
+        }
+        else if (curr->key > key)
+        {
+            next = curr->left;
+        }
+        else
+        {
+            /* Found! */
+            *val = curr->value;
+            return 0;
+        }
+    }
+    /* Not found! */
+    return -1;
+}
 
