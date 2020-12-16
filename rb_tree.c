@@ -79,6 +79,14 @@ struct rb_tree* rb_tree_init(struct rb_tree* tree)
     return ans;
 }
 
+struct rb_tree* rb_tree_clear(struct rb_tree* tree)
+{
+    elem_destroy(tree->root, tree->cleanup_f);
+    tree->root = NULL;
+    tree->len = 0;
+    return tree;
+}
+
 void (*rb_set_cleanup_f(struct rb_tree* tree, void (*cleanup_f)(void*)))(void*)
 {
     void (*ans)(void*);
