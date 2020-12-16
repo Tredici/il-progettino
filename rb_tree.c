@@ -291,6 +291,8 @@ int rb_tree_set(struct rb_tree* tree, long int key, void* val)
     /* Potrebbe aver infranto la regola dei colori */
     rb_tree_insert_fixup(tree, new_item);
 
+    tree->len++;
+
     return 0;
 }
 
