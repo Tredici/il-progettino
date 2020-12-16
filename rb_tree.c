@@ -221,7 +221,7 @@ static void rb_tree_insert_fixup(struct rb_tree* tree, elem* new_item)
 
 /** Inserisce un nuovo nodo nell'albero o aggiorna il valore corrente
  *
- * Ritorna 0 in caso di successo, -1 in caso di errore.
+ * Ritorna 0 in caso di successo, un valore non nullo in caso di errore.
  */
 int rb_tree_set(struct rb_tree* tree, long int key, void* val)
 {
