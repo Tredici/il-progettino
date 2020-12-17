@@ -33,7 +33,7 @@ int initUDPSocket(int port)
     for (iter = res; iter; iter = iter->ai_next)
     {
         /* Prova a creare un socket UDP */
-        sckt = socket(iter->ai_family, iter->ai_protocol, iter->ai_socktype);
+        sckt = socket(iter->ai_family, iter->ai_socktype, iter->ai_protocol);
         if (sckt == -1)
             continue;   /* proviamo il prossimo */
 
