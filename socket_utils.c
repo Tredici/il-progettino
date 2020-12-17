@@ -42,6 +42,7 @@ int initUDPSocket(int port)
         err = setsockopt(sckt, SOL_SOCKET, SO_REUSEADDR, &sockOpt, sizeof(sockOpt));
         if (err != 0)
         {
+            close(sckt);    /* Chiude il socket sul quale si ha provato ad operare */
             freeaddrinfo(res);  /* in caso di errore libera la memoria di prima */
             return -1;
         }
