@@ -188,6 +188,11 @@ size_t queue_get_size(const struct queue* q)
     return ans;
 }
 
+size_t queue_empty(const struct queue* q)
+{
+    return queue_get_size(q) == 0;
+}
+
 void (*queue_set_cleanup_f(struct queue* q, void(*cleanup_f)(void*)))(void*)
 {
     void(*ans)(void*);
