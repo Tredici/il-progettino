@@ -13,5 +13,6 @@
 #include <netdb.h>
 
 int initUDPSocket(int);
+int getSocketPort(int);
 
 #endif

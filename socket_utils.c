@@ -61,3 +61,33 @@ int initUDPSocket(int port)
 
     return sckt;
 }
+
+int getSocketPort(int socket)
+{
+    struct sockaddr_storage ss;
+    socklen_t size = sizeof(struct sockaddr_storage);
+    int port;
+
+    if (getsockname(socket, &ss, &size) != 0)
+    {
+        return -1;
+    }
+
+    switch (ss.ss_family)
+    {
+    case AF_INET:
+        /* IPv4 */
+        port = ntohs(((struct sockaddr_in*) &ss)->sin_port);
+        break;
+
+    case AF_INET6:
+        /* IPv4 */
+        port = ntohs(((struct sockaddr_in6*) &ss)->sin6_port);
+        break;
+
+    default:
+        return -1;
+    }
+
+    return port;
+}
