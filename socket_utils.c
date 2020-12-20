@@ -68,7 +68,7 @@ int getSocketPort(int socket)
     socklen_t size = sizeof(struct sockaddr_storage);
     int port;
 
-    if (getsockname(socket, &ss, &size) != 0)
+    if (getsockname(socket, (struct sockaddr*) &ss, &size) != 0)
     {
         return -1;
     }
