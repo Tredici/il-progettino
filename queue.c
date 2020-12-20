@@ -143,6 +143,8 @@ struct queue* queue_clear(struct queue* q)
     {
         pthread_mutex_unlock(q->mutex);
     }
+
+    return q;
 }
 
 void queue_destroy(struct queue* q)
