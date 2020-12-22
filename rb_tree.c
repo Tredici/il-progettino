@@ -6,6 +6,12 @@
  * futuro di una sentinella diversa da NULL
  */
 #define IS_NIL(tree, p) ((p) == NULL)
+/**
+ * Ottiene i figli destro o sinistro in modo
+ * sicuro aggirando l'eventuale sentinella
+ */
+#define GET_LEFT(tree, p) ((p) != NULL ? (p)->left : NULL )
+#define GET_RIGHT(tree, p) ((p) != NULL ? (p)->left : NULL )
 
 enum color {
     BLACK,
