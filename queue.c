@@ -22,10 +22,6 @@ static elem* elem_init(void* val)
     return ans;
 }
 
-/** Elimina e svolge il cleanup richiesto su una lista di elmenti
- */
-static void elem_destroy_list(elem* e, void(*f)(void*));
-
 struct queue
 {
     void(*cleanup_f)(void*);
