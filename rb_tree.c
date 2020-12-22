@@ -1,5 +1,12 @@
 #include "rb_tree.h"
 
+/**
+ * Macro definita per rendere le funzioni
+ * indipendenti dall'eventuale utilizzo
+ * futuro di una sentinella diversa da NULL
+ */
+#define IS_NIL(tree, p) ((p) == NULL)
+
 enum color {
     BLACK,
     RED
