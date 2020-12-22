@@ -212,6 +212,26 @@ static elem* left_rotate(struct rb_tree* tree, elem* node)
     return ans;
 }
 
+/** Sposta un nodo da un posto all'altro
+ *  in un albero rosso nero
+ * Cormen pag. 267
+ */
+static void rb_transplant(struct rb_tree* tree, elem* u, elem* v)
+{
+    if (IS_NIL(tree, u->parent))
+    {
+        tree->root = v;
+    }
+    else if (u == u->parent->left)
+    {
+        u->parent->left = v;
+    }
+    else
+    {
+        u->parent->right = v;
+    }
+    v->parent = u->parent;
+}
 
 /** Ripristina le proprietà di un albero rosso nero
  *  in seguito a un inserimento
