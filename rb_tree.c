@@ -239,6 +239,22 @@ static void rb_transplant(struct rb_tree* tree, elem* u, elem* v)
     v->parent = u->parent;
 }
 
+/** Funzioni ausiliarie da utilizzare altrove
+ * Cormen pag. 241
+ */
+static void tree_minimum(struct rb_tree* tree, elem* p)
+{
+    while (!IS_NIL(tree, p->left))
+        p = p->left;
+    return p;
+}
+static void tree_maximum(struct rb_tree* tree, elem* p)
+{
+    while (!IS_NIL(tree, p->right))
+        p = p->right;
+    return p;
+}
+
 /** Ripristina le proprietà di un albero rosso nero
  *  in seguito a un inserimento
  * Cormen pag. 261
