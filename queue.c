@@ -29,7 +29,7 @@ struct queue
     pthread_cond_t* cond;
     elem* first;
     elem* last;
-    size_t len; /*non necessario, per ora non usato*/
+    size_t len;
 };
 
 struct queue* queue_init(struct queue* q, enum q_flag flag) {
