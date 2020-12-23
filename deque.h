@@ -26,4 +26,11 @@ struct deque* deque_init(struct deque*);
 void (*deque_get_cleanup_f(struct deque*))(void*);
 void (*deque_set_cleanup_f(struct deque*, void(*)(void*)))(void*);
 
+/**
+ * Resetta lo stato di una deque a quello iniziale,
+ * conserva la funzione di cleanup
+ */
+struct deque* deque_clear(struct deque*);
+
+
 #endif

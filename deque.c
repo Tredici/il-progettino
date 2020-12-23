@@ -61,4 +61,28 @@ void (*deque_set_cleanup_f(struct deque* d, void(*cleanup_f)(void*)))(void*)
     return ans; 
 }
 
+struct deque* deque_clear(struct deque* d)
+{
+    delem* iter, * next;
+
+    if (d == NULL)
+    {
+        return NULL;
+    }
+
+    for (iter = next = d->first; next != NULL; iter = next)
+    {
+        if (d->cleanup_f != NULL)
+            d->cleanup_f(iter->val);
+
+        next = iter->next;
+        free(iter);
+    }
+
+    d->first = NULL;
+    d->last = NULL;
+    d->len = 0;
+
+    return d;
+}
 
