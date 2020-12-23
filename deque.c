@@ -39,4 +39,26 @@ struct deque* deque_init(struct deque* d)
     return ans;
 }
 
+void (*deque_get_cleanup_f(struct deque* d))(void*)
+{
+    if (d == NULL)
+    {
+        return NULL;
+    }
+    return d->cleanup_f; 
+}
+
+void (*deque_set_cleanup_f(struct deque* d, void(*cleanup_f)(void*)))(void*)
+{
+    void(*ans)(void*);
+
+    if (d == NULL)
+    {
+        return NULL;
+    }
+    ans = d->cleanup_f;
+    d->cleanup_f = cleanup_f;
+    return ans; 
+}
+
 
