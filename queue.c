@@ -225,7 +225,7 @@ int queue_push(struct queue* q, void* data)
     new_elem = elem_init(data);
     if (new_elem == NULL)
     {
-        return 0;
+        return -1;
     }
 
     if (q->mutex != NULL)
