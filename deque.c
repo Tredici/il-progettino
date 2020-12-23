@@ -1,5 +1,4 @@
 #include "deque.h"
-#include <stdlib.h>
 #include <string.h>
 
 struct delem
@@ -92,3 +91,10 @@ void deque_destroy(struct deque* d)
         free(d);
 }
 
+ssize_t deque_size(const struct deque* d)
+{
+    if (d == NULL)
+        return -1;
+
+    return d->len;
+}

@@ -6,6 +6,8 @@
 #ifndef DEQUE
 #define DEQUE
 
+#include <stdlib.h>
+
 /* deque */
 struct deque;
 /* iteratore della deque */
@@ -37,5 +39,11 @@ struct deque* deque_clear(struct deque*);
  * cleanup una deque generata usando deque_init(NULL)
  */
 void deque_destroy(struct deque*);
+
+/**
+ * Fornisce la dimensione di una lista
+ * oppure -1 in caso di errore
+ */
+ssize_t deque_size(const struct deque*);
 
 #endif
