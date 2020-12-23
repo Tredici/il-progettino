@@ -86,3 +86,9 @@ struct deque* deque_clear(struct deque* d)
     return d;
 }
 
+void deque_destroy(struct deque* d)
+{
+    if (deque_clear(d) != NULL)
+        free(d);
+}
+

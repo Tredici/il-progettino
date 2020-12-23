@@ -32,5 +32,10 @@ void (*deque_set_cleanup_f(struct deque*, void(*)(void*)))(void*);
  */
 struct deque* deque_clear(struct deque*);
 
+/**
+ * Distrugge in maniera sicura con il necessario
+ * cleanup una deque generata usando deque_init(NULL)
+ */
+void deque_destroy(struct deque*);
 
 #endif
