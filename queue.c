@@ -30,6 +30,8 @@ struct queue
     elem* first;
     elem* last;
     size_t len; /* numero di elementi presenti */
+    /* contatori per le chiamate a pop e push */
+    size_t npop, npush;
 };
 
 struct queue* queue_init(struct queue* q, enum q_flag flag) {
@@ -134,6 +136,8 @@ struct queue* queue_clear(struct queue* q)
     q->first = NULL;
     q->last = NULL;
     q->len = 0;
+    q->npop = 0;
+    q->npush = 0;
 
     if (q->mutex != NULL)
     {
@@ -150,6 +154,8 @@ void queue_destroy(struct queue* q)
     q->first = NULL;
     q->last = NULL;
     q->len = 0;
+    q->npop = 0;
+    q->npush = 0;
 
     if (q->mutex != NULL)
     {
@@ -215,9 +221,14 @@ void (*queue_get_cleanup_f(struct queue* q))(void*)
     return q->cleanup_f;
 }
 
+/**
+ * Ritorna un valore negativo in caso di errore,
+ * altrimeni il numero dell'inserimento effettuato.
+ */
 int queue_push(struct queue* q, void* data)
 {
     elem* new_elem;
+    int ans;
 
     if (q == NULL) 
         return -1;
@@ -244,21 +255,26 @@ int queue_push(struct queue* q, void* data)
     }
 
     q->len++;
+    ans = q->npush++;
 
     if (q->mutex != NULL)
     {
         pthread_mutex_unlock(q->mutex);   
     }
 
-    return 0;
+    return ans;
 }
 
 
+/**
+ * Ritorna un valore negativo in caso di errore,
+ * altrimeni il numero dell'estrazione effettuata.
+ */
 int queue_pop(struct queue* q, void** data, int flag)
 {
-    void* ans;
     elem* old_elem;
     int err;
+    int ans;
 
     if (q == NULL)
     {
@@ -294,8 +310,8 @@ int queue_pop(struct queue* q, void** data, int flag)
     }
 
     old_elem->next = NULL;
-    ans = old_elem->val;
-    *data = ans;
+    *data = old_elem->val;
+    ans = q->npop++;
 
     free(old_elem);
 
@@ -304,5 +320,5 @@ int queue_pop(struct queue* q, void** data, int flag)
         pthread_mutex_unlock(q->mutex);
     }
 
-    return 0;
+    return ans;
 }

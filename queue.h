@@ -37,11 +37,20 @@ void (*queue_get_cleanup_f(struct queue*))(void*);
 
 /** Inserisce un nuovo elemento nella queue
  * 
+ * Ritorna un volare non negativo in caso
+ * di successo, in particolare ritona il 
+ * numero dell'inserimento effettuato 
+ * dall'ultimo reset 
  */
 int queue_push(struct queue*, void*);
 
 /** Estrae un elemento dalla coda
  * A seconda del valore del flag potrebbe bloccarsi o meno
+ * 
+ * Ritorna un volare non negativo in caso
+ * di successo, in particolare ritona il 
+ * numero dell'inserimento effettuato 
+ * dall'ultimo reset
  */
 int queue_pop(struct queue*, void**, int);
 
