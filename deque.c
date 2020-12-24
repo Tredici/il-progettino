@@ -98,3 +98,20 @@ ssize_t deque_size(const struct deque* d)
 
     return d->len;
 }
+
+/**
+ * Funzione ausiliaria per inizializzare
+ * elementi
+ */
+static delem* delem_init(void* val)
+{
+    delem* ans;
+
+    ans = malloc(sizeof(delem));
+    if (ans == NULL)
+        return NULL;
+
+    memset(ans, 0, sizeof(delem));
+    return ans;
+}
+
