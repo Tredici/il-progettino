@@ -115,3 +115,20 @@ static delem* delem_init(void* val)
     return ans;
 }
 
+/**
+ * Aggiunge il primo elemento a una deque
+ */
+static int deque_start(struct deque* d, delem* e)
+{
+    if (d == NULL || d->len != 0)
+        return -1;
+
+    if (e->next != NULL || e->prev != NULL)
+        return -1;
+
+    d->first = e;
+    d->last = e;
+    d->len = 1;
+
+    return 0;
+}
