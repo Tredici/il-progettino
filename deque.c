@@ -132,3 +132,33 @@ static int deque_start(struct deque* d, delem* e)
 
     return 0;
 }
+
+
+int deque_append(struct deque* d, void* val)
+{
+    delem* e;
+
+    if (d == NULL)
+        return -1;
+
+    e = delem_init(val);
+    if (e == NULL)
+        return -1;
+
+    if (d->len == 0)
+    {
+        if(deque_start(d, e) != 0)
+            return -1;
+    }
+    else
+    {
+        /* inserisce dalla parte di last */
+        e->prev = d->last;
+        d->last->next = e;
+        d->last = e;
+    }
+    d->len++;
+
+    return 0;
+}
+

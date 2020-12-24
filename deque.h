@@ -46,4 +46,10 @@ void deque_destroy(struct deque*);
  */
 ssize_t deque_size(const struct deque*);
 
+/**
+ * Aggiunge un elemento in coda a una deque.
+ */
+int deque_append(struct deque*, void*);
+
+
 #endif
