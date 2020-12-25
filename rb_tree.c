@@ -134,67 +134,67 @@ void (*rb_get_cleanup_f(struct rb_tree* tree))(void*)
 /** Ruota un nodo con il suo figlio sinistro
  *  LEFT-ROTATE pag. 259
  */
-void right_rotate(struct rb_tree* tree, elem* node)
+void right_rotate(struct rb_tree* tree, elem* x)
 {
     elem* ans;
     elem *to_move;
 
-    ans = node->left;
+    ans = x->left;
     to_move = ans->right;
-    node->left = to_move;
+    x->left = to_move;
     if (to_move != NULL)
-        to_move->parent = node;
+        to_move->parent = x;
 
-    ans->parent = node->parent;
+    ans->parent = x->parent;
     if (ans->parent == NULL)
     {
         /* Avviene un cambio di radice */
         tree->root = ans;
     }
-    else if (node == node->parent->left)
+    else if (x == x->parent->left)
     {
-        node->parent->left = ans;
+        x->parent->left = ans;
     }
     else
     {
-        node->parent->right = ans;
+        x->parent->right = ans;
     }
 
-    ans->right = node;
-    node->parent = ans;
+    ans->right = x;
+    x->parent = ans;
 }
 
 /** Ruota un nodo con il suo figlio destro
  *  RIGHT-ROTATE pag. 259
  */
-void left_rotate(struct rb_tree* tree, elem* node)
+void left_rotate(struct rb_tree* tree, elem* x)
 {
-    elem* ans;
+    elem* y;
     elem *to_move;
 
-    ans = node->right;
-    to_move = node->left;
-    node->right = to_move;
+    y = x->right;
+    to_move = x->left;
+    x->right = to_move;
     if (to_move != NULL)
-        to_move->parent = node;
+        to_move->parent = x;
 
-    ans->parent = node->parent;
-    if (ans->parent == NULL)
+    y->parent = x->parent;
+    if (y->parent == NULL)
     {
         /* Avviene un cambio di radice */
-        tree->root = ans;
+        tree->root = y;
     }
-    else if (node == node->parent->left)
+    else if (x == x->parent->left)
     {
-        node->parent->left = ans;
+        x->parent->left = y;
     }
     else
     {
-        node->parent->right = ans;
+        x->parent->right = y;
     }
 
-    ans->left = node;
-    node->parent = ans;
+    y->left = x;
+    x->parent = y;
 }
 
 /** Sposta un nodo da un posto all'altro
