@@ -19,4 +19,11 @@ void (*rb_get_cleanup_f(struct rb_tree*))(void*);
 int rb_tree_set(struct rb_tree*, long int, void*);
 int rb_tree_get(struct rb_tree*, long int, void**);
 
+/** Elimina un elemento dall'albero, eventualmente
+ * ritornandone il valore se l'ultimo argomento non
+ * è NULL, in caso contrario invoca su di esso
+ * l'opportuna funzione di cleanup
+ */
+int rb_tree_remove(struct rb_tree*, long int, void**);
+
 #endif

@@ -437,3 +437,173 @@ int rb_tree_get(struct rb_tree* tree, long int key, void** val)
     return -1;
 }
 
+/** Ripristina l'integrità di un albero in seguito alla
+ *  rimozione di un elemento
+ * Cormen Pag. 270
+ */
+static void rb_delete_fixup(struct rb_tree* tree, elem* x)
+{
+    elem* w;
+
+    while (x != tree->root || x->col == BLACK)
+    {
+        if (x == x->parent->left)
+        {
+            w =  x->parent->right;
+            if (w->col == RED)
+            {
+                w->col = BLACK;
+                x->parent->col = RED;
+                left_rotate(tree, x->parent);
+                w = x->parent->right;
+            }
+            if (w->left->col == BLACK && w->right->col == BLACK)
+            {
+                w->col = RED;
+                x = x->parent;
+            }
+            else
+            {
+                if (w->right->parent == BLACK)
+                {
+                    w->left->col = BLACK;
+                    w->col = RED;
+                    right_rotate(tree, w);
+                    w = x->parent->right;
+                }
+                w->col = x->parent->col;
+                x->parent->col = BLACK;
+                w->right->col = BLACK;
+                left_rotate(tree, x->parent);
+                x = tree->root;
+            }
+        }
+        else
+        {
+            /* speculare a sopra con left e right
+             * invertiti
+             */
+            w = x->parent->left;
+            if (w->col == RED)
+            {
+                w->col = BLACK;
+                x->parent->col = RED;
+                right_rotate(tree, x->parent);
+                w = x->parent->left;
+            }
+            if (w->left->col == BLACK && w->right->col == BLACK)
+            {
+                w->col = RED;
+                x = x->parent;
+            }
+            else
+            {
+                if (w->left->col == BLACK)
+                {
+                    w->right->col = BLACK;
+                    w->col = RED;
+                    left_rotate(tree, w);
+                    w = x->parent->left;
+                }
+                w->col = x->parent->col;
+                x->parent->col = BLACK;
+                w->left->col = BLACK;
+                right_rotate(tree, x->parent);
+                x = tree->root;
+            }
+        }
+    }
+
+    x->col = BLACK;
+}
+
+/**
+ * Cormen Pag. 268
+ */
+static void rb_delete(struct rb_tree* tree, elem* z)
+{
+    elem* y, *x;
+    enum color y_original_color;
+
+    y = z;
+    y_original_color = y->col;
+    if (IS_NIL(tree, z->left))
+    {
+        x = z->right;
+        rb_transplant(tree, z, z->right);
+    }
+    else if (IS_NIL(tree, z->right))
+    {
+        x = z->left;
+        rb_transplant(tree, z, z->left);
+    }
+    else
+    {
+        y = tree_minimum(z->right);
+        y_original_color = y->col;
+        x = y->right;
+        if (y->parent == z)
+            x->parent = y;  /* Questo serve nel caso della sentinella */
+    }
+
+    /* Eventuale ripristino delle
+     *  proprietà dell'albero
+     */
+    if (y_original_color == BLACK)
+        rb_delete_fixup(tree, x);
+}
+
+/**
+ * Metodo effettivo, quelle sopra sono funzioni ausiliarie
+ */
+int rb_tree_remove(struct rb_tree* tree, long int key, void** val)
+{
+    elem* curr, *next;
+    void* res;
+
+    curr = NULL;
+    next = tree->root;
+
+    while (!IS_NIL(tree, next))
+    {
+        curr = next;
+
+        if (curr->key < key)
+        {
+            next = curr->right;
+        }
+        else if (curr->key > key)
+        {
+            next = curr->left;
+        }
+        else
+        {
+            /* Found! */
+            res = curr->value;
+            break;
+        }
+    }
+
+    if (IS_NIL(tree, next))
+    {
+        /* Not found! */
+        return -1;
+    }
+
+    /* Elimina il nodo */
+    rb_delete(tree, curr);
+
+    /* Valuta se restituire il valore oppure pulirlo */
+    if (val != NULL)
+    {
+        *val = res;
+    }
+    else if (tree->cleanup_f)
+    {
+        tree->cleanup_f(res);
+    }
+
+    return 0;
+}
+
+
