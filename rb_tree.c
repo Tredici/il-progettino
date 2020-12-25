@@ -139,15 +139,7 @@ static elem* right_rotate(struct rb_tree* tree, elem* node)
     elem* ans;
     elem *to_move;
 
-    if (node == NULL)
-    {
-        return NULL;
-    }
     ans = node->left;
-    if (ans == NULL)
-    {
-        return NULL;
-    }
     to_move = ans->right;
     node->left = to_move;
     if (to_move != NULL)
@@ -182,16 +174,7 @@ static elem* left_rotate(struct rb_tree* tree, elem* node)
     elem* ans;
     elem *to_move;
 
-    if (node == NULL)
-    {
-        return NULL;
-    }
-
     ans = node->right;
-    if (ans == NULL)
-    {
-        return NULL;
-    }
     to_move = node->left;
     node->right = to_move;
     if (to_move != NULL)
