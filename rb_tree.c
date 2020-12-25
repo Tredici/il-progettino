@@ -5,7 +5,7 @@
  * indipendenti dall'eventuale utilizzo
  * futuro di una sentinella diversa da NULL
  */
-#define IS_NIL(tree, p) ((p) == NULL)
+#define IS_NIL(tree, p) ((p) == NULL || (p) == (tree)->nil)
 /**
  * Ottiene i figli destro o sinistro in modo
  * sicuro aggirando l'eventuale sentinella
@@ -33,10 +33,11 @@ typedef struct elem
 struct rb_tree {
     void (*cleanup_f)(void*);
     elem* root;
+    elem* nil;  /* sentinella */
     size_t len;
 };
 
-static elem* elem_init(long int key, void* value)
+static elem* elem_init(struct rb_tree* tree, long int key, void* value)
 {
     elem* ans;
 
@@ -50,6 +51,9 @@ static elem* elem_init(long int key, void* value)
     ans->col = RED;
     ans->key = key;
     ans->value = value;
+    /* Inizializza con la sentinella */
+    ans->right = tree->nil;
+    ans->left = tree->nil;
 
     return ans;
 }
@@ -57,14 +61,14 @@ static elem* elem_init(long int key, void* value)
 /** Libera la memoria occupata da p e da tutti i suoi discendenti.
  * Se specificata, invoca la funzione di cleanup fornita sui valori salvati.
  */
-static void elem_destroy(elem* p, void (*cleanup_f) (void*))
+static void elem_destroy(struct rb_tree* tree, elem* p, void (*cleanup_f) (void*))
 {
-    if (p == NULL) 
+    if (IS_NIL(tree, p)) 
         return;
     if (cleanup_f != NULL)
         cleanup_f(p->value);
-    elem_destroy(p->left,  cleanup_f);
-    elem_destroy(p->right, cleanup_f);
+    elem_destroy(tree, p->left,  cleanup_f);
+    elem_destroy(tree, p->right, cleanup_f);
     free(p);
 }
 
@@ -74,6 +78,7 @@ static void elem_destroy(elem* p, void (*cleanup_f) (void*))
 struct rb_tree* rb_tree_init(struct rb_tree* tree)
 {
     struct rb_tree* ans;
+    elem* nil;
 
     if (tree == NULL)
     {
@@ -89,12 +94,21 @@ struct rb_tree* rb_tree_init(struct rb_tree* tree)
     }
     memset(ans, 0, sizeof(struct rb_tree));
 
+    /* Inizializza la sentinella */
+    nil = elem_init(tree, 0, NULL);
+    if (nil == NULL)
+    {
+        return NULL;
+    }
+    nil->col = BLACK;
+    ans->nil = nil;
+
     return ans;
 }
 
 struct rb_tree* rb_tree_clear(struct rb_tree* tree)
 {
-    elem_destroy(tree->root, tree->cleanup_f);
+    elem_destroy(tree, tree->root, tree->cleanup_f);
     tree->root = NULL;
     tree->len = 0;
     return tree;
@@ -103,6 +117,7 @@ struct rb_tree* rb_tree_clear(struct rb_tree* tree)
 void rb_tree_destroy(struct rb_tree* tree)
 {
     rb_tree_clear(tree);
+    free(tree->nil); /* Elimina la sentinella */
     free(tree);
 }
 
@@ -142,7 +157,7 @@ void right_rotate(struct rb_tree* tree, elem* x)
     ans = x->left;
     to_move = ans->right;
     x->left = to_move;
-    if (to_move != NULL)
+    if (!IS_NIL(tree, to_move))
         to_move->parent = x;
 
     ans->parent = x->parent;
@@ -175,7 +190,7 @@ void left_rotate(struct rb_tree* tree, elem* x)
     y = x->right;
     to_move = x->left;
     x->right = to_move;
-    if (to_move != NULL)
+    if (!IS_NIL(tree, to_move))
         to_move->parent = x;
 
     y->parent = x->parent;
@@ -337,7 +352,7 @@ int rb_tree_set(struct rb_tree* tree, long int key, void* val)
     curr = NULL;
     next = tree->root;
 
-    while (next != NULL)
+    while (!IS_NIL(tree, next))
     {
         curr = next;
 
@@ -359,13 +374,13 @@ int rb_tree_set(struct rb_tree* tree, long int key, void* val)
         }
     }
     /* Ha trovato il punto dell'albero dove finirà */
-    new_item = elem_init(key, val);
+    new_item = elem_init(tree, key, val);
     if (new_item == NULL)
     {
         return -1;
     }
     new_item->parent = curr;
-    if (curr == NULL)
+    if (IS_NIL(tree, curr))
     {
         /* l'albero è vuoto, aggiungiamo la radice */
         tree->root = new_item;
