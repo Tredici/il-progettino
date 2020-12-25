@@ -134,7 +134,7 @@ void (*rb_get_cleanup_f(struct rb_tree* tree))(void*)
 /** Ruota un nodo con il suo figlio sinistro
  *  LEFT-ROTATE pag. 259
  */
-static elem* right_rotate(struct rb_tree* tree, elem* node)
+void right_rotate(struct rb_tree* tree, elem* node)
 {
     elem* ans;
     elem *to_move;
@@ -162,14 +162,12 @@ static elem* right_rotate(struct rb_tree* tree, elem* node)
 
     ans->right = node;
     node->parent = ans;
-
-    return ans;
 }
 
 /** Ruota un nodo con il suo figlio destro
  *  RIGHT-ROTATE pag. 259
  */
-static elem* left_rotate(struct rb_tree* tree, elem* node)
+void left_rotate(struct rb_tree* tree, elem* node)
 {
     elem* ans;
     elem *to_move;
@@ -197,8 +195,6 @@ static elem* left_rotate(struct rb_tree* tree, elem* node)
 
     ans->left = node;
     node->parent = ans;
-
-    return ans;
 }
 
 /** Sposta un nodo da un posto all'altro
