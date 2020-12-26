@@ -592,6 +592,8 @@ int rb_tree_remove(struct rb_tree* tree, long int key, void** val)
 
     /* Elimina il nodo */
     rb_delete(tree, curr);
+    /* La dimensione è diminuita di uno */
+    tree->len--;
 
     /* Valuta se restituire il valore oppure pulirlo */
     if (val != NULL)
