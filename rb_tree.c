@@ -600,7 +600,7 @@ int rb_tree_remove(struct rb_tree* tree, long int key, void** val)
     {
         *val = res;
     }
-    else if (tree->cleanup_f)
+    else if (tree->cleanup_f != NULL)
     {
         tree->cleanup_f(res);
     }
