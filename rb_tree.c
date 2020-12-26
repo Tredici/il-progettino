@@ -396,7 +396,7 @@ int rb_tree_set(struct rb_tree* tree, long int key, void* val)
     return 0;
 }
 
-/** Cerca un valore nell'albero e lo restituisce tramite il terzo argomento
+/** Cerca un valore nell'albero e lo restituisce tramite il terzo argomento, oppure si limita a verificare che questo esista
  *
  *  Ritorna 0 in caso di successo, un valore non nullo in caso di errore.
  */
@@ -422,7 +422,8 @@ int rb_tree_get(struct rb_tree* tree, long int key, void** val)
         else
         {
             /* Found! */
-            *val = curr->value;
+            if (val != NULL)
+                *val = curr->value;
             return 0;
         }
     }
