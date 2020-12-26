@@ -13,6 +13,16 @@
 #define GET_LEFT(tree, p) ((p) != NULL ? (p)->left : NULL )
 #define GET_RIGHT(tree, p) ((p) != NULL ? (p)->left : NULL )
 
+/* Ottiene il colore del nodo in questione */
+#define GET_COLOR(n)  ((n) != NULL ? (n)->col    : BLACK)
+/* Ottiene il padre, eventualmente NULL */
+#define GET_PARENT(n) ((n) != NULL ? (n)->parent : NULL )
+/* Ottiene il colore del padre, default NERO */
+#define GET_PCOLOR(n) ((n)->parent != NULL ? (n)->parent->col    : BLACK)
+/* È un figlio destro o sinistro */
+#define IS_LEFT_SON(n) ((n)->parent->left == (n))
+#define IS_RIGHT_SON(n) ((n)->parent->right == (n))
+
 enum color {
     BLACK,
     RED
@@ -255,16 +265,6 @@ static elem* tree_maximum(struct rb_tree* tree, elem* p)
  */
 static void rb_tree_insert_fixup(struct rb_tree* tree, elem* new_item)
 {
-/* Ottiene il colore del nodo in questione */
-#define GET_COLOR(n)  ((n) != NULL ? (n)->col    : BLACK)
-/* Ottiene il padre, eventualmente NULL */
-#define GET_PARENT(n) ((n) != NULL ? (n)->parent : NULL )
-/* Ottiene il colore del padre, default NERO */
-#define GET_PCOLOR(n) ((n)->parent != NULL ? (n)->parent->col    : BLACK)
-/* È un figlio destro o sinistro */
-#define IS_LEFT_SON(n) ((n)->parent->left == (n))
-#define IS_RIGHT_SON(n) ((n)->parent->right == (n))
-
     elem* parent;
     elem* uncle;
     elem* grandpa;
@@ -330,13 +330,6 @@ static void rb_tree_insert_fixup(struct rb_tree* tree, elem* new_item)
     }
     /* Colora la radice di nero */
     tree->root->col = BLACK;
-
-/* Elimina la macro create apposta */
-#undef IS_RIGHT_SON
-#undef IS_LEFT_SON
-#undef GET_PCOLOR
-#undef GET_PARENT
-#undef GET_COLOR
 }
 
 
