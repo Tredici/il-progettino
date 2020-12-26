@@ -407,7 +407,7 @@ int rb_tree_get(struct rb_tree* tree, long int key, void** val)
     curr = NULL;
     next = tree->root;
 
-    while (next != NULL)
+    while (!IS_NIL(tree, next))
     {
         curr = next;
 
