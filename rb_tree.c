@@ -131,7 +131,7 @@ void rb_tree_destroy(struct rb_tree* tree)
     free(tree);
 }
 
-void (*rb_set_cleanup_f(struct rb_tree* tree, void (*cleanup_f)(void*)))(void*)
+void (*rb_tree_set_cleanup_f(struct rb_tree* tree, void (*cleanup_f)(void*)))(void*)
 {
     void (*ans)(void*);
 
@@ -145,7 +145,7 @@ void (*rb_set_cleanup_f(struct rb_tree* tree, void (*cleanup_f)(void*)))(void*)
     return ans;
 }
 
-void (*rb_get_cleanup_f(struct rb_tree* tree))(void*)
+void (*rb_tree_get_cleanup_f(struct rb_tree* tree))(void*)
 {
     if (tree == NULL)
     {
