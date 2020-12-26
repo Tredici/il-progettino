@@ -289,12 +289,16 @@ static void rb_tree_insert_fixup(struct rb_tree* tree, elem* new_item)
                 grandpa->col = RED;
                 /*A questo punto il n. di nodi neri in ciascun percorso è invariato*/
                 new_item = grandpa;
+                /* A questo punto padre e nonno cambiano ovviamente */
             }
             else /* Lo zio è nero */
             {
                 if (IS_RIGHT_SON(parent)) /* Caso 2: figlio destro di un sinistro */
                 {
                     new_item = parent;
+                    /* padre e nonno CAMBIANO! */
+                    parent = GET_PARENT(new_item);
+                    grandpa = GET_PARENT(parent);
                     left_rotate(tree, new_item);
                 }
                 /* Caso 3, eseguito SEMPRE dopo il 2 */
@@ -321,6 +325,8 @@ static void rb_tree_insert_fixup(struct rb_tree* tree, elem* new_item)
                 if (IS_LEFT_SON(parent))
                 {
                     new_item = parent;
+                    parent = GET_PARENT(new_item);
+                    grandpa = GET_PARENT(parent);
                     right_rotate(tree, new_item);
                 }
                 parent->col  = BLACK;
