@@ -539,7 +539,7 @@ static void rb_delete(struct rb_tree* tree, elem* z)
     }
     else
     {
-        y = tree_minimum(z->right);
+        y = tree_minimum(tree, z->right);
         y_original_color = y->col;
         x = y->right;
         if (y->parent == z)
