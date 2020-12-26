@@ -26,4 +26,8 @@ int rb_tree_get(struct rb_tree*, long int, void**);
  */
 int rb_tree_remove(struct rb_tree*, long int, void**);
 
+/** Fornisce il numero di nodi dell'albero.
+ */
+ssize_t rb_tree_size(const struct rb_tree*);
+
 #endif

@@ -608,4 +608,10 @@ int rb_tree_remove(struct rb_tree* tree, long int key, void** val)
     return 0;
 }
 
+ssize_t rb_tree_size(const struct rb_tree* tree)
+{
+    if (tree == NULL)
+        return -1;
 
+    return tree->len;
+}
