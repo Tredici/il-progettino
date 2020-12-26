@@ -538,6 +538,16 @@ static void rb_delete(struct rb_tree* tree, elem* z)
         x = y->right;
         if (y->parent == z)
             x->parent = y;  /* Questo serve nel caso della sentinella */
+        else
+        {
+            rb_transplant(tree, y, y->right);
+            y->right = z->right;
+            y->right->parent = y;
+        }
+        rb_transplant(tree, z, y);
+        y->left = z->left;
+        y->left->parent = y;
+        y->col = z->col;
     }
 
     /* Eventuale ripristino delle
