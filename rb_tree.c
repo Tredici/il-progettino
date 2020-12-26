@@ -95,7 +95,7 @@ struct rb_tree* rb_tree_init(struct rb_tree* tree)
     memset(ans, 0, sizeof(struct rb_tree));
 
     /* Inizializza la sentinella */
-    nil = elem_init(tree, 0, NULL);
+    nil = elem_init(ans, 0, NULL);
     if (nil == NULL)
     {
         return NULL;
