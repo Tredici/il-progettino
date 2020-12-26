@@ -44,7 +44,7 @@ static elem* elem_init(struct rb_tree* tree, long int key, void* value)
     ans = malloc(sizeof(elem));
     if (ans == NULL)
     {
-        return ans;
+        return NULL;
     }
     memset(ans, 0, sizeof(elem));
 
