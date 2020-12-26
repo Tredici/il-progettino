@@ -64,6 +64,7 @@ static elem* elem_init(struct rb_tree* tree, long int key, void* value)
     /* Inizializza con la sentinella */
     ans->right = tree->nil;
     ans->left = tree->nil;
+    ans->parent = tree->nil;
 
     return ans;
 }
