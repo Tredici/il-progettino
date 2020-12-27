@@ -454,7 +454,7 @@ static void rb_delete_fixup(struct rb_tree* tree, elem* x)
 {
     elem* w;
 
-    while (x != tree->root || x->col == BLACK)
+    while (x != tree->root && x->col == BLACK)
     {
         if (x == x->parent->left)
         {
