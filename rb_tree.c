@@ -177,13 +177,13 @@ void right_rotate(struct rb_tree* tree, elem* x)
         /* Avviene un cambio di radice */
         tree->root = y;
     }
-    else if (x == x->parent->left)
+    else if (x == x->parent->right)
     {
-        x->parent->left = y;
+        x->parent->right = y;
     }
     else
     {
-        x->parent->right = y;
+        x->parent->left = y;
     }
 
     y->right = x;
