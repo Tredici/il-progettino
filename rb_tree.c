@@ -379,21 +379,27 @@ int rb_tree_set(struct rb_tree* tree, long int key, void* val)
     {
         return -1;
     }
-    new_item->parent = curr;
     if (IS_NIL(tree, curr))
     {
         /* l'albero è vuoto, aggiungiamo la radice */
         tree->root = new_item;
-    }
-    else if (curr->key < key)
-    {
-        /* maggiore: posizionato a destra */
-        curr->right = new_item;
+        /* parent è di default tree->nil */
     }
     else
     {
-        /* minore: posizionato a sinistra */
-        curr->left = new_item;
+        /* il parent va impostato adeguatamente */
+        new_item->parent = curr;
+
+        if (curr->key < key)
+        {
+            /* maggiore: posizionato a destra */
+            curr->right = new_item;
+        }
+        else
+        {
+            /* minore: posizionato a sinistra */
+            curr->left = new_item;
+        }
     }
     /* Potrebbe aver infranto la regola dei colori */
     rb_tree_insert_fixup(tree, new_item);
