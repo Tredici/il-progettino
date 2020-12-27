@@ -199,7 +199,7 @@ void left_rotate(struct rb_tree* tree, elem* x)
     elem *to_move;
 
     y = x->right;
-    to_move = x->left;
+    to_move = y->left;
     x->right = to_move;
     if (!IS_NIL(tree, to_move))
         to_move->parent = x;
