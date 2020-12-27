@@ -30,4 +30,8 @@ int rb_tree_remove(struct rb_tree*, long int, void**);
  */
 ssize_t rb_tree_size(const struct rb_tree*);
 
+#ifdef _RB_TREE_DEBUG
+void rb_tree_debug(const struct rb_tree*);
+#endif
+
 #endif

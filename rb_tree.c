@@ -634,3 +634,37 @@ ssize_t rb_tree_size(const struct rb_tree* tree)
 
     return tree->len;
 }
+
+#ifdef _RB_TREE_DEBUG
+#include <stdio.h>
+void p_elem(const struct rb_tree* T, elem* p, int h)
+{
+    for(int i=0; i<h; ++i)
+    {
+        printf("  ");
+    }
+    printf("<%s - %s", (IS_NIL(T, p) ? "NIL" : "NODE" ),
+        (GET_COLOR(p) == BLACK? "BLACK" : "RED" )
+    );
+    if (!IS_NIL(T, p))
+    {
+        printf(" : [ %ld : %ld ]", p->key, (long int)p->value);
+    }
+    printf(">\n");
+
+    if (!IS_NIL(T, p))
+    {
+        p_elem(T, p->left, h+1);
+        p_elem(T, p->right, h+1);
+        /*for(int i=0; i<h; ++i)
+        {
+            printf("  ");
+        }
+        printf("<\\NODE>\n");*/
+    }
+}
+void rb_tree_debug(const struct rb_tree* T)
+{
+    p_elem(T, T->root, 0);
+}
+#endif
