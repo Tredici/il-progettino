@@ -172,7 +172,7 @@ void right_rotate(struct rb_tree* tree, elem* x)
         to_move->parent = x;
 
     y->parent = x->parent;
-    if (y->parent == NULL)
+    if (IS_NIL(tree, y->parent))
     {
         /* Avviene un cambio di radice */
         tree->root = y;
@@ -205,7 +205,7 @@ void left_rotate(struct rb_tree* tree, elem* x)
         to_move->parent = x;
 
     y->parent = x->parent;
-    if (y->parent == NULL)
+    if (IS_NIL(tree, y->parent))
     {
         /* Avviene un cambio di radice */
         tree->root = y;
