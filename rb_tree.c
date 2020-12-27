@@ -297,9 +297,11 @@ static void rb_tree_insert_fixup(struct rb_tree* tree, elem* new_item)
                 {
                     new_item = parent;
                     /* padre e nonno CAMBIANO! */
+                    left_rotate(tree, new_item);
+                    /* ma cambiano ANCHE in seguito
+                        a una ROTAZIONE!!! */
                     parent = GET_PARENT(new_item);
                     grandpa = GET_PARENT(parent);
-                    left_rotate(tree, new_item);
                 }
                 /* Caso 3, eseguito SEMPRE dopo il 2 */
                 parent->col  = BLACK;
@@ -325,9 +327,9 @@ static void rb_tree_insert_fixup(struct rb_tree* tree, elem* new_item)
                 if (IS_LEFT_SON(new_item))
                 {
                     new_item = parent;
+                    right_rotate(tree, new_item);
                     parent = GET_PARENT(new_item);
                     grandpa = GET_PARENT(parent);
-                    right_rotate(tree, new_item);
                 }
                 parent->col  = BLACK;
                 grandpa->col = RED;
