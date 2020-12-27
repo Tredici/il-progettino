@@ -162,32 +162,32 @@ void (*rb_tree_get_cleanup_f(struct rb_tree* tree))(void*)
  */
 void right_rotate(struct rb_tree* tree, elem* x)
 {
-    elem* ans;
+    elem* y;
     elem *to_move;
 
-    ans = x->left;
-    to_move = ans->right;
+    y = x->left;
+    to_move = y->right;
     x->left = to_move;
     if (!IS_NIL(tree, to_move))
         to_move->parent = x;
 
-    ans->parent = x->parent;
-    if (ans->parent == NULL)
+    y->parent = x->parent;
+    if (y->parent == NULL)
     {
         /* Avviene un cambio di radice */
-        tree->root = ans;
+        tree->root = y;
     }
     else if (x == x->parent->left)
     {
-        x->parent->left = ans;
+        x->parent->left = y;
     }
     else
     {
-        x->parent->right = ans;
+        x->parent->right = y;
     }
 
-    ans->right = x;
-    x->parent = ans;
+    y->right = x;
+    x->parent = y;
 }
 
 /** Ruota un nodo con il suo figlio destro
