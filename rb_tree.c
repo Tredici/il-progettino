@@ -163,13 +163,11 @@ void (*rb_tree_get_cleanup_f(struct rb_tree* tree))(void*)
 void right_rotate(struct rb_tree* tree, elem* x)
 {
     elem* y;
-    elem *to_move;
 
     y = x->left;
-    to_move = y->right;
-    x->left = to_move;
-    if (!IS_NIL(tree, to_move))
-        to_move->parent = x;
+    x->left = y->right;
+    if (!IS_NIL(tree, y->right))
+        y->right->parent = x;
 
     y->parent = x->parent;
     if (IS_NIL(tree, y->parent))
@@ -196,13 +194,11 @@ void right_rotate(struct rb_tree* tree, elem* x)
 void left_rotate(struct rb_tree* tree, elem* x)
 {
     elem* y;
-    elem *to_move;
 
     y = x->right;
-    to_move = y->left;
-    x->right = to_move;
-    if (!IS_NIL(tree, to_move))
-        to_move->parent = x;
+    x->right = y->left;
+    if (!IS_NIL(tree, y->left))
+        y->left->parent = x;
 
     y->parent = x->parent;
     if (IS_NIL(tree, y->parent))
