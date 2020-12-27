@@ -293,7 +293,7 @@ static void rb_tree_insert_fixup(struct rb_tree* tree, elem* new_item)
             }
             else /* Lo zio è nero */
             {
-                if (IS_RIGHT_SON(parent)) /* Caso 2: figlio destro di un sinistro */
+                if (IS_RIGHT_SON(new_item)) /* Caso 2: figlio destro di un sinistro */
                 {
                     new_item = parent;
                     /* padre e nonno CAMBIANO! */
@@ -322,7 +322,7 @@ static void rb_tree_insert_fixup(struct rb_tree* tree, elem* new_item)
             }
             else
             {
-                if (IS_LEFT_SON(parent))
+                if (IS_LEFT_SON(new_item))
                 {
                     new_item = parent;
                     parent = GET_PARENT(new_item);
