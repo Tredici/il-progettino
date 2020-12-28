@@ -469,7 +469,7 @@ static void rb_delete_fixup(struct rb_tree* tree, elem* x)
             }
             else
             {
-                if (w->right->parent == BLACK)
+                if (w->right->col == BLACK)
                 {
                     w->left->col = BLACK;
                     w->col = RED;
