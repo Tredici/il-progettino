@@ -32,6 +32,7 @@ ssize_t rb_tree_size(const struct rb_tree*);
 
 #ifdef _RB_TREE_DEBUG
 void rb_tree_debug(const struct rb_tree*);
+long int rb_tree_check_integrity(const struct rb_tree*);
 #endif
 
 #endif

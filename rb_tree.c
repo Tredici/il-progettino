@@ -74,7 +74,7 @@ static elem* elem_init(struct rb_tree* tree, long int key, void* value)
  */
 static void elem_destroy(struct rb_tree* tree, elem* p, void (*cleanup_f) (void*))
 {
-    if (IS_NIL(tree, p)) 
+    if (IS_NIL(tree, p))
         return;
     if (cleanup_f != NULL)
         cleanup_f(p->value);
@@ -662,5 +662,56 @@ void p_elem(const struct rb_tree* T, elem* p, int h)
 void rb_tree_debug(const struct rb_tree* T)
 {
     p_elem(T, T->root, 0);
+}
+/** Controlla l'altezza nera del nodo dato
+ * In caso di problemi restituisce -key
+ * del nodo "problematico"
+ */
+long int black_h(const struct rb_tree* T,
+                const elem* node)
+{
+    long int left, right, ans;
+
+    if (IS_NIL(T, node))
+        return 0L;
+
+    left = black_h(T, node->left);
+    if (left < 0)
+        return left;
+
+    right = black_h(T, node->right);
+    if (right < 0)
+        return right;
+
+    if (left != right)
+    {
+        ans = -node->key;
+        fprintf(stderr, "*** DISASTRO nodo [%ld] ***\n", -ans);
+    }
+    else
+    {
+        ans = left + (node->col == BLACK? 1 : 0);
+    }
+
+    return ans;
+}
+/** Verifica che l'altezza nera di tutte le foglie
+ *  sia la stessa
+ */
+long int rb_tree_check_integrity(const struct rb_tree* T)
+{
+    long int ans;
+
+    if (!IS_NIL(T, T->root) && T->root->col == RED)
+    {
+        ans =  -T->root->key;
+        fprintf(stderr, "*** DISASTRO root [%ld] ***\n", -ans);
+    }
+    else
+    {
+        ans = black_h(T, T->root);
+    }
+
+    return ans;
 }
 #endif
