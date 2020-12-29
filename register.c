@@ -1,4 +1,4 @@
-#define _XOPEN_SOURCE   /* per strptime */
+#define _XOPEN_SOURCE 500  /* per strptime */
 #include "register.h"
 #include <time.h>
 #include <string.h>
