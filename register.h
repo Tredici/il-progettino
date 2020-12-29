@@ -6,6 +6,7 @@
 #ifndef REGISTER
 #define REGISTER
 
+struct entry;
 
 
 #endif
