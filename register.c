@@ -12,6 +12,10 @@
 #define SEPARATOR "|"
 /* 1 CARATTERE */
 #define TYPE_LENGHT 1
+/* carattere tampone */
+#define C_SWAB 'T'
+/* carattere nuovo caso */
+#define C_NEW_CASE 'N'
 
 
 enum entry_type
@@ -83,12 +87,12 @@ struct entry* register_parse_entry(const char* s, struct entry* e)
     /* Case-insensitive */
     switch (toupper(type))
     {
-    case 'N':
+    case C_NEW_CASE:
         /* code */
         ans->type = NEW_CASE;
         break;
 
-    case 'T':
+    case C_SWAB:
         /* code */
         ans->type = SWAB;
         break;
