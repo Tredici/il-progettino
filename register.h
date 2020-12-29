@@ -45,5 +45,17 @@ struct entry* register_parse_entry(const char*, struct entry*);
  */
 void register_free_entry(struct entry*);
 
+/** Svolge un lavoro complementare rispetto a
+ * register_parse_entry
+ *
+ * Se il secondo argomento è NULL il terzo viene
+ * ignorato e lo spazio necessario viene riservato
+ * in memoria dinamica e può essere tranquillamente
+ * riservato in memoria dinamica
+ *
+ * Se il vettore allocato ha una dimensione di
+ * almeno
+ */
+char* register_serialize_entry(const struct entry*, char*, size_t);
 
 #endif

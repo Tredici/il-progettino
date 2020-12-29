@@ -126,3 +126,71 @@ void register_free_entry(struct entry* E)
 }
 
 
+char* register_serialize_entry(const struct entry* E, char* buf, size_t len)
+{
+    char str[ENTRY_TEXT_MAXLEN] = {};
+    char* ans;
+    size_t strLen;
+    char symbol;
+
+    if (E == NULL)
+    {
+        return NULL;
+    }
+    /* Controllo integrità tipo */
+    switch (E->type)
+    {
+    case SWAB:
+        symbol = C_SWAB;
+        break;
+
+    case NEW_CASE:
+        symbol = C_NEW_CASE;
+        break;
+
+    default:
+        /* struttura malformata */
+        return NULL;
+    }
+    /* Controllo validità counter */
+    if (E->counter <= 0)
+    {
+        return NULL;
+    }
+
+    strLen = strftime(str, ENTRY_TEXT_MAXLEN, "%Y-%m-%d", E);
+    if (strLen != DATE_LENGHT)
+    {
+        return NULL;
+    }
+
+    strLen = sprintf(&str[DATE_LENGHT], SEPARATOR "%c" SEPARATOR, symbol);
+    if (strLen != 2 + TYPE_LENGHT)
+    {
+        return NULL;
+    }
+
+    strLen = sprintf(&str[DATE_LENGHT+2+TYPE_LENGHT], "%d", E->counter);
+    if (strLen < 0)
+    {
+        return 0;
+    }
+
+    if (buf != NULL)
+    {
+        if (len < DATE_LENGHT+2+TYPE_LENGHT+strLen+1)
+        {
+            /** Se non basta lo spazio per contenere
+             * il risultato genera un errore
+             */
+            return NULL;
+        }
+        ans = strcpy(buf, str);
+    }
+    else
+    {
+        ans = strdup(str);
+    }
+
+    return ans;
+}
