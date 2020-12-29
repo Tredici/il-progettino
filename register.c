@@ -115,3 +115,10 @@ struct entry* register_parse_entry(const char* s, struct entry* e)
 
     return ans;
 }
+
+void register_free_entry(struct entry* E)
+{
+    free(E);
+}
+
+

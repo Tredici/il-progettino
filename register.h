@@ -34,5 +34,11 @@ struct entry;
  */
 struct entry* register_parse_entry(const char*, struct entry*);
 
+/** Distrugge correttamente un'entry allocata
+ * in memoria dinamica, ad esempio tramine
+ * register_parse_entry
+ */
+void register_free_entry(struct entry*);
+
 
 #endif
