@@ -13,7 +13,9 @@ enum entry_type
  *      ? +ora
  *  tipo:
  *      >tampone
- *
+ *      >nuovo caso
+ *  numero:
+ *      -numero di persone coinvolte
  */
 
 struct entry
