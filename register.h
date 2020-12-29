@@ -6,6 +6,8 @@
 #ifndef REGISTER
 #define REGISTER
 
+#include <stdlib.h>
+
 struct entry;
 
 /** La struttura testuale di un entry
@@ -19,6 +21,18 @@ struct entry;
  *  +numero di persone coinvolte
  *
  */
+
+/** Esegue il parsing di una entry convertendola
+ *  da formato testuale a struttura di riferimento
+ *
+ * Se il secondo parametro è NULL alloca la entry
+ * in memoria dinamica
+ *
+ * In caso di successo ritorna un puntatore alla
+ * entry data (che può coincidere con l'argomento),
+ * altrimenti NULL
+ */
+struct entry* register_parse_entry(const char*, struct entry*);
 
 
 #endif
