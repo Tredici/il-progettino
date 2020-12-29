@@ -166,7 +166,7 @@ char* register_serialize_entry(const struct entry* E, char* buf, size_t len)
         return NULL;
     }
 
-    strLen = strftime(str, ENTRY_TEXT_MAXLEN, "%Y-%m-%d", E);
+    strLen = strftime(str, ENTRY_TEXT_MAXLEN, "%Y-%m-%d", (const struct tm*)&E->e_time);
     if (strLen != DATE_LENGHT)
     {
         return NULL;
