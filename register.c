@@ -1,3 +1,4 @@
+#define _XOPEN_SOURCE   /* per strptime */
 #include "register.h"
 #include <time.h>
 #include <string.h>
@@ -70,7 +71,7 @@ struct entry* register_parse_entry(const char* s, struct entry* e)
         return NULL;
     }
     /* Ora prova a leggere il tipo */
-    if (scanf(&s[DATE_LENGHT+1], "%c" SEPARATOR, &type) == EOF)
+    if (sscanf(&s[DATE_LENGHT+1], "%c" SEPARATOR, &type) == EOF)
     {
         if (e == NULL)
         {
@@ -102,7 +103,7 @@ struct entry* register_parse_entry(const char* s, struct entry* e)
     }
 
     /* Ora manca solo il numero finale */
-    if (scanf(&s[DATE_LENGHT+1+TYPE_LENGHT+1], "%d", &ans->counter) == EOF)
+    if (sscanf(&s[DATE_LENGHT+1+TYPE_LENGHT+1], "%d", &ans->counter) == EOF)
     {
         if (e == NULL)
         {
