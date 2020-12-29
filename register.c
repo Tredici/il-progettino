@@ -17,6 +17,14 @@
 /* carattere nuovo caso */
 #define C_NEW_CASE 'N'
 
+/** Una entry necessiterà di:
+ *  tempo:
+ *      +data
+ *      ? +ora
+ *  tipo:
+ *      >tampone
+ *
+ */
 
 enum entry_type
 {
