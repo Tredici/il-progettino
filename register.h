@@ -8,6 +8,11 @@
 
 #include <stdlib.h>
 
+/** Spazio massimo necessario per
+ * serializzare un'entry
+ */
+#define ENTRY_TEXT_MAXLEN 22
+
 struct entry;
 
 /** La struttura testuale di un entry
