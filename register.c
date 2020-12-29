@@ -130,7 +130,7 @@ char* register_serialize_entry(const struct entry* E, char* buf, size_t len)
 {
     char str[ENTRY_TEXT_MAXLEN] = {};
     char* ans;
-    size_t strLen;
+    int strLen;
     char symbol;
 
     if (E == NULL)
