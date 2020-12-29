@@ -186,7 +186,7 @@ char* register_serialize_entry(const struct entry* E, char* buf, size_t len)
 
     if (buf != NULL)
     {
-        if (len < DATE_LENGHT+2+TYPE_LENGHT+strLen+1)
+        if ((int)len < DATE_LENGHT+2+TYPE_LENGHT+strLen+1)
         {
             /** Se non basta lo spazio per contenere
              * il risultato genera un errore
