@@ -45,7 +45,7 @@ struct repl_cmd
  *
  * Il primo argomento è la stringa in cui cercare
  * un comando, il secondo è un array di
- * repl_cmd_hint terminato da 
+ * repl_cmd_hint terminato da
  * (struct repl_cmd_hint*) NULL che specifica i
  * comandi da individuare
  *
