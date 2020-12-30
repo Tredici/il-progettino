@@ -2,6 +2,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <errno.h>
 
 struct repl_cmd repl_recognise_cmd(const char* text,
     const struct repl_cmd_hint cmds[], int len)
@@ -119,7 +120,10 @@ int repl_apply_cmd(const char* cmd, struct repl_cmd_todo* cmds, int len)
     /* indice del comando individuato */
     index = command.flag;
     if (index == -1)
+    {
+        errno = ENOSYS;
         return -1;
+    }
 
     result = cmds[index].fun(command.args);
     free(hints);
