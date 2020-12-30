@@ -43,15 +43,20 @@ struct repl_cmd
  * e restituisce una struttura che permette di
  * identificare il comando in questione
  *
- * Il primo argomento è la stringa in cui cercare
- * un comando, il secondo è un array di
- * repl_cmd_hint terminato da
- * (struct repl_cmd_hint*) NULL che specifica i
- * comandi da individuare
+ * +Il primo argomento è la stringa in cui cercare
+ *  un comando,
+ * +il secondo è un array di
+ *  repl_cmd_hint eventualmente terminato da
+ *  (struct repl_cmd_hint*) NULL che specifica i
+ *  comandi da individuare,
+ * +il terzo contiene la dimensione dell'arrray
+ *  passato come secondo parametro, oppure -1 se
+ *  si vuole lasciare questa non specificata e
+ *  affidarsi al NULL terminatore
  *
  * Il controllo del comando è CASE-INSENSITIVE
  */
-struct repl_cmd repl_recognise_cmd(const char*, const struct repl_cmd_hint[]);
+struct repl_cmd repl_recognise_cmd(const char*, const struct repl_cmd_hint[], int);
 
 
 
