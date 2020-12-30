@@ -42,7 +42,6 @@ repl_make_hint_from_todo(const struct repl_cmd_todo* todos,
                         int len,
                         struct repl_cmd_hint* hints)
 {
-    const struct repl_cmd_todo* t;
     struct repl_cmd_hint* ans;
     int i;
 
@@ -59,10 +58,10 @@ repl_make_hint_from_todo(const struct repl_cmd_todo* todos,
         ans = hints;
     }
 
-    for (t = todos, i = 0; (i == -1 || i < len) && t != NULL; ++t, ++i)
+    for (i = 0; (i == -1 || i < len) && todos[i].command[0] != '\0'; ++i)
     {
         /* inizializza l'i-esimo "hint" */
-        strncpy(ans[i].command, t[i].command, REPL_CMD_MAX_L);
+        strncpy(ans[i].command, todos[i].command, REPL_CMD_MAX_L);
         /* vedi la descrizione della funzione */
         ans[i].flag = i;
     }
