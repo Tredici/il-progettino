@@ -1,6 +1,7 @@
 #include "repl.h"
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 struct repl_cmd repl_recognise_cmd(const char* text,
     const struct repl_cmd_hint cmds[], int len)
@@ -31,6 +32,39 @@ struct repl_cmd repl_recognise_cmd(const char* text,
         }
 
         ++cmds;
+    }
+
+    return ans;
+}
+
+struct repl_cmd_hint*
+repl_make_hint_from_todo(const struct repl_cmd_todo* todos,
+                        int len,
+                        struct repl_cmd_hint* hints)
+{
+    const struct repl_cmd_todo* t;
+    struct repl_cmd_hint* ans;
+    int i;
+
+    if (hints == NULL)
+    {
+        if (len == -1) /* parametri inconsistenti */
+        {
+            return NULL;
+        }
+        ans = calloc(len, sizeof(struct repl_cmd_hint));
+    }
+    else
+    {
+        ans = hints;
+    }
+
+    for (t = todos, i = 0; (i == -1 || i < len) && t != NULL; ++t, ++i)
+    {
+        /* inizializza l'i-esimo "hint" */
+        strncpy(ans[i].command, t[i].command, REPL_CMD_MAX_L);
+        /* vedi la descrizione della funzione */
+        ans[i].flag = i;
     }
 
     return ans;

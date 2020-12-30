@@ -76,6 +76,36 @@ struct repl_cmd_todo
     int (*fun)(const char*);
 };
 
+/** Funzione ausiliaria per ottenere
+ *      struct repl_cmd_hint
+ * a partire da
+ *      struct repl_cmd_todo
+ *
+ * Se il secondo argomento non è -1
+ * si aspetta esattamente len elementi
+ * nel primo array e spazio a
+ * sufficenza nel terzo elemento qualora
+ * questo non sia NULL.
+ *
+ * Se questo è NULL len elementi sono
+ * allocati in memoria dinamica e
+ * vanno poi liberati con una chiamata
+ * a free.
+ *
+ * Il flag negli elementi ritornati è pari
+ * alla posizione nell'array originario
+ * dell'elemento corrispondente.
+ *
+ * Ritorna NULL in caso di errore,
+ * altrimenti fornisce un puntatore
+ * all'array con i risultati, eventualmente
+ * coincidente con il terzo parametro fornito.
+ *
+ * Gli ultimi due parametri non possono essere
+ * contemporaneamente -1 e NULL.
+ */
+struct repl_cmd_hint* repl_make_hint_from_todo(const struct repl_cmd_todo*, int, struct repl_cmd_hint*);
+
 
 
 #endif
