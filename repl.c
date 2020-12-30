@@ -191,6 +191,7 @@ int repl_start(const char* msg, struct repl_cmd_todo* cmds, int len)
             break;
         case OK_TERMINATE:
             repeat = 0;
+            res = 0;
             break;
         case WRN_CONTINUE:
             break;
