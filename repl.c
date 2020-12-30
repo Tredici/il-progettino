@@ -147,7 +147,7 @@ int repl_start(const char* msg, struct repl_cmd_todo* cmds, int len)
     int repeat;
     char* line;
     size_t lineLen;
-    size_t lineBytes;
+    ssize_t lineBytes;
 
     if (cmds == NULL)
     {
