@@ -172,7 +172,7 @@ int repl_start(const char* msg, struct repl_cmd_todo* cmds, int len)
         lineBytes = getline(&line, &lineLen, stdout);
         if (lineBytes == -1)
         {
-            free(&line);
+            free(line);
             return -1;
         }
         /* rimuove il carattere '\n' finale */
@@ -180,7 +180,7 @@ int repl_start(const char* msg, struct repl_cmd_todo* cmds, int len)
 
         errno = 0;
         res = repl_apply_cmd(line, cmds, len);
-        free(&line);
+        free(line);
 
         if (res == -1 && errno == ENOSYS)
             res = WRN_CMDNF;
