@@ -58,6 +58,24 @@ struct repl_cmd
  */
 struct repl_cmd repl_recognise_cmd(const char*, const struct repl_cmd_hint[], int);
 
+/** Specifica il nome di un comando e una
+ * funzione da invocare su di esso fornendole
+ * la stringa con gli argomenti che seguono
+ * questo.
+ *
+ * La funzione deve restituire 0 in caso di
+ * successo e un valore NEGATIVO in caso di
+ * errore.
+ * Eventuali valori positivi sarebbero
+ * nascosti al chiamante di una delle funzioni
+ * che usano questa struttura.
+ */
+struct repl_cmd_todo
+{
+    char command[REPL_CMD_MAX_L+1];
+    int (*fun)(const char*);
+};
+
 
 
 #endif
