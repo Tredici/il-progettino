@@ -97,3 +97,36 @@ int repl_todos_lenght(struct repl_cmd_todo* todos)
     return counter;
 }
 
+
+int repl_apply_cmd(const char* cmd, struct repl_cmd_todo* cmds, int len)
+{
+    struct repl_cmd_hint* hints;
+    struct repl_cmd command;
+    int index;
+    int result;
+
+    if (cmds == NULL)
+        return -1;
+
+    if (len == -1) /* per ora non si accettano queste cose */
+        return -1;
+
+    hints = repl_make_hint_from_todo(cmds, len, NULL);
+    if (hints == NULL)
+        return -1;
+
+    command = repl_recognise_cmd(cmd, hints, len);
+    /* indice del comando individuato */
+    index = command.flag;
+    if (index == -1)
+        return -1;
+
+    result = cmds[index].fun(command.args);
+    free(hints);
+
+    if (result < 0)
+        return -1;
+
+    return result;
+}
+

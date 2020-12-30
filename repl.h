@@ -121,6 +121,11 @@ int repl_hints_lenght(struct repl_cmd_hint*);
  */
 int repl_todos_lenght(struct repl_cmd_todo*);
 
+/** Cerca un comando nella stringa fornita e prova
+ * ad invocare su esso la funzione associata.
+ */
+int repl_apply_cmd(const char*, struct repl_cmd_todo*, int);
+
 
 
 #endif
