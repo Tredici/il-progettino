@@ -68,3 +68,32 @@ repl_make_hint_from_todo(const struct repl_cmd_todo* todos,
 
     return ans;
 }
+
+int repl_hints_lenght(struct repl_cmd_hint* hints)
+{
+    int counter;
+
+    if (hints == NULL)
+        return -1;
+
+    counter = 0;
+    while (hints[counter].command[0] != '\0')
+        ++counter;
+
+    return counter;
+}
+
+int repl_todos_lenght(struct repl_cmd_todo* todos)
+{
+    int counter;
+
+    if (todos == NULL)
+        return -1;
+
+    counter = 0;
+    while (todos[counter].command[0] != '\0')
+        ++counter;
+
+    return counter;
+}
+

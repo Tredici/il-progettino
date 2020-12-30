@@ -107,6 +107,20 @@ struct repl_cmd_todo
  */
 struct repl_cmd_hint* repl_make_hint_from_todo(const struct repl_cmd_todo*, int, struct repl_cmd_hint*);
 
+/** Ricava la lunghezza di un array di
+ * (struct repl_cmd_hint) terminato da
+ * un "elemento nullo" (il cui campo
+ * command inizia con '\0'), in caso di
+ * errore ritorna -1 (ovvero quando il
+ * parametro è esso stesso NULL)
+ */
+int repl_hints_lenght(struct repl_cmd_hint*);
+
+/** Come repl_hints_lenght ma
+ * per gli array di (struct repl_cmd_todo)
+ */
+int repl_todos_lenght(struct repl_cmd_todo*);
+
 
 
 #endif
