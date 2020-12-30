@@ -1,8 +1,13 @@
+/* macro per rendere disponibile getline */
+#define _GNU_SOURCE
+#define _POSIX_C_SOURCE 200809L
+
 #include "repl.h"
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <stdio.h>
 
 struct repl_cmd repl_recognise_cmd(const char* text,
     const struct repl_cmd_hint cmds[], int len)
@@ -136,3 +141,77 @@ int repl_apply_cmd(const char* cmd, struct repl_cmd_todo* cmds, int len)
     return result;
 }
 
+int repl_start(const char* msg, struct repl_cmd_todo* cmds, int len)
+{
+    int res;
+    int repeat;
+    char* line;
+    size_t lineLen;
+    size_t lineBytes;
+
+    if (cmds == NULL)
+    {
+        return -1;
+    }
+
+    if (len == -1)
+    {
+        len = repl_todos_lenght(cmds);
+        if (len == -1)
+        {
+            return -1;
+        }
+    }
+
+    repeat = 1;
+    while (repeat)
+    {
+        printf("%s>", msg != NULL ? msg : "");
+        line = NULL;
+        lineLen = 0;
+        lineBytes = getline(&line, &lineLen, stdout);
+        if (lineBytes == -1)
+        {
+            free(&line);
+            return -1;
+        }
+        /* rimuove il carattere '\n' finale */
+        line[lineBytes-1] = '\0';
+
+        errno = 0;
+        res = repl_apply_cmd(line, cmds, len);
+        free(&line);
+
+        if (res == -1 && errno == ENOSYS)
+            res = WRN_CMDNF;
+
+        switch (res)
+        {
+        case OK_CONTINUE:
+            break;
+        case OK_TERMINATE:
+            repeat = 0;
+            break;
+        case WRN_CONTINUE:
+            break;
+        case ERR_PARAMS:
+            break;
+        case WRN_CMDNF:
+            break;
+
+        default:
+            if (res < 0)
+            {
+                repeat = 0;
+            }
+            else
+            {
+                fprintf(stderr, "repl_start: unexpected result.\n");
+            }
+
+            break;
+        }
+    }
+
+    return res;
+}

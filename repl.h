@@ -126,6 +126,59 @@ int repl_todos_lenght(struct repl_cmd_todo*);
  */
 int repl_apply_cmd(const char*, struct repl_cmd_todo*, int);
 
+/** Insieme di costanti utilizzabili per
+ * controllare un ciclo repl.
+ *
+ * Queste costanti sono i valori di riferimento
+ * che le funzioni dei comandi dovrebbero ritornare
+ * per controllare un ciclo.
+ * Corrispondono tutte a valori non negativi poiché
+ * l'eventuale restituzione di un valore negativo
+ * indica al sistema l'avvento di un errore grave e
+ * irrecuperabile che causa l'immediata terminazione
+ * del ciclo.
+ */
+enum repl_code
+{
+    /* TUTTO OK: prosegui con la prossima iterazione*/
+    OK_CONTINUE,
+    /* TUTTO OK: il ciclo ha fine */
+    OK_TERMINATE,
+    /* ATTENZIONE: qualcosa è andato storto ma non è grave */
+    WRN_CONTINUE,
+    /* ERRORE: parametri invalidi, proseguire */
+    ERR_PARAMS,
+    /* ATTENZIONE: comando inesistente,
+        da non usare direttamente */
+    WRN_CMDNF
+};
+
+/** Massimo numero di caratteri che si garantisce
+ * di poter gestire in un ciclo repl per riga,
+ * eventuali caratteri in eccesso saranno scartati
+ */
+#define REPL_MAX_LINE 256
+
+/** Implementa un ciclo REPL
+ * READ EVALUATE PRINT LOOP
+ *
+ * In cui continua a chiedere un input
+ * da tastiera, cerca un comando in esso
+ * e prova a richiamare la funzione
+ * associata a questo passandoci la
+ * stringa con gli argomenti forniti.
+ *
+ * La logica seguita per gestire l'array
+ * e il parametro sulla lunghezza è la
+ * stessa seguita con:
+ *      repl_recognise_cmd
+ *
+ * Il primo parametro, che può essere
+ * NULL indica una stringa da stampare
+ * ogni volta che si desidera chiedere
+ * l'input all'utente.
+ */
+int repl_start(const char*, struct repl_cmd_todo*, int);
 
 
 #endif
