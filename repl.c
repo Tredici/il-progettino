@@ -117,6 +117,9 @@ int repl_apply_cmd(const char* cmd, struct repl_cmd_todo* cmds, int len)
         return -1;
 
     command = repl_recognise_cmd(cmd, hints, len);
+    free(hints);
+    hints = NULL;
+
     /* indice del comando individuato */
     index = command.flag;
     if (index == -1)
@@ -126,7 +129,6 @@ int repl_apply_cmd(const char* cmd, struct repl_cmd_todo* cmds, int len)
     }
 
     result = cmds[index].fun(command.args);
-    free(hints);
 
     if (result < 0)
         return -1;
