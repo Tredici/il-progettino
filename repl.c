@@ -169,7 +169,7 @@ int repl_start(const char* msg, struct repl_cmd_todo* cmds, int len)
         printf("%s>", msg != NULL ? msg : "");
         line = NULL;
         lineLen = 0;
-        lineBytes = getline(&line, &lineLen, stdout);
+        lineBytes = getline(&line, &lineLen, stdin);
         if (lineBytes == -1)
         {
             free(line);
