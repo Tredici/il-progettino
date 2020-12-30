@@ -17,7 +17,7 @@ struct repl_cmd repl_recognise_cmd(const char* text,
         cmdLen = strlen(cmd->command);
 
         /* Test del comando */
-        if (strncasecmp(text, cmd->command, cmdLen) == 0)
+        if (strncasecmp(text, cmd->command, cmdLen) == 0 && !isgraph(text[cmdLen]))
         {
             ans.flag = cmd->flag;
             
