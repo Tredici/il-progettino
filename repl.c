@@ -15,7 +15,7 @@ struct repl_cmd repl_recognise_cmd(const char* text,
     ans.command = text;
     ans.flag = -1;
 
-    for (cmd = &cmds[0], i = 0; (len == -1 || i < len) && cmd != NULL; ++cmd, ++i)
+    for (cmd = &cmds[0], i = 0; (len == -1 || i < len) && cmd->command[0] != '\0'; ++cmd, ++i)
     {
         cmdLen = strlen(cmd->command);
 

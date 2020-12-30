@@ -46,13 +46,14 @@ struct repl_cmd
  * +Il primo argomento è la stringa in cui cercare
  *  un comando,
  * +il secondo è un array di
- *  repl_cmd_hint eventualmente terminato da
- *  (struct repl_cmd_hint*) NULL che specifica i
+ *  repl_cmd_hint eventualmente terminato da un
+ *  elemento il cui campo command inizia con '\0'
+ *  ("comando nullo") che specifica i
  *  comandi da individuare,
  * +il terzo contiene la dimensione dell'arrray
  *  passato come secondo parametro, oppure -1 se
  *  si vuole lasciare questa non specificata e
- *  affidarsi al NULL terminatore
+ *  affidarsi al "comando nullo" terminatore
  *
  * Il controllo del comando è CASE-INSENSITIVE
  */
