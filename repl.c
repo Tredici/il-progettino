@@ -1,5 +1,6 @@
 #include "repl.h"
 #include <string.h>
+#include <ctype.h>
 
 struct repl_cmd repl_recognise_cmd(const char* text,
     const struct repl_cmd_hint cmds[])
