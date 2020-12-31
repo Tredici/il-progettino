@@ -69,4 +69,12 @@ void* list_set_item(struct list*, size_t, void*);
  */
 void list_foreach(struct list*, void (*)(void*));
 
+/** Itera lungo la lista ed elimina tutti gli elementi
+ * sui quali la funzione fornita restituisce un valore
+ * non nullo, l'elemento viene semplicemente elimitato,
+ * un eventuale cleanup non è eseguito di default e va
+ * eseguito nella funzione fornita.
+ */
+void list_eliminate(struct list*, int (*)(void*));
+
 #endif

@@ -106,3 +106,48 @@ void* list_get_item(struct list* l, size_t index) {
 
     return ptr->val;
 }
+
+void list_eliminate(struct list* l, int (*fun)(void*))
+{
+    void* val;
+    elem* ptr;  /* per iterare */
+    elem* curr; /* per eliminare */
+    elem* prev; /* per mantenere il collegamento */
+
+    /* controllo validità parametri */
+    if (l == NULL || fun == NULL)
+        return;
+
+    prev = NULL; /* all'inizio non ci sono precedenti */
+    ptr = l->first;
+    while (ptr != NULL)
+    {
+        /* ora si lavora su questo */
+        curr = ptr;
+        /* e si prende di mira il prossimo */
+        ptr = curr->next;
+
+        if (0 != fun(curr->val))
+        {
+            /* mantiene la catena */
+            if (prev == NULL)
+            {
+                /* nuovo primo */
+                l->first = ptr;
+            }
+            else
+            {
+                /* elemento nel mezzo */
+                prev->next = ptr;
+            }
+
+            /* libera l'elemento */
+            free(curr);
+            /* il precednte non cambia */
+            continue;
+        }
+
+        /* solo se non si elimina nulla */
+        prev = curr;
+    }
+}
