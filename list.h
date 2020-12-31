@@ -77,4 +77,15 @@ void list_foreach(struct list*, void (*)(void*));
  */
 void list_eliminate(struct list*, int (*)(void*));
 
+
+/** Itera lungo una lista ed esegue quello che ci si
+ * aspetta da una funzione chiamata accumulate se si
+ * ha un minimo di esperienza.
+ * Il primo parametro della funzione argomento è il
+ * puntatore al valore nella liste mentre il secondo
+ * coincide con il terzo argomento fornito alla
+ * funzione.
+ */
+void list_accumulate(struct list*, void (*)(void*, void*), void*);
+
 #endif

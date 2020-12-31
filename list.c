@@ -151,3 +151,14 @@ void list_eliminate(struct list* l, int (*fun)(void*))
         prev = curr;
     }
 }
+
+void list_accumulate(struct list* l, void (*fun)(void*, void*), void* base)
+{
+    elem* ptr;
+
+    if (l == NULL)
+        return;
+
+    for (ptr = l->first; ptr != NULL; ptr = ptr->next)
+        fun(ptr->val, base);
+}
