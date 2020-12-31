@@ -25,16 +25,6 @@
  *      ? +ora
  *  tipo:
  *      >tampone
- *
- */
-
-
-/** Una entry necessiterà di:
- *  tempo:
- *      +data
- *      ? +ora
- *  tipo:
- *      >tampone
  *      >nuovo caso
  *  numero:
  *      -numero di persone coinvolte
