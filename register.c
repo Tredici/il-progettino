@@ -26,11 +26,6 @@
  *
  */
 
-enum entry_type
-{
-    SWAB,       /* tampone */
-    NEW_CASE    /* nuovo caso */
-};
 
 /** Una entry necessiterà di:
  *  tempo:

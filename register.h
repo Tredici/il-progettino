@@ -13,6 +13,12 @@
  */
 #define ENTRY_TEXT_MAXLEN 22
 
+enum entry_type
+{
+    SWAB,       /* tampone */
+    NEW_CASE    /* nuovo caso */
+};
+
 struct entry;
 
 /** La struttura testuale di un entry
