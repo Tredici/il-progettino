@@ -19,6 +19,12 @@ enum entry_type
     NEW_CASE    /* nuovo caso */
 };
 
+/** Un register è una raccolta di entry
+ * e permette di eseguire una serie di
+ * operazioni su queste
+ */
+struct register;
+
 struct entry;
 
 /** La struttura testuale di un entry
