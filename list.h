@@ -10,6 +10,7 @@
 #include <stdlib.h> /* Definisce NULL */
 #include <errno.h>
 
+struct elem;
 struct list;
 
 /**Equivalente a un costruttore.
