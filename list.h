@@ -88,4 +88,8 @@ void list_eliminate(struct list*, int (*)(void*));
  */
 void list_accumulate(struct list*, void (*)(void*, void*), void*);
 
+/** Aggiunge un elemento in testa alla lista
+ */
+int list_prepend(struct list*, void*);
+
 #endif

@@ -181,3 +181,21 @@ void list_accumulate(struct list* l, void (*fun)(void*, void*), void* base)
     for (ptr = l->first; ptr != NULL; ptr = ptr->next)
         fun(ptr->val, base);
 }
+
+int list_prepend(struct list* l, void* val)
+{
+    elem* new_e;
+
+    if (l == NULL)
+        return -1;
+
+    new_e = elem_init(val);
+    if (new_e == NULL)
+        return -1;
+
+    new_e->next = l->first;
+    l->first = new_e;
+    l->len++;
+
+    return 0;
+}
