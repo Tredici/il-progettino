@@ -2,6 +2,7 @@
  * Implementazione delle funzioni 
  */
 #include "list.h"
+#include <string.h>
 
 typedef struct elem
 {
@@ -9,6 +10,22 @@ typedef struct elem
     void* val;
 } elem;
 
+/** Costruisce e inizializza un elemento
+ * con il valore fornito
+ */
+elem* elem_init(void* val)
+{
+    elem* ans;
+
+    ans = malloc(sizeof(elem));
+    if (ans == NULL)
+        return NULL;
+
+    memset(ans, 0, sizeof(elem));
+    ans->val = val;
+
+    return ans;
+}
 
 struct list
 {
