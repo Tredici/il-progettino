@@ -143,6 +143,8 @@ void list_eliminate(struct list* l, int (*fun)(void*))
 
             /* libera l'elemento */
             free(curr);
+            /* un elemento in meno */
+            l->len--;
             /* il precednte non cambia */
             continue;
         }
