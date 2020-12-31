@@ -33,6 +33,12 @@ struct entry;
  *
  */
 
+
+/** Crea un entry associata al giorno corrente
+ * del tipo e con la quantità specificata.
+ */
+struct entry* register_new_entry(struct entry*, enum entry_type, int);
+
 /** Esegue il parsing di una entry convertendola
  *  da formato testuale a struttura di riferimento
  *

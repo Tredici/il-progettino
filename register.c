@@ -1,4 +1,6 @@
 #define _XOPEN_SOURCE 500  /* per strptime */
+#define _POSIX_C_SOURCE /* per localtime_r */
+
 #include "register.h"
 #include <time.h>
 #include <string.h>
@@ -37,6 +39,47 @@ struct entry
     int counter;
 };
 
+struct entry*
+register_new_entry(struct entry* E,
+                enum entry_type type,
+                int counter)
+{
+    struct entry* ans;
+    time_t today;
+
+    if (counter <= 0)
+        return NULL;
+
+    switch (type)
+    {
+    case SWAB:
+    case NEW_CASE:
+        break;
+
+    default:
+        return NULL;
+    }
+
+    if (E == NULL)
+    {
+        ans = malloc(sizeof(struct entry));
+        if (ans == NULL)
+            return NULL;
+    }
+    else
+    {
+        ans = E;
+    }
+
+    today = time(NULL);
+    if (localtime_r(&today, &ans->e_time) == NULL)
+        return NULL;
+
+    ans->type = type;
+    ans->counter = counter;
+
+    return ans;
+}
 
 struct entry* register_parse_entry(const char* s, struct entry* e)
 {
