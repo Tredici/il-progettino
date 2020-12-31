@@ -148,6 +148,7 @@ int repl_start(const char* msg, struct repl_cmd_todo* cmds, int len)
     char* line;
     size_t lineLen;
     ssize_t lineBytes;
+    char* cstr;
 
     if (cmds == NULL)
     {
@@ -178,8 +179,18 @@ int repl_start(const char* msg, struct repl_cmd_todo* cmds, int len)
         /* rimuove il carattere '\n' finale */
         line[lineBytes-1] = '\0';
 
+        /* trova il primo carattere "non blank" */
+        for (cstr = line; *cstr != '\n' && !isgraph(*cstr); ++cstr)
+            ;
+
+        /** se la stringa è vuota si può saltare
+         * direttamente alla prossima iterazione
+         */
+        if (*cstr == '\0')
+            continue;
+
         errno = 0;
-        res = repl_apply_cmd(line, cmds, len);
+        res = repl_apply_cmd(cstr, cmds, len);
         free(line);
 
         if (res == -1 && errno == ENOSYS)
