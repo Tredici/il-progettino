@@ -235,7 +235,7 @@ int list_append(struct list* l, void* val)
 
 #ifdef _LIST_DEBUG
 #include <stdio.h>
-void print_elem(void* val)
+static void print_elem(void* val)
 {
     printf("[%ld] -> ", (long)val);
 }
