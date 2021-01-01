@@ -174,7 +174,7 @@ void list_accumulate(struct list* l, void (*fun)(void*, void*), void* base)
 {
     elem* ptr;
 
-    if (l == NULL)
+    if (l == NULL || fun == NULL)
         return;
 
     for (ptr = l->first; ptr != NULL; ptr = ptr->next)
