@@ -1,5 +1,5 @@
 /**
- * Implementazione delle funzioni 
+ * Implementazione delle funzioni
  */
 #include "list.h"
 #include <string.h>
@@ -45,7 +45,7 @@ struct list* list_init(struct list* l)
             return NULL;
         }
     }
-    else 
+    else
     {
         ans = l;
     }
@@ -109,7 +109,7 @@ void list_foreach(struct list* l, void (*fun)(void*))
 void* list_get_item(struct list* l, size_t index) {
     elem* ptr;
     size_t i;
-    
+
     if (index >= l->len)
     {
         errno = EINVAL;
