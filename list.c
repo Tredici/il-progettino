@@ -84,9 +84,9 @@ void (*list_get_cleanup(struct list* l))(void*)
     return l->cleanup_f;
 }
 
-void (*list_set_cleanup(struct list* l, void(*f)(void)))(void*)
+void (*list_set_cleanup(struct list* l, void(*f)(void*)))(void*)
 {
-    void(*ans)(void);
+    void(*ans)(void*);
     ans = l->cleanup_f;
     l->cleanup_f = f;
     return ans;

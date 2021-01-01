@@ -46,7 +46,7 @@ size_t list_size(const struct list*);
  * Rermette di impostare una funzione di cleanup da invocare su ogni elemento della lista in caso di distruzione (clear) della stessa. Restituisce il precedente handler. 
  * 
  */
-void (*list_set_cleanup(struct list*, void(*)(void)))(void*);
+void (*list_set_cleanup(struct list*, void(*)(void*)))(void*);
 
 /**  Restituisce la funzione di cleanup corrente
  * 
