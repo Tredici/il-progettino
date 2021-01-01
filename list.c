@@ -198,3 +198,33 @@ int list_prepend(struct list* l, void* val)
 
     return 0;
 }
+
+int list_append(struct list* l, void* val)
+{
+    elem* new_e;
+    elem* ptr;
+
+    if (l == NULL)
+        return -1;
+
+    new_e = elem_init(val);
+    if (new_e == NULL)
+        return -1;
+
+    if (l->first == NULL)
+    {
+        /* lista inizialmente vuota */
+        l->first = new_e;
+    }
+    else
+    {
+        /* scorre la lista fino alla fine */
+        for (ptr = l->first; ptr->next != NULL; ptr = ptr->next)
+            ;
+
+        ptr->next = new_e;
+    }
+    l->len++;
+
+    return 0;
+}

@@ -92,4 +92,8 @@ void list_accumulate(struct list*, void (*)(void*, void*), void*);
  */
 int list_prepend(struct list*, void*);
 
+/** Aggiunge un elemento in coda alla lista
+ */
+int list_append(struct list*, void*);
+
 #endif
