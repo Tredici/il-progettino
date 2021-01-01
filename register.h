@@ -88,4 +88,10 @@ char* register_serialize_entry(const struct entry*, char*, size_t);
  */
 struct e_register* register_create(struct e_register*, int);
 
+/** Libera tutta la memoria associata a un registro
+ * senza preoccuparsi di eseguire alcuna operazione
+ * per garantire la persistenza dei dati o altro.
+ */
+void register_destroy(struct e_register*);
+
 #endif

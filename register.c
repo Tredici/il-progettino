@@ -299,3 +299,13 @@ struct e_register* register_create(struct e_register* r, int flag)
     return ans;
 }
 
+void register_destroy(struct e_register* r)
+{
+    if (r == NULL)
+        return;
+
+    list_destroy(r->l);
+    r->l = NULL;
+    free(r);
+}
+
