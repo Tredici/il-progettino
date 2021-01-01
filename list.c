@@ -29,7 +29,7 @@ elem* elem_init(void* val)
 
 struct list
 {
-    void(*cleanup_f)(void);
+    void(*cleanup_f)(void*);
     elem* first;
     size_t len;
 };
