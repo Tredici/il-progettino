@@ -79,6 +79,28 @@ register_new_entry(struct entry* E,
     return ans;
 }
 
+struct entry* register_clone_entry(const struct entry* E, struct entry* E2)
+{
+    struct entry* ans;
+
+    if (E == NULL)
+        return NULL;
+
+    if (E2 == NULL)
+    {
+        ans = malloc(sizeof(struct entry));
+        if (ans == NULL)
+            return NULL;
+    }
+    else
+    {
+        ans = E2;
+    }
+    memcpy(ans, E, sizeof(struct entry));
+
+    return ans;
+}
+
 struct entry* register_parse_entry(const char* s, struct entry* e)
 {
     struct entry* ans;

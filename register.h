@@ -45,6 +45,13 @@ struct entry;
  */
 struct entry* register_new_entry(struct entry*, enum entry_type, int);
 
+/** Copia una entry in un'altra, eventualmente allocando lo spazio
+ * necessario in memoria dinamica.
+ *
+ * Restituisce NULL in caso di errore
+ */
+struct entry* register_clone_entry(const struct entry*, struct entry*);
+
 /** Esegue il parsing di una entry convertendola
  *  da formato testuale a struttura di riferimento
  *
