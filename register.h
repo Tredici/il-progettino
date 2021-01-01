@@ -23,7 +23,7 @@ enum entry_type
  * e permette di eseguire una serie di
  * operazioni su queste
  */
-struct register;
+struct e_register;
 
 struct entry;
 
