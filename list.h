@@ -96,4 +96,11 @@ int list_prepend(struct list*, void*);
  */
 int list_append(struct list*, void*);
 
+#ifdef _LIST_DEBUG
+/* Stampa il contenuto di una lista considerando
+ * i puntatori come dei long
+ */
+void list_debug(struct list*);
+#endif
+
 #endif
