@@ -117,9 +117,7 @@ void* list_get_item(struct list* l, size_t index) {
     }
 
     for (i = 0, ptr = l->first; i != index && ptr; ++i)
-    {
-
-    }
+        ;
 
     return ptr->val;
 }
