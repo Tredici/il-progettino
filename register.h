@@ -101,4 +101,12 @@ void register_destroy(struct e_register*);
  */
 int register_add_entry(struct e_register*, const struct entry*);
 
+/** Dato un registro calcola il numero di
+ * elementi del tipo specificato.
+ *
+ * Restituisce il totale calcolato oppure
+ * -1 in caso di errore.
+ */
+int register_calc_type(const struct e_register*, enum entry_type);
+
 #endif

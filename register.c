@@ -326,3 +326,38 @@ int register_add_entry(struct e_register* R, const struct entry* E)
     return 0;
 }
 
+static void sumType(void* elem, void* tot)
+{
+    struct entry* E;
+
+    if (elem == NULL)
+        return;
+
+    E = (struct entry*)elem;
+    if (E->type == ((int*)tot)[1])
+        *(int*)tot += E->counter;
+}
+
+int register_calc_type(const struct e_register* R, enum entry_type type)
+{
+    void (*fun)(void*, void*);
+    int ans[2];
+
+    if (R == NULL)
+        return -1;
+
+    switch (type)
+    {
+    case SWAB:
+    case NEW_CASE:
+        ans[1] = type;
+        break;
+    default:
+        return -1;
+    }
+
+    ans[0] = 0;
+    list_accumulate(R->l, &sumType, &ans);
+
+    return ans;
+}
