@@ -93,7 +93,7 @@ void (*list_set_cleanup(struct list* l, void(*f)(void*)))(void*)
 }
 
 ssize_t list_size(const struct list* l) {
-    return l != NULL ? l->len : -1;
+    return l != NULL ? (ssize_t)l->len : -1;
 }
 
 void list_foreach(struct list* l, void (*fun)(void*))
