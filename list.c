@@ -6,7 +6,7 @@
 
 typedef struct elem
 {
-    elem* next;
+    struct elem* next;
     void* val;
 } elem;
 
