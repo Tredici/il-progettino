@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include "list.h"   /* per usare delle list per gestire i registri */
 
 /* 4 ANNO 2 MESE 2 GIORNI 2 SEPARATORI (-) */
 #define DATE_LENGHT 10
@@ -35,6 +36,14 @@ struct entry
     struct tm e_time;
     enum entry_type type;
     int counter;
+};
+
+struct e_register
+{
+    /* memorizza data di crezione
+     * di un register */
+    struct tm e_time;
+    struct list* l;
 };
 
 struct entry*
