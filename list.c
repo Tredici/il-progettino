@@ -231,23 +231,22 @@ int list_append(struct list* l, void* val)
 
 #ifdef _LIST_DEBUG
 #include <stdio.h>
+void print_elem(void* val)
+{
+    printf("[%ld] -> ", (long)val);
+}
 /* Stampa il contenuto di una lista considerando
  * i puntatori come dei long
  */
 void list_debug(struct list* l)
 {
-    elem* p;
-
     if (l == NULL)
     {
         printf(" *** list_debug(NULL) *** \n");
         return;
     }
     printf("{ ");
-    for(p = l->first; p != NULL; p = p->next)
-    {
-        printf("[%ld] -> ", (long)p->val);
-    }
+    list_foreach(l, print_elem);
     printf("NIL }\n");
 }
 #endif
