@@ -126,7 +126,6 @@ void* list_get_item(struct list* l, size_t index) {
 
 void list_eliminate(struct list* l, int (*fun)(void*))
 {
-    void* val;
     elem* ptr;  /* per iterare */
     elem* curr; /* per eliminare */
     elem* prev; /* per mantenere il collegamento */
