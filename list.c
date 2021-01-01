@@ -162,6 +162,7 @@ void list_eliminate(struct list* l, int (*fun)(void*))
             /* un elemento in meno */
             l->len--;
             /* il precednte non cambia */
+            /* il precedente non cambia */
             continue;
         }
 
