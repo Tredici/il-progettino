@@ -74,8 +74,11 @@ void list_foreach(struct list*, void (*)(void*));
  * non nullo, l'elemento viene semplicemente elimitato,
  * un eventuale cleanup non è eseguito di default e va
  * eseguito nella funzione fornita.
+ *
+ * Restituisce il numero di elementi eliminati o -1 in
+ * caso di errore
  */
-void list_eliminate(struct list*, int (*)(void*));
+int list_eliminate(struct list*, int (*)(void*));
 
 
 /** Itera lungo una lista ed esegue quello che ci si

@@ -124,15 +124,18 @@ void* list_get_item(struct list* l, size_t index) {
     return ptr->val;
 }
 
-void list_eliminate(struct list* l, int (*fun)(void*))
+int list_eliminate(struct list* l, int (*fun)(void*))
 {
     elem* ptr;  /* per iterare */
     elem* curr; /* per eliminare */
     elem* prev; /* per mantenere il collegamento */
+    int ans;
+
+    ans = 0;
 
     /* controllo validità parametri */
     if (l == NULL || fun == NULL)
-        return;
+        return -1;
 
     prev = NULL; /* all'inizio non ci sono precedenti */
     ptr = l->first;
@@ -161,6 +164,7 @@ void list_eliminate(struct list* l, int (*fun)(void*))
             free(curr);
             /* un elemento in meno */
             l->len--;
+            ++ans;
             /* il precedente non cambia */
             continue;
         }
@@ -168,6 +172,8 @@ void list_eliminate(struct list* l, int (*fun)(void*))
         /* solo se non si elimina nulla */
         prev = curr;
     }
+
+    return ans;
 }
 
 void list_accumulate(struct list* l, void (*fun)(void*, void*), void* base)
