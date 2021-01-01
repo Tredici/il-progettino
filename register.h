@@ -83,4 +83,9 @@ void register_free_entry(struct entry*);
  */
 char* register_serialize_entry(const struct entry*, char*, size_t);
 
+/** Crea un nuovo registro in memoria, eventualmente
+ * allocando lo spazio necessario in memoria dinamica
+ */
+struct e_register* register_create(struct e_register*, int);
+
 #endif

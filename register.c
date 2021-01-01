@@ -261,3 +261,41 @@ char* register_serialize_entry(const struct entry* E, char* buf, size_t len)
 
     return ans;
 }
+
+struct e_register* register_create(struct e_register* r, int flag)
+{
+    struct e_register* ans;
+    time_t t;
+
+    if (r == NULL)
+    {
+        ans = malloc(sizeof(struct e_register));
+        if (ans == NULL)
+            return NULL;
+    }
+    else
+    {
+        ans = r;
+    }
+    memset(ans, 0, sizeof(struct e_register));
+    t = time(NULL);
+    if (localtime_r(&t, &ans->e_time) == NULL)
+    {
+        if (r == NULL)
+            free(ans);
+
+        return NULL;
+    }
+    ans->l = list_init(NULL);
+    if (ans->l == NULL)
+    {
+        if (r == NULL)
+            free(ans);
+
+        return NULL;
+    }
+    list_set_cleanup(ans->l, &free);
+
+    return ans;
+}
+
