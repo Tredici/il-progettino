@@ -94,4 +94,11 @@ struct e_register* register_create(struct e_register*, int);
  */
 void register_destroy(struct e_register*);
 
+/** Aggiunge una entry a un registro.
+ * L'aggiunta è fatta in maniera "safe", viene inserita
+ * una copia cosicché non ci siano rischi se l'entry
+ * orginale viene distrutta.
+ */
+int register_add_entry(struct e_register*, const struct entry*);
+
 #endif

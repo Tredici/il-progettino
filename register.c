@@ -309,3 +309,20 @@ void register_destroy(struct e_register* r)
     free(r);
 }
 
+int register_add_entry(struct e_register* R, const struct entry* E)
+{
+    struct entry* E2;
+
+    if (R == NULL || E == NULL)
+        return -1;
+
+    E2 = register_clone_entry(E, NULL);
+    if (E2 == NULL)
+        return -1;
+
+    if (list_prepend(R->l, E2) != 0)
+        return -1;
+
+    return 0;
+}
+
