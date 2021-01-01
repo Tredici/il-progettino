@@ -39,7 +39,7 @@ void list_destroy(struct list*);
 /** Fornisce il numero di elementi nella lista
  * 
  */
-size_t list_size(const struct list*);
+ssize_t list_size(const struct list*);
 
 /** Per specificare l'eventuale funzione di cleanup
  * 

@@ -92,7 +92,7 @@ void (*list_set_cleanup(struct list* l, void(*f)(void*)))(void*)
     return ans;
 }
 
-size_t list_size(const struct list* l) {
+ssize_t list_size(const struct list* l) {
     return l != NULL ? l->len : -1;
 }
 
