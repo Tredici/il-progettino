@@ -3,11 +3,17 @@
  * di essere unito in un prodotto
  * definitivo
  */
-
+#include "repl.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include "peer/peer_stop.h"
 
 int main(int argc, char* argv[])
 {
 
-    return 0;
+
+    printf("Peer terminato correttamente.\n");
+
+    return EXIT_SUCCESS;
 }
 
