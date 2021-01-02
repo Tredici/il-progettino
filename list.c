@@ -185,6 +185,69 @@ void list_accumulate(struct list* l, void (*fun)(void*, void*), void* base)
         fun(ptr->val, base);
 }
 
+struct list* list_map(const struct list* l,
+                        void* (*map)(void*),
+                        void (*clean_f)(void*))
+{
+    struct list* ans;
+    elem* current; /* punta all'emento di l */
+    /* punta all'ultimo elemento creato */
+    elem* base;
+    /* punta di volta in volta al nuovo elemento
+     * che si sta creando */
+    elem* new_e;
+
+    /* argomenti validi? */
+    if (l == NULL || map == NULL)
+        return NULL;
+
+    /* per ragioni di efficienza - farlo in O(n) */
+    ans = list_init(NULL);
+    if (ans == NULL)
+        return NULL;
+
+    list_set_cleanup(ans, clean_f);
+
+    base = NULL;
+    new_e = NULL;
+    current = NULL;
+
+    /* lista non vuota */
+    if (l->first != NULL)
+    {
+        current = l->first;
+        /* crea il primo elemento e lo aggiunge */
+        base = elem_init(map(current->val));
+        if (base == NULL)
+        {
+            list_destroy(ans);
+            return NULL;
+        }
+
+        ans->first = base;
+        ans->len++;
+
+        /* ciclo per aggiungere gli elementi successivi */
+        for (current = current->next; current != NULL; current = current->next)
+        {
+            /* prova a generare il nuovo elemento */
+            new_e = elem_init(map(current->val));
+            /* testa che sia andato tutto bene */
+            if (new_e == NULL)
+            {
+                list_destroy(ans);
+                return NULL;
+            }
+
+            base->next = new_e; /* aggiunta di un elmento */
+            ans->len++; /* lunghezza aumentata */
+            base = new_e; /* nuova base */
+        }
+    }
+
+    return ans;
+}
+
 int list_prepend(struct list* l, void* val)
 {
     elem* new_e;

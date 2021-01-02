@@ -99,6 +99,22 @@ int list_eliminate(struct list*, int (*)(void*));
  */
 void list_accumulate(struct list*, void (*)(void*, void*), void*);
 
+/** Genera una lista con tanti elementi quanti ne ha
+ * la lista fornita generandoli mediante la funzione
+ * passata come secondo argomento.
+ * Il terzo parametro, eventualmente NULL, è la
+ * funzione da impostare come di cleanup per la nuova
+ * lista che sta venendo creata.
+ *
+ * Restituisce NULL in caso di errore.
+ *
+ * Il nome è ispirato alla funzione (o metodo) map
+ * presente in numerose librerie di altri linguaggi
+ * che permette di otterenere un iterabile mappando
+ * gli elementi di un altro.
+ */
+struct list* list_map(const struct list*, void* (*)(void*), void (*)(void*));
+
 /** Aggiunge un elemento in testa alla lista
  */
 int list_prepend(struct list*, void*);
