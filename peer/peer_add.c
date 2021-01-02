@@ -42,7 +42,7 @@ int add(const char* args)
     /* qui andrà il codice per generare */
     E = register_new_entry(NULL, type, quantity);
     if (E == NULL)
-        return WRN_CONTINUE;
+        return ERR_FAIL;
 
     /* Qui andrà il codice per aggiungere 
      * la nuova entry al registro del peer */
