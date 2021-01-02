@@ -15,7 +15,7 @@ int add(const char* args)
     enum entry_type type;
     struct entry* E;
     
-    if (sscanf(args, "%c %d", &quantity, &ctype) != 2)
+    if (sscanf(args, "%c %d", &ctype, &quantity) != 2)
     {
         /* è andata male */
         return ERR_PARAMS;
