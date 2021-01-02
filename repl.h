@@ -148,6 +148,8 @@ enum repl_code
     WRN_CONTINUE,
     /* ERRORE: parametri invalidi, proseguire */
     ERR_PARAMS,
+    /* ERRORE: un errore di libreria ha fatto fallire il comando */
+    ERR_FAIL,
     /* ATTENZIONE: comando inesistente,
         da non usare direttamente */
     WRN_CMDNF
