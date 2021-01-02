@@ -300,6 +300,16 @@ struct list* list_reduce(const struct list* l,
     return ans;
 }
 
+static void* identity(void* p)
+{
+    return p;
+}
+
+struct list* list_copy(const struct list* l, void* (*fun)(void*))
+{
+    return list_map(l, fun == NULL ? identity : fun, list_get_cleanup(l));
+}
+
 int list_prepend(struct list* l, void* val)
 {
     elem* new_e;
