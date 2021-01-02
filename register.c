@@ -340,7 +340,6 @@ static void sumType(void* elem, void* tot)
 
 int register_calc_type(const struct e_register* R, enum entry_type type)
 {
-    void (*fun)(void*, void*);
     int ans[2];
 
     if (R == NULL)
