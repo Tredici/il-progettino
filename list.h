@@ -115,6 +115,18 @@ void list_accumulate(struct list*, void (*)(void*, void*), void*);
  */
 struct list* list_map(const struct list*, void* (*)(void*), void (*)(void*));
 
+/** Genera una lista a partire da un'altra in cui
+ * ogni elemento della nuova lista è ottenuto
+ * elaborando due elementi consecutivi della lista
+ * originale.
+ * La lista risultato ha lunghezza minore di 1 di
+ * quella originale, ragion per cui se la lista ha
+ * meno di due elementi quella risultate è vuota.
+ *
+ * Restituisce NULL in caso di errore.
+ */
+struct list* list_reduce(const struct list*, void* (*)(void*,void*), void (*)(void*));
+
 /** Aggiunge un elemento in testa alla lista
  */
 int list_prepend(struct list*, void*);

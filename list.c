@@ -248,6 +248,57 @@ struct list* list_map(const struct list* l,
     return ans;
 }
 
+struct list* list_reduce(const struct list* l,
+                        void* (*fun)(void*,void*),
+                        void (*clean_f)(void*))
+{
+    struct list* ans;
+    elem* e1,* e2,* tmp;
+    /* per gestire la nuova lista */
+    elem* base, * new_e;
+
+    /* controllo parametri */
+    if (l == NULL || fun == NULL)
+        return NULL;
+
+    ans = list_init(NULL);
+    if (ans == NULL)
+        return NULL;
+
+    list_set_cleanup(ans, clean_f);
+
+    /* se la lista ha almeno un elemento */
+    if (l->len > 1)
+    {
+        e1 = l->first;
+        e2 = e1->next;
+
+        new_e = elem_init(fun(e1->val, e2->val));
+        if (new_e == NULL)
+        {
+            list_destroy(ans);
+            return NULL;
+        }
+        ans->first = new_e;
+        ans->len++;
+
+        base = new_e;
+        for (e1 = e2, e2 = e2->next; e2 != NULL; e1 = e2, e2 = e2->next)
+        {
+            new_e = elem_init(fun(e1->val, e2->val));
+            if (new_e == NULL)
+            {
+                list_destroy(ans);
+                return NULL;
+            }
+            base = new_e;
+            ans->len++;
+        }
+    }
+
+    return ans;
+}
+
 int list_prepend(struct list* l, void* val)
 {
     elem* new_e;
