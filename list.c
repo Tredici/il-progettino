@@ -253,7 +253,7 @@ struct list* list_reduce(const struct list* l,
                         void (*clean_f)(void*))
 {
     struct list* ans;
-    elem* e1,* e2,* tmp;
+    elem* e1,* e2;
     /* per gestire la nuova lista */
     elem* base, * new_e;
 
