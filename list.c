@@ -291,8 +291,9 @@ struct list* list_reduce(const struct list* l,
                 list_destroy(ans);
                 return NULL;
             }
-            base = new_e;
+            base->next = new_e;
             ans->len++;
+            base = new_e
         }
     }
 
