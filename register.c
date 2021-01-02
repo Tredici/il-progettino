@@ -294,7 +294,7 @@ struct e_register* register_create(struct e_register* r, int flag)
 
         return NULL;
     }
-    list_set_cleanup(ans->l, &free);
+    list_set_cleanup(ans->l, &register_free_entry);
 
     return ans;
 }
@@ -359,5 +359,5 @@ int register_calc_type(const struct e_register* R, enum entry_type type)
     ans[0] = 0;
     list_accumulate(R->l, &sumType, &ans);
 
-    return ans;
+    return ans[0];
 }
