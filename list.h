@@ -127,6 +127,13 @@ struct list* list_map(const struct list*, void* (*)(void*), void (*)(void*));
  */
 struct list* list_reduce(const struct list*, void* (*)(void*,void*), void (*)(void*));
 
+/** Copia una lista in un'altra.
+ * La copia è fatta "per valore" (duplicando i
+ * riferimenti) oppure tramite la funzione secondo
+ * argomento se questa non è NULL.
+ */
+struct list* list_copy(const struct list*, void* (*)(void*));
+
 /** Aggiunge un elemento in testa alla lista
  */
 int list_prepend(struct list*, void*);
