@@ -359,5 +359,5 @@ int register_calc_type(const struct e_register* R, enum entry_type type)
     ans[0] = 0;
     list_accumulate(R->l, &sumType, &ans);
 
-    return ans;
+    return ans[0];
 }
