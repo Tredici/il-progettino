@@ -293,7 +293,7 @@ struct list* list_reduce(const struct list* l,
             }
             base->next = new_e;
             ans->len++;
-            base = new_e
+            base = new_e;
         }
     }
 
