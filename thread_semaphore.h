@@ -53,3 +53,15 @@ int thread_semaphore_get_status(struct thread_semaphore*, int*, void**);
  * SOLO il thread padre dovrebbe chiamarla.
  */
 int thread_semaphore_destroy(struct thread_semaphore*);
+
+/** Assegna facoltativamente uno stato e dei
+ * valori al semaforo e lo imposta come "acceso"
+ * cosicché il padre sia notificato dello
+ * stato del figlio.
+ *
+ * Restituisce 0 in caso di successo e -1 in
+ * caso di errore.
+ *
+ * SOLO il figlio deve chiamarla.
+ */
+int thread_semaphore_signal(struct thread_semaphore*, int, void*);

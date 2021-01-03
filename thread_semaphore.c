@@ -84,3 +84,14 @@ int thread_semaphore_destroy(struct thread_semaphore* ts)
 
     return 0;
 }
+
+int thread_semaphore_signal(struct thread_semaphore* ts, int status, void* data)
+{
+    if (ts == NULL)
+        return -1;
+
+    ts->status = status;
+    ts->data = data;
+
+    return 0;
+}
