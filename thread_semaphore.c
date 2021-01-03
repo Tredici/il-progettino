@@ -129,6 +129,12 @@ int start_long_life_thread(pthread_t *thread, void*(*t_fun)(void *), void** data
         return -1;
     }
 
+    if (pthread_detach(t) != 0)
+    {
+        thread_semaphore_destroy(ts);
+        return -1;
+    }
+
     if (thread_semaphore_wait(ts) != 0)
     {
         thread_semaphore_destroy(ts);
