@@ -1,9 +1,7 @@
 #include "commons.h"
-#include <sys/uio.h>
 #include <stdio.h>
 #include <stdarg.h> /* per un numero variabile di argomenti */
 #include <stdlib.h>
-#include <unistd.h>
 
 #define MAX_ERR_L 256
 
