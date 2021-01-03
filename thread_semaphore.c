@@ -42,3 +42,33 @@ struct thread_semaphore* thread_semaphore_init()
     return ans;
 }
 
+int thread_semaphore_wait(struct thread_semaphore* ts)
+{
+    if (pthread_mutex_lock(&ts->mutex) != 0)
+        return -1;
+
+    while (ts->flag == TSF_WAIT)
+        if (pthread_cond_wait(&ts->cond, &ts->mutex) != 0)
+            return -1;
+
+    if (pthread_mutex_unlock(&ts->mutex) != 0)
+        return -1;
+
+    return 0;
+}
+
+int thread_semaphore_get_status(struct thread_semaphore* ts, int* status, void** data)
+{
+    if (ts == NULL)
+        return -1;
+
+    if (status != NULL)
+        *status = ts->status;
+
+    if (data != NULL)
+        *data = ts->data;
+
+    return 0;
+}
+
+

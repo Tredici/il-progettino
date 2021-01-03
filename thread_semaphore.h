@@ -30,3 +30,16 @@ struct thread_semaphore* thread_semaphore_init();
  * SOLO il thread padre dovrebbe chiamarla.
  */
 int thread_semaphore_wait(struct thread_semaphore*);
+
+/** Fornisce lo stato del semaforo.
+ * NON deve essere mai chiamato prima di
+ * thread_semaphore_wait.
+ * Restituisce lo stato in cui il figlio ha
+ * lasciato il semaforo.
+ *
+ * Restituisce 0 in caso di successo e -1 in
+ * caso di errore.
+ *
+ * SOLO il thread padre dovrebbe chiamarla.
+ */
+int thread_semaphore_get_status(struct thread_semaphore*, int*, void**);
