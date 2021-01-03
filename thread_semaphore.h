@@ -13,6 +13,8 @@
 #ifndef THREAD_SEMAPHORE
 #define THREAD_SEMAPHORE
 
+#include <pthread.h>
+
 /** Semaforo sul quale si blocca il padre
  * in attesa che il figlio faccia qualcosa
  */
