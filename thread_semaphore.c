@@ -90,8 +90,24 @@ int thread_semaphore_signal(struct thread_semaphore* ts, int status, void* data)
     if (ts == NULL)
         return -1;
 
+    if (pthread_mutex_lock(&ts->mutex) != 0)
+    {
+        return -1;
+    }
+
     ts->status = status;
     ts->data = data;
+
+    ts->flag = TSF_GO; /* il padre può proseguire */
+    if (pthread_cond_signal(&ts->cond) != 0)
+    {
+        return -1;
+    }
+
+    if (pthread_mutex_unlock(&ts->mutex) != 0)
+    {
+        return -1;
+    }
 
     return 0;
 }
