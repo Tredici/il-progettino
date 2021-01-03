@@ -65,3 +65,28 @@ int thread_semaphore_destroy(struct thread_semaphore*);
  * SOLO il figlio deve chiamarla.
  */
 int thread_semaphore_signal(struct thread_semaphore*, int, void*);
+
+/** Avvia un thread destinato a durare a tempo
+ * indefinito.
+ *
+ * L'avvio viene effettuato utilizzando le funzioni
+ * thread_semaphore_* quindi la funzione del thread
+ * deve segnalare al chiamante il suo corretto avvio.
+ *
+ * Se il primo parametro non è NULL fornisce l'id
+ * del thread creato.
+ *
+ * Il thread creato deve lasciare 0 nella variabile
+ * di stato del semaforo per segnalare un corretto
+ * avvio, qualsiasi altro valore sarà interpretato
+ * come indice di un'avvio fallimentare e indice
+ * della terminazione precoce del nuovo figlio.
+ *
+ * Utilizza l'ultimo argomento per fornire al
+ * chiamante i dati passati dal thread creato,
+ * se questo non è NULL.
+ *
+ * Restituisce 0 in caso di successo e -1 in
+ * caso di errore.
+ */
+int start_long_life_thread(pthread_t*, void*(*)(void *), void**);
