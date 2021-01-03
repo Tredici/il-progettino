@@ -17,3 +17,28 @@ struct thread_semaphore{
     void* data;
 };
 
+struct thread_semaphore* thread_semaphore_init()
+{
+    struct thread_semaphore* ans;
+
+    ans = malloc(sizeof(struct thread_semaphore));
+    if (ans == NULL)
+        return NULL;
+
+    memset(ans, 0, sizeof(struct thread_semaphore));
+
+    if (pthread_mutex_init(&ans->mutex, NULL) != 0)
+    {
+        free(ans);
+        return NULL;
+    }
+    if (pthread_cond_init(&ans->cond, NULL) != 0)
+    {
+        pthread_mutex_destroy(&ans->mutex);
+        free(ans);
+        return NULL;
+    }
+
+    return ans;
+}
+

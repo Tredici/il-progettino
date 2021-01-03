@@ -14,3 +14,9 @@
  * in attesa che il figlio faccia qualcosa
  */
 struct thread_semaphore;
+
+/** Crea e inzializza il semaforo.
+ * Solo il padre deve invocare questa
+ * funzione.
+ */
+struct thread_semaphore* thread_semaphore_init();
