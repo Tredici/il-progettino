@@ -20,3 +20,13 @@ struct thread_semaphore;
  * funzione.
  */
 struct thread_semaphore* thread_semaphore_init();
+
+/** Attende che il semaforo sia configurato
+ * - "acceso" - dal figlio.
+ *
+ * Restituisce 0 in caso di successo e -1 in
+ * caso di errore.
+ *
+ * SOLO il thread padre dovrebbe chiamarla.
+ */
+int thread_semaphore_wait(struct thread_semaphore*);
