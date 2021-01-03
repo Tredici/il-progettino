@@ -43,3 +43,13 @@ int thread_semaphore_wait(struct thread_semaphore*);
  * SOLO il thread padre dovrebbe chiamarla.
  */
 int thread_semaphore_get_status(struct thread_semaphore*, int*, void**);
+
+/** Libera tutte le risorse allocate per il
+ * semaforo.
+ *
+ * Restituisce 0 in caso di successo e -1 in
+ * caso di errore.
+ *
+ * SOLO il thread padre dovrebbe chiamarla.
+ */
+int thread_semaphore_destroy(struct thread_semaphore*);

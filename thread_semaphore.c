@@ -71,4 +71,16 @@ int thread_semaphore_get_status(struct thread_semaphore* ts, int* status, void**
     return 0;
 }
 
+int thread_semaphore_destroy(struct thread_semaphore* ts)
+{
+    if (ts == NULL)
+        return -1;
 
+    if (pthread_cond_destroy(&ts->cond) != 0)
+        return -1;
+
+    if (pthread_mutex_destroy(&ts->mutex) != 0)
+        return -1;
+
+    return 0;
+}
