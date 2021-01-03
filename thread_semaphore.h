@@ -10,6 +10,9 @@
  * (o meno) e lo notifica al padre.
  */
 
+#ifndef THREAD_SEMAPHORE
+#define THREAD_SEMAPHORE
+
 /** Semaforo sul quale si blocca il padre
  * in attesa che il figlio faccia qualcosa
  */
@@ -90,3 +93,5 @@ int thread_semaphore_signal(struct thread_semaphore*, int, void*);
  * caso di errore.
  */
 int start_long_life_thread(pthread_t*, void*(*)(void *), void**);
+
+#endif
