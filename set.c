@@ -61,7 +61,7 @@ int set_add(struct set* S, long int key)
     return rb_tree_set(S->T, key, NULL);
 }
 
-int set_check(struct set* S, long int key)
+int set_has(struct set* S, long int key)
 {
     if (S == NULL)
         return -1;
