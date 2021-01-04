@@ -112,18 +112,21 @@ int thread_semaphore_signal(struct thread_semaphore* ts, int status, void* data)
     return 0;
 }
 
-int start_long_life_thread(pthread_t *thread, void*(*t_fun)(void *), void** data)
+int start_long_life_thread(pthread_t *thread, void*(*t_fun)(void *), void* args, void** data)
 {
     pthread_t t;
     struct thread_semaphore* ts;
     int status;
     void* d;
+    void* argv[2];
 
     ts = thread_semaphore_init();
     if (ts == NULL)
         return -1;
 
-    if (pthread_create(&t, NULL, t_fun, ts) != 0)
+    argv[0] = ts;
+    argv[1] = args;
+    if (pthread_create(&t, NULL, t_fun, (void*)&argv) != 0)
     {
         thread_semaphore_destroy(ts);
         return -1;

@@ -87,6 +87,15 @@ int thread_semaphore_signal(struct thread_semaphore*, int, void*);
  * come indice di un'avvio fallimentare e indice
  * della terminazione precoce del nuovo figlio.
  *
+ * Il penultimo argomento permette di passare alla
+ * funzione un parametro come void*.
+ * La funzione argomento riceverà come argomento
+ * un puntatore a un void*[2] che però è locale
+ * a start_long_life_thread e conterrà il valore
+ * argomento nel suo secondo elemento, che andrà
+ * copiato prima di segnalare il semaforo se lo
+ * si vorrà utilizzare in seguito.
+ *
  * Utilizza l'ultimo argomento per fornire al
  * chiamante i dati passati dal thread creato,
  * se questo non è NULL.
@@ -94,6 +103,6 @@ int thread_semaphore_signal(struct thread_semaphore*, int, void*);
  * Restituisce 0 in caso di successo e -1 in
  * caso di errore.
  */
-int start_long_life_thread(pthread_t*, void*(*)(void *), void**);
+int start_long_life_thread(pthread_t*, void*(*)(void *), void*, void**);
 
 #endif
