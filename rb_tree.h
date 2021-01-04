@@ -5,7 +5,6 @@
 #define RB_TREE
 
 #include <stdlib.h>
-#include <string.h>
 
 struct rb_tree;
 

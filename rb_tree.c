@@ -1,4 +1,5 @@
 #include "rb_tree.h"
+#include <string.h>
 
 /**
  * Macro definita per rendere le funzioni
