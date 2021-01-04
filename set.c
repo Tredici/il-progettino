@@ -66,7 +66,14 @@ int set_has(struct set* S, long int key)
     if (S == NULL)
         return -1;
 
-    return rb_tree_get(S->T, key, NULL);
+    switch (rb_tree_get(S->T, key, NULL))
+    {
+    case 0:
+        return 1;
+
+    default:
+        return 0;
+    }
 }
 
 int set_remove(struct set* S, long int key)
