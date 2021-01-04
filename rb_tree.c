@@ -633,7 +633,7 @@ ssize_t rb_tree_size(const struct rb_tree* tree)
 
 #ifdef _RB_TREE_DEBUG
 #include <stdio.h>
-void p_elem(const struct rb_tree* T, elem* p, int h)
+static void p_elem(const struct rb_tree* T, elem* p, int h)
 {
     for(int i=0; i<h; ++i)
     {
