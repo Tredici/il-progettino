@@ -113,6 +113,7 @@ struct rb_tree* rb_tree_init(struct rb_tree* tree)
     }
     nil->col = BLACK;
     ans->nil = nil;
+    ans->root = nil;
 
     return ans;
 }
