@@ -33,5 +33,8 @@ int set_empty(struct set*);
 int set_min(struct set*, long int*);
 int set_max(struct set*, long int*);
 
+/* precedente successore */
+int set_prev(struct set*, long int, long int*);
+int set_next(struct set*, long int, long int*);
 
 #endif

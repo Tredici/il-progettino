@@ -117,3 +117,18 @@ int set_max(struct set* S, long int* val)
     return rb_tree_max(S->T, val, NULL);
 }
 
+int set_prev(struct set* S, long int base, long int* val)
+{
+    if (S == NULL)
+        return -1;
+
+    return rb_tree_prev(S->T, base, val, NULL);
+}
+
+int set_next(struct set* S, long int base, long int* val)
+{
+    if (S == NULL)
+        return -1;
+
+    return rb_tree_next(S->T, base, val, NULL);
+}
