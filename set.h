@@ -11,6 +11,9 @@
 
 struct set;
 
-
+struct set* set_init(struct set*);
+struct set* set_clear(struct set*);
+/* da chiamare SEMPRE al termine dell'utilizzo */
+void set_destroy(struct set*);
 
 #endif
