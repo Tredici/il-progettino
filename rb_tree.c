@@ -672,6 +672,42 @@ int rb_tree_max(struct rb_tree* tree, long int* key, void** value)
     return 0;
 }
 
+/** Trova e restituisce il nodo associato
+ * alla chiave fornita o NULL se questo non
+ * viene trovato
+ */
+static elem* elem_find(struct rb_tree* tree, long int key)
+{
+    elem* curr, *next;
+
+    if (tree == NULL)
+        return NULL;
+
+    curr = NULL;
+    next = tree->root;
+
+    while (!IS_NIL(tree, next))
+    {
+        curr = next;
+
+        if (curr->key < key)
+        {
+            next = curr->right;
+        }
+        else if (curr->key > key)
+        {
+            next = curr->left;
+        }
+        else
+        {
+            /* trovato! */
+            return curr;
+        }
+    }
+    /* Non trovato */
+    return NULL;
+}
+
 #ifdef _RB_TREE_DEBUG
 #include <stdio.h>
 static void p_elem(const struct rb_tree* T, elem* p, int h)
