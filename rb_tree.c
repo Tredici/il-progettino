@@ -742,7 +742,9 @@ static elem* elem_prev(struct rb_tree* tree, elem* e)
             /* non c'è niente da fare */
             return NULL;
         }
-        next = tree_maximum(tree, next);
+        /* arrivati a questo punto il successore è
+         * l'antenato dato che sta alla sinistra
+         * del nodo di partenza*/
     }
 
     return next;
@@ -781,7 +783,7 @@ static elem* elem_next(struct rb_tree* tree, elem* e)
             /* non c'è niente da fare */
             return NULL;
         }
-        next = tree_minimum(tree, next);
+        /* deve essere vero allora IS_LEFT_SON(curr) */
     }
 
     return next;
