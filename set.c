@@ -85,3 +85,19 @@ ssize_t set_size(struct set* S)
     return rb_tree_size(S->T);
 }
 
+int set_empty(struct set* S)
+{
+    if (S == NULL)
+        return -1;
+
+    switch (rb_tree_size(S->T))
+    {
+    case 0:
+        return 1;
+    case -1:
+        return -1;
+    default:
+        return 0;
+    }
+}
+

@@ -26,5 +26,8 @@ int set_remove(struct set*, long int);
 /* size */
 ssize_t set_size(struct set*);
 
+/* 1 se vuoto -1 errore 0 altrimenti */
+int set_empty(struct set*);
+
 
 #endif
