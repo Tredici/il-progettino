@@ -54,6 +54,11 @@ int rb_tree_next(struct rb_tree*, long int, long int*, void**);
  */
 int rb_tree_prev(struct rb_tree*, long int, long int*, void**);
 
+/** In ordine, richiama la funzione argomento
+ * su ciascuna coppia [key,value] dell'albero
+ */
+int rb_tree_foreach(struct rb_tree*, void(*)(long int, void*));
+
 #ifdef _RB_TREE_DEBUG
 void rb_tree_debug(const struct rb_tree*);
 long int rb_tree_check_integrity(const struct rb_tree*);

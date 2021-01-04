@@ -848,6 +848,16 @@ static void inorder(struct rb_tree* tree, elem* node, void(*fun)(long int, void*
     inorder(tree, node->right, fun);
 }
 
+int rb_tree_foreach(struct rb_tree* tree, void(*fun)(long int, void*))
+{
+    if (tree == NULL || fun == NULL)
+        return -1;
+
+    inorder(tree, tree->root, fun);
+
+    return 0;
+}
+
 #ifdef _RB_TREE_DEBUG
 #include <stdio.h>
 static void p_elem(const struct rb_tree* T, elem* p, int h)
