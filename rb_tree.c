@@ -708,6 +708,85 @@ static elem* elem_find(struct rb_tree* tree, long int key)
     return NULL;
 }
 
+/** Ricava l'elemento precedente a quello dato
+ * Perfettamente speculare alla precedente
+ * left|right e maximum|minimum scambiati
+ */
+static elem* elem_prev(struct rb_tree* tree, elem* e)
+{
+    elem* curr;
+    elem* next;
+
+    if (tree == NULL || IS_NIL(tree, e))
+        return NULL;
+
+    /** caso semplice, il nodo ha dei discendenti
+     * a destra
+     */
+    if (!IS_NIL(tree, e->left))
+    {
+        next = tree_maximum(tree, e->left);
+    }
+    else
+    {
+        curr = e;
+        next = curr->parent;
+        /* bisogna tornare indietro */
+        while (curr != tree->root && IS_LEFT_SON(curr))
+        {
+            curr = next;
+            next = next->parent;
+        }
+        if (curr == tree->root)
+        {
+            /* non c'è niente da fare */
+            return NULL;
+        }
+        next = tree_maximum(tree, next);
+    }
+
+    return next;
+}
+
+/** Dato un elemento ottiene il suo successore,
+ * il primo immediatamente a destra
+ */
+static elem* elem_next(struct rb_tree* tree, elem* e)
+{
+    elem* curr;
+    elem* next;
+
+    if (tree == NULL || IS_NIL(tree, e))
+        return NULL;
+
+    /** caso semplice, il nodo ha dei discendenti
+     * a destra
+     */
+    if (!IS_NIL(tree, e->right))
+    {
+        next = tree_minimum(tree, e->right);
+    }
+    else
+    {
+        curr = e;
+        next = curr->parent;
+        /* bisogna tornare indietro */
+        while (curr != tree->root && IS_RIGHT_SON(curr))
+        {
+            curr = next;
+            next = next->parent;
+        }
+        if (curr == tree->root)
+        {
+            /* non c'è niente da fare */
+            return NULL;
+        }
+        next = tree_minimum(tree, next);
+    }
+
+    return next;
+}
+
 #ifdef _RB_TREE_DEBUG
 #include <stdio.h>
 static void p_elem(const struct rb_tree* T, elem* p, int h)
