@@ -858,6 +858,19 @@ int rb_tree_foreach(struct rb_tree* tree, void(*fun)(long int, void*))
     return 0;
 }
 
+/** Come inorder ma per accumulate
+ */
+static void inorder_acc(struct rb_tree* tree, elem* node, void(*fun)(long int, void*, void*), void* base)
+{
+    if (IS_NIL(tree, node))
+        return;
+
+    inorder_acc(tree, node->left, fun, base);
+    fun(node->key, node->value, base);
+    inorder_acc(tree, node->right, fun, base);
+}
+
+
 #ifdef _RB_TREE_DEBUG
 #include <stdio.h>
 static void p_elem(const struct rb_tree* T, elem* p, int h)
