@@ -53,4 +53,26 @@ void set_destroy(struct set* S)
     S->T = NULL;
 }
 
+int set_add(struct set* S, long int key)
+{
+    if (S == NULL)
+        return -1;
 
+    return rb_tree_set(S->T, key, NULL);
+}
+
+int set_check(struct set* S, long int key)
+{
+    if (S == NULL)
+        return -1;
+
+    return rb_tree_get(S->T, key, NULL);
+}
+
+int set_remove(struct set* S, long int key)
+{
+    if (S == NULL)
+        return -1;
+
+    return rb_tree_remove(S->T, key, NULL);
+}
