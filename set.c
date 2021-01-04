@@ -101,3 +101,19 @@ int set_empty(struct set* S)
     }
 }
 
+int set_min(struct set* S, long int* val)
+{
+    if (S == NULL || val == NULL)
+        return -1;
+
+    return rb_tree_min(S->T, val, NULL);
+}
+
+int set_max(struct set* S, long int* val)
+{
+    if (S == NULL || val == NULL)
+        return -1;
+
+    return rb_tree_max(S->T, val, NULL);
+}
+

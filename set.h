@@ -29,5 +29,9 @@ ssize_t set_size(struct set*);
 /* 1 se vuoto -1 errore 0 altrimenti */
 int set_empty(struct set*);
 
+/* minimo massimo */
+int set_min(struct set*, long int*);
+int set_max(struct set*, long int*);
+
 
 #endif
