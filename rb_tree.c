@@ -787,6 +787,52 @@ static elem* elem_next(struct rb_tree* tree, elem* e)
     return next;
 }
 
+int rb_tree_next(struct rb_tree* tree, long int base, long int* key, void** value)
+{
+    elem* node;
+
+    if (tree == NULL)
+        return -1;
+
+    node = elem_find(tree, base);
+    if (node == NULL)
+        return -1;
+
+    node = elem_next(tree, node);
+    if (node == NULL)
+        return -1;
+    
+    if (key != NULL)
+        *key = node->key;
+    if (value != NULL)
+        *value = node->value;
+
+    return 0;
+}
+
+int rb_tree_prev(struct rb_tree* tree, long int base, long int* key, void** value)
+{
+    elem* node;
+
+    if (tree == NULL)
+        return -1;
+
+    node = elem_find(tree, base);
+    if (node == NULL)
+        return -1;
+
+    node = elem_prev(tree, node);
+    if (node == NULL)
+        return -1;
+    
+    if (key != NULL)
+        *key = node->key;
+    if (value != NULL)
+        *value = node->value;
+
+    return 0;
+}
+
 #ifdef _RB_TREE_DEBUG
 #include <stdio.h>
 static void p_elem(const struct rb_tree* T, elem* p, int h)

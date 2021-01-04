@@ -42,6 +42,18 @@ ssize_t rb_tree_size(const struct rb_tree*);
 int rb_tree_min(struct rb_tree*, long int*, void**);
 int rb_tree_max(struct rb_tree*, long int*, void**);
 
+/** Permette di ottenere chiave e valore
+ * del nodo successore di quello la cui
+ * chiave viene specificata.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int rb_tree_next(struct rb_tree*, long int, long int*, void**);
+/** Come rb_tree_next ma per il precedente
+ */
+int rb_tree_prev(struct rb_tree*, long int, long int*, void**);
+
 #ifdef _RB_TREE_DEBUG
 void rb_tree_debug(const struct rb_tree*);
 long int rb_tree_check_integrity(const struct rb_tree*);
