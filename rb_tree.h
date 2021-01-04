@@ -59,6 +59,13 @@ int rb_tree_prev(struct rb_tree*, long int, long int*, void**);
  */
 int rb_tree_foreach(struct rb_tree*, void(*)(long int, void*));
 
+/** L'idea alla fine è sempre quella.
+ * Il terzo argomento della funzione e della
+ * funzione argomento coincidono e possono
+ * essere usati liberamente dall'utente.
+ */
+int rb_tree_accumulate(struct rb_tree*, void(*)(long int, void*, void*), void*);
+
 #ifdef _RB_TREE_DEBUG
 void rb_tree_debug(const struct rb_tree*);
 long int rb_tree_check_integrity(const struct rb_tree*);

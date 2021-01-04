@@ -870,6 +870,15 @@ static void inorder_acc(struct rb_tree* tree, elem* node, void(*fun)(long int, v
     inorder_acc(tree, node->right, fun, base);
 }
 
+int rb_tree_accumulate(struct rb_tree* tree, void(*fun)(long int, void*, void*), void* base)
+{
+    if (tree == NULL || fun == NULL)
+        return -1;
+
+    inorder_acc(tree, tree->root, fun, base);
+
+    return 0;
+}
 
 #ifdef _RB_TREE_DEBUG
 #include <stdio.h>
