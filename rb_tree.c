@@ -835,6 +835,19 @@ int rb_tree_prev(struct rb_tree* tree, long int base, long int* key, void** valu
     return 0;
 }
 
+/** Funzione ausiliaria che applica su tutti
+ * i nodi dell'albero la funzione fun in ordine
+ */
+static void inorder(struct rb_tree* tree, elem* node, void(*fun)(long int, void*))
+{
+    if (IS_NIL(tree, node))
+        return;
+
+    inorder(tree, node->left, fun);
+    fun(node->key, node->value);
+    inorder(tree, node->right, fun);
+}
+
 #ifdef _RB_TREE_DEBUG
 #include <stdio.h>
 static void p_elem(const struct rb_tree* T, elem* p, int h)
