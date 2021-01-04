@@ -76,3 +76,12 @@ int set_remove(struct set* S, long int key)
 
     return rb_tree_remove(S->T, key, NULL);
 }
+
+ssize_t set_size(struct set* S)
+{
+    if (S == NULL)
+        return -1;
+
+    return rb_tree_size(S->T);
+}
+

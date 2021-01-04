@@ -8,6 +8,7 @@
 #ifndef SET
 #define SET
 
+#include <stdlib.h>
 
 struct set;
 
@@ -21,6 +22,9 @@ void set_destroy(struct set*);
 int set_add(struct set*, long int);
 int set_check(struct set*, long int);
 int set_remove(struct set*, long int);
+
+/* size */
+ssize_t set_size(struct set*);
 
 
 #endif
