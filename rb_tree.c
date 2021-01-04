@@ -632,6 +632,46 @@ ssize_t rb_tree_size(const struct rb_tree* tree)
     return tree->len;
 }
 
+int rb_tree_min(struct rb_tree* tree, long int* key, void** value)
+{
+    elem* e;
+
+    if (tree == NULL)
+        return -1;
+
+    e = tree_minimum(tree, tree->root);
+    if (IS_NIL(tree, e))
+        return -1;
+
+    if (key != NULL)
+        *key = e->key;
+
+    if (value != NULL)
+        *value = e->value;
+
+    return 0;
+}
+
+int rb_tree_max(struct rb_tree* tree, long int* key, void** value)
+{
+    elem* e;
+
+    if (tree == NULL)
+        return -1;
+
+    e = tree_maximum(tree, tree->root);
+    if (IS_NIL(tree, e))
+        return -1;
+
+    if (key != NULL)
+        *key = e->key;
+
+    if (value != NULL)
+        *value = e->value;
+
+    return 0;
+}
+
 #ifdef _RB_TREE_DEBUG
 #include <stdio.h>
 static void p_elem(const struct rb_tree* T, elem* p, int h)

@@ -30,6 +30,18 @@ int rb_tree_remove(struct rb_tree*, long int, void**);
  */
 ssize_t rb_tree_size(const struct rb_tree*);
 
+/** Forniscono rispettivamente le coppie
+ * (dipendentemente dal fatto che gli ultimi
+ * argomenti non siano NULL) corrispondenti
+ * ai valori delle chiavi massima e minima
+ * nell'albero.
+ *
+ * Restituiscono 0 in caso di successo, -1
+ * altrimenti.
+ */
+int rb_tree_min(struct rb_tree*, long int*, void**);
+int rb_tree_max(struct rb_tree*, long int*, void**);
+
 #ifdef _RB_TREE_DEBUG
 void rb_tree_debug(const struct rb_tree*);
 long int rb_tree_check_integrity(const struct rb_tree*);
