@@ -139,3 +139,18 @@ int set_next(struct set* S, long int base, long int* val)
 
     return rb_tree_next(S->T, base, val, NULL);
 }
+
+static void help_foreach(long int key, void* value, void* base)
+{
+    void(*f)(long int);
+
+    /* per sopprimere il warning "unused parameter" */
+    (void)value;
+
+    /* questa è arte e l'arte non si spiega */
+    /* Deriva dal fatto che il cast da un puntatore
+     * a funzione a (void*) e viceversa è, per
+     * lo standard del C, undefined behaviour */
+    f = *(void(**)(long int))base;
+    f(key);
+}
