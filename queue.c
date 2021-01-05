@@ -285,6 +285,13 @@ int queue_pop(struct queue* q, void** data, int flag)
     {
         pthread_mutex_lock(q->mutex);
 
+        /* se lavora in moaniera NONBLOCKING */
+        if (flag != NULL && q->len == 0)
+        {
+            pthread_mutex_unlock(q->mutex);
+            return -1;
+        }
+
         while (q->len == 0)
         {
             /* si blocca sulla variabile di condizione */
