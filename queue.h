@@ -51,6 +51,10 @@ int queue_push(struct queue*, void*);
  * di successo, in particolare ritorna il
  * numero dell'inserimento effettuato 
  * dall'ultimo reset
+ *
+ * Se il terzo argomento (flag) ha valore
+ * non nullo non si blocca qualora la coda
+ * sia vuota.
  */
 int queue_pop(struct queue*, void**, int);
 
