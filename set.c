@@ -162,5 +162,7 @@ int set_foreach(struct set* S, void(*fun)(long int))
     if (S == NULL)
         return -1;
 
+    f = fun;
+
     return rb_tree_accumulate(S->T, &help_foreach, (void*)&f);
 }
