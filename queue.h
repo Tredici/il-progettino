@@ -48,7 +48,7 @@ int queue_push(struct queue*, void*);
  * A seconda del valore del flag potrebbe bloccarsi o meno
  * 
  * Ritorna un volare non negativo in caso
- * di successo, in particolare ritona il 
+ * di successo, in particolare ritorna il
  * numero dell'inserimento effettuato 
  * dall'ultimo reset
  */
