@@ -37,4 +37,7 @@ int set_max(struct set*, long int*);
 int set_prev(struct set*, long int, long int*);
 int set_next(struct set*, long int, long int*);
 
+/* foreach */
+int set_foreach(struct set*, void(*)(long int));
+
 #endif

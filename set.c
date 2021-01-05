@@ -154,3 +154,13 @@ static void help_foreach(long int key, void* value, void* base)
     f = *(void(**)(long int))base;
     f(key);
 }
+
+int set_foreach(struct set* S, void(*fun)(long int))
+{
+    void(*f)(long int);
+
+    if (S == NULL)
+        return -1;
+
+    return rb_tree_accumulate(S->T, &help_foreach, (void*)&f);
+}
