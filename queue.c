@@ -1,4 +1,5 @@
 #include "queue.h"
+#include <errno.h>
 
 typedef struct elem
 {
@@ -285,9 +286,10 @@ int queue_pop(struct queue* q, void** data, int flag)
     {
         pthread_mutex_lock(q->mutex);
 
-        /* se lavora in moaniera NONBLOCKING */
+        /* se lavora in maniera NONBLOCKING */
         if (flag != NULL && q->len == 0)
         {
+            errno = ENODATA;
             pthread_mutex_unlock(q->mutex);
             return -1;
         }
