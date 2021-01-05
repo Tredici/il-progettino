@@ -17,6 +17,9 @@ struct io_message* io_message_init(const char* msg, enum unified_io_type type)
 {
     struct io_message* ans;
 
+    if (msg == NULL || (type < 0 || type >= UNIFIED_IO_LIMIT))
+        return NULL;
+
     ans = malloc(sizeof(struct io_message));
     if (ans == NULL)
         return NULL;
