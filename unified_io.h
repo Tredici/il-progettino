@@ -28,6 +28,14 @@ enum unified_io_type
  */
 int unified_io_init();
 
+/** Da chiamare alla fine dell'utilizzo.
+ * Libera tutte le risorse utilizzate.
+ *
+ * Restituisce 0 in caso di successo
+ * -1 in caso di errore.
+ */
+int unified_io_close();
+
 
 
 #endif

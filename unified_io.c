@@ -26,3 +26,13 @@ int unified_io_init()
     return 0;
 }
 
+int unified_io_close()
+{
+    if (message_queue == NULL)
+        return -1;
+
+    queue_destroy(message_queue);
+
+    return 0;
+}
+
