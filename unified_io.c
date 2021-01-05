@@ -32,6 +32,15 @@ static struct io_message* io_message_init(const char* msg, enum unified_io_type 
     return ans;
 }
 
+static void io_message_destroy(struct io_message* iom)
+{
+    if (iom == NULL)
+        return;
+
+    free(iom->msg);
+    free(iom);
+}
+
 /** Coda per i messaggi che genereranno
  * i vari thread.
  */
