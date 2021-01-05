@@ -11,6 +11,15 @@
 #ifndef UNIFIED_IO
 #define UNIFIED_IO
 
+enum unified_io_type
+{
+    UNIFIED_IO_NORMAL,
+    UNIFIED_IO_ERROR,
+    /* serve per il check,
+     * non è un tipo di messaggio
+     * valido */
+    UNIFIED_IO_LIMIT
+};
 
 
 
