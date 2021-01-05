@@ -13,7 +13,7 @@ struct io_message
     char* msg;
 };
 
-struct io_message* io_message_init(const char* msg, enum unified_io_type type)
+static struct io_message* io_message_init(const char* msg, enum unified_io_type type)
 {
     struct io_message* ans;
 
