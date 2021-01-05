@@ -21,6 +21,12 @@ enum unified_io_type
     UNIFIED_IO_LIMIT
 };
 
+/** Inizializza tutto il sistema,
+ * va chiamata all'inizio dal thread
+ * principale prima di eseguire ogni
+ * sorta di operazione.
+ */
+int unified_io_init();
 
 
 
