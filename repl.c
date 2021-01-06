@@ -26,6 +26,13 @@ const char* repl_sign = ">";
  */
 void (*repl_not_found_f)(const char*);
 
+/** È un puntatore a funzione che
+ * permette di specificare una
+ * funzione da invocare prima di ogni
+ * iterazione del ciclo REPL.
+ */
+void (*repl_repeat)(void);
+
 struct repl_cmd repl_recognise_cmd(const char* text,
     const struct repl_cmd_hint cmds[], int len)
 {
@@ -184,6 +191,9 @@ int repl_start(const char* msg, struct repl_cmd_todo* cmds, int len)
     repeat = 1;
     while (repeat)
     {
+        if (repl_repeat != NULL)
+            repl_repeat();
+
         printf("%s%s", msg != NULL ? msg : "", repl_sign != NULL ? repl_sign : "");
         line = NULL;
         lineLen = 0;
