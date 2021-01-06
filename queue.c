@@ -274,7 +274,6 @@ int queue_push(struct queue* q, void* data)
 int queue_pop(struct queue* q, void** data, int flag)
 {
     elem* old_elem;
-    int err;
     int ans;
 
     if (q == NULL)
