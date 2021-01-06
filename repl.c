@@ -190,7 +190,7 @@ int repl_start(const char* msg, struct repl_cmd_todo* cmds, int len)
         line[lineBytes-1] = '\0';
 
         /* trova il primo carattere "non blank" */
-        for (cstr = line; *cstr != '\n' && !isgraph(*cstr); ++cstr)
+        for (cstr = line; *cstr != '\0' && !isgraph(*cstr); ++cstr)
             ;
 
         /** se la stringa è vuota si può saltare
