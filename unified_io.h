@@ -45,5 +45,23 @@ int unified_io_close();
  */
 int unified_io_push(const char*, enum unified_io_type);
 
+/** Prova a stampare un messaggio in coda.
+ *
+ * Di default (argomento a 0) si blocca fino
+ * a che non diviene disponibile un messaggio
+ * da stampare.
+ *
+ * Restituisce 0 in caso di successo, -1
+ * in caso di errore.
+ *
+ * Qualora non ci sia nessun messaggio da stampare
+ * ed è stato richiesto un comportamento
+ * NONBLOCKING se non v'è alcun messaggio da
+ * stampare restituisce -1 e imposta errno a
+ * EWOULDBLOCK
+ *
+ * Va utilizzato SOLAMENTE nel thread principale.
+ */
+int unified_io_print(int);
 
 #endif

@@ -90,4 +90,23 @@ int unified_io_push(const char* msg, enum unified_io_type type)
     return 0;
 }
 
+int unified_io_print(int flag)
+{
+    struct io_message* iom;
 
+    if (queue_pop(message_queue, (void*)&iom, !!flag))
+        return -1;
+
+    switch (iom->type)
+    {
+    case UNIFIED_IO_NORMAL:
+        fprintf(stdout, "%s\n", iom->msg);
+        break;
+
+    case UNIFIED_IO_ERROR:
+        fprintf(stderr, "%s\n", iom->msg);
+        break;
+    }
+
+    return 0;
+}
