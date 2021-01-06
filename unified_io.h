@@ -31,6 +31,9 @@ int unified_io_init();
 /** Da chiamare alla fine dell'utilizzo.
  * Libera tutte le risorse utilizzate.
  *
+ * Va usato SOLO quando si è sicuri
+ * che nessun thread proverà a scrivere.
+ *
  * Restituisce 0 in caso di successo
  * -1 in caso di errore.
  */
