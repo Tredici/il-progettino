@@ -167,3 +167,15 @@ int start_long_life_thread(pthread_t *thread, void*(*t_fun)(void *), void* args,
 
     return 0;
 }
+
+/** Compie un lavoro complementare a quello svolto
+ * da start_long_life_thread
+ */
+struct thread_semaphore* thread_semaphore_form_args(void* args)
+{
+    /* argomenti mancanti */
+    if (args == NULL)
+        return NULL;
+
+    return (struct thread_semaphore*)((void**)args)[0];
+}

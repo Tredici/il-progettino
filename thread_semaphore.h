@@ -105,4 +105,12 @@ int thread_semaphore_signal(struct thread_semaphore*, int, void*);
  */
 int start_long_life_thread(pthread_t*, void*(*)(void *), void*, void**);
 
+/** Da invocare da un thread creato con
+ * start_long_life_thread fornendoci
+ * l'argomento (void* args):
+ *  restituisce al chiamanete il
+ *  punatatore al semaforo
+ */
+struct thread_semaphore* thread_semaphore_form_args(void*);
+
 #endif
