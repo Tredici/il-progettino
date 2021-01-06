@@ -9,6 +9,16 @@
 #include <errno.h>
 #include <stdio.h>
 
+/** È il segno mostrato prima di ogni
+ * riga di input richiesto all'utente
+ * in un ciclo REPL.
+ *
+ * Va dichiarata come esterna e
+ * modificata per ottenere un altro
+ * valore da utilizzare.
+ */
+const char* repl_sign = ">";
+
 struct repl_cmd repl_recognise_cmd(const char* text,
     const struct repl_cmd_hint cmds[], int len)
 {
@@ -167,7 +177,7 @@ int repl_start(const char* msg, struct repl_cmd_todo* cmds, int len)
     repeat = 1;
     while (repeat)
     {
-        printf("%s>", msg != NULL ? msg : "");
+        printf("%s%s", msg != NULL ? msg : "", repl_sign != NULL ? repl_sign : "");
         line = NULL;
         lineLen = 0;
         lineBytes = getline(&line, &lineLen, stdin);

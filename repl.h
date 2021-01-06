@@ -179,6 +179,14 @@ enum repl_code
  * NULL indica una stringa da stampare
  * ogni volta che si desidera chiedere
  * l'input all'utente.
+ *
+ * La stringa posta tra questo e l'input
+ * dell'utente (di default ">") può
+ * essere modificata dichiarando la
+ * variabile esterna
+ *  extern const char* repl_sign;
+ *
+ * e riassegnandola.
  */
 int repl_start(const char*, struct repl_cmd_todo*, int);
 
