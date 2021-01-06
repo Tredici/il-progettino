@@ -94,7 +94,10 @@ int unified_io_print(int flag)
 {
     struct io_message* iom;
 
-    if (queue_pop(message_queue, (void*)&iom, !!flag))
+    if (message_queue == NULL)
+        return -1;
+
+    if (queue_pop(message_queue, (void*)&iom, !!flag) < 0)
         return -1;
 
     switch (iom->type)
