@@ -19,6 +19,13 @@
  */
 const char* repl_sign = ">";
 
+/** È il puntatore alla funzione che
+ * viene invocata ogni volta che
+ * l'utente fornisce un comando non
+ * riconosciuto.
+ */
+void (*repl_not_found_f)(const char*);
+
 struct repl_cmd repl_recognise_cmd(const char* text,
     const struct repl_cmd_hint cmds[], int len)
 {
@@ -219,6 +226,9 @@ int repl_start(const char* msg, struct repl_cmd_todo* cmds, int len)
         case ERR_PARAMS:
             break;
         case WRN_CMDNF:
+            /* comando non trovato */
+            if (repl_not_found_f != NULL)
+                repl_not_found_f(cstr);
             break;
 
         default:

@@ -186,6 +186,14 @@ enum repl_code
  * variabile esterna:
  *  extern const char* repl_sign;
  * e riassegnandola.
+ *
+ * È possibile specificare una funzione
+ * speciale che gestirà il caso in cui
+ * un comando inserito non è riconosciuto
+ * tra quelli indicati dichiarando e
+ * riassegnando la variabile esterna:
+ *  extern void (*repl_not_found_f)
+ *          (const char*);
  */
 int repl_start(const char*, struct repl_cmd_todo*, int);
 
