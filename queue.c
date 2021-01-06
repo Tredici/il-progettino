@@ -287,7 +287,7 @@ int queue_pop(struct queue* q, void** data, int flag)
         pthread_mutex_lock(q->mutex);
 
         /* se lavora in maniera NONBLOCKING */
-        if (flag != NULL && q->len == 0)
+        if (flag != 0 && q->len == 0)
         {
             errno = ENODATA;
             pthread_mutex_unlock(q->mutex);
