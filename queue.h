@@ -54,7 +54,8 @@ int queue_push(struct queue*, void*);
  *
  * Se il terzo argomento (flag) ha valore
  * non nullo non si blocca qualora la coda
- * sia vuota.
+ * sia vuota. In tal caso imposta errno a
+ * ENODATA.
  */
 int queue_pop(struct queue*, void**, int);
 
