@@ -9,6 +9,30 @@
 #include <errno.h>
 #include <stdio.h>
 
+/** È il segno mostrato prima di ogni
+ * riga di input richiesto all'utente
+ * in un ciclo REPL.
+ *
+ * Va dichiarata come esterna e
+ * modificata per ottenere un altro
+ * valore da utilizzare.
+ */
+const char* repl_sign = ">";
+
+/** È il puntatore alla funzione che
+ * viene invocata ogni volta che
+ * l'utente fornisce un comando non
+ * riconosciuto.
+ */
+void (*repl_not_found_f)(const char*);
+
+/** È un puntatore a funzione che
+ * permette di specificare una
+ * funzione da invocare prima di ogni
+ * iterazione del ciclo REPL.
+ */
+void (*repl_repeat)(void);
+
 struct repl_cmd repl_recognise_cmd(const char* text,
     const struct repl_cmd_hint cmds[], int len)
 {
@@ -167,7 +191,10 @@ int repl_start(const char* msg, struct repl_cmd_todo* cmds, int len)
     repeat = 1;
     while (repeat)
     {
-        printf("%s>", msg != NULL ? msg : "");
+        if (repl_repeat != NULL)
+            repl_repeat();
+
+        printf("%s%s", msg != NULL ? msg : "", repl_sign != NULL ? repl_sign : "");
         line = NULL;
         lineLen = 0;
         lineBytes = getline(&line, &lineLen, stdin);
@@ -180,7 +207,7 @@ int repl_start(const char* msg, struct repl_cmd_todo* cmds, int len)
         line[lineBytes-1] = '\0';
 
         /* trova il primo carattere "non blank" */
-        for (cstr = line; *cstr != '\n' && !isgraph(*cstr); ++cstr)
+        for (cstr = line; *cstr != '\0' && !isgraph(*cstr); ++cstr)
             ;
 
         /** se la stringa è vuota si può saltare
@@ -209,6 +236,9 @@ int repl_start(const char* msg, struct repl_cmd_todo* cmds, int len)
         case ERR_PARAMS:
             break;
         case WRN_CMDNF:
+            /* comando non trovato */
+            if (repl_not_found_f != NULL)
+                repl_not_found_f(cstr);
             break;
 
         default:
