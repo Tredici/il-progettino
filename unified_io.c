@@ -73,3 +73,21 @@ int unified_io_close()
     return 0;
 }
 
+int unified_io_push(const char* msg, enum unified_io_type type)
+{
+    struct io_message* iom;
+
+    iom = io_message_init(msg, type);
+    if (iom == NULL)
+        return -1;
+
+    if (queue_push(message_queue, (void*)iom) < 0)
+    {
+        io_message_destroy(iom);
+        return -1;
+    }
+
+    return 0;
+}
+
+

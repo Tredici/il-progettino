@@ -36,6 +36,14 @@ int unified_io_init();
  */
 int unified_io_close();
 
+/** Aggiunge un messaggio da stampare a video.
+ * È possibile specificare se si tratta di un
+ * messaggio "normale" o di un "errore"
+ *
+ * Restituisce 0 in caso di successo, -1 in
+ * caso di errore.
+ */
+int unified_io_push(const char*, enum unified_io_type);
 
 
 #endif
