@@ -98,12 +98,16 @@ static void repeat(void)
                 yield = 1;
             }
             else
+            {
+                tcsetattr(STDIN_FILENO, TCSAFLUSH, &save);
                 errExit("***  void repeat(void) ***\n");
+            }
         }
         err = waitForInput(1);
     } while (err == -1 && errno == EWOULDBLOCK);
     if (errno != EWOULDBLOCK)
     {
+        tcsetattr(STDIN_FILENO, TCSAFLUSH, &save);
         errExit("***  void repeat(void) ***\n");
     }
 
