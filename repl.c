@@ -218,7 +218,6 @@ int repl_start(const char* msg, struct repl_cmd_todo* cmds, int len)
 
         errno = 0;
         res = repl_apply_cmd(cstr, cmds, len);
-        free(line);
 
         if (res == -1 && errno == ENOSYS)
             res = WRN_CMDNF;
@@ -253,6 +252,7 @@ int repl_start(const char* msg, struct repl_cmd_todo* cmds, int len)
 
             break;
         }
+        free(line);
     }
 
     return res;
