@@ -105,7 +105,7 @@ static void repeat(void)
         }
         err = waitForInput(1);
     } while (err == -1 && errno == EWOULDBLOCK);
-    if (errno != EWOULDBLOCK)
+    if (err == -1 && errno != EWOULDBLOCK)
     {
         tcsetattr(STDIN_FILENO, TCSAFLUSH, &save);
         errExit("***  void repeat(void) ***\n");
