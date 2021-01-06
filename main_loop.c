@@ -64,3 +64,64 @@ makeRCTODOV(const struct main_loop_command* commands,
     return ans;
 }
 
+int main_loop(const char* msg, const struct main_loop_command* commands, int len)
+{
+    struct repl_cmd_todo* cmds;
+    int cmdsLen;
+    int ans;
+    /* per specificare la funzione da
+     * invocare quando l'utente invoca
+     * un comando inesistente */
+    extern void (*repl_not_found_f)(const char*);
+    /* specifica la funzione da invocare
+     * prima di ogni iterazione del ciclo
+     * REPL */
+    extern void (*repl_repeat)(void);
+
+    /* controlla la validità dei parametri */
+    if (commands == NULL || len <= 0)
+        return -1;
+
+    /* modo artificioso di passare i parametri
+     * alla funzione per gestire l'help */
+    commV = commands;
+    commN = len;
+
+    /* prova a trasformare i dati nel formato
+     * necessario a gestire la meglio il ciclo
+     * REPL */
+    cmds = makeRCTODOV(commands, len);
+    if (cmds == NULL)
+    {
+        /* è andata male */
+        return -1;
+    }
+    cmdsLen = 1 + len;
+
+    /* specifica la funzione per
+     * "COMMAND NOT FOUND" */
+    repl_not_found_f = &cmd404;
+
+    /* Specifica che funzione eseguire
+     * prima di ogni iterazione del ciclo,
+     * ovvero quella che si occuperà
+     * di stampare l'output dei thread
+     * secondari fino a che l'utente non
+     * premerà un tasto qualsiasi */
+    repl_repeat = &repeat;
+
+    /* avvia il ciclo REPL */
+    ans = repl_start(msg, cmds, cmdsLen);
+
+    /* libera la memoria riservata
+     * per tenere i dati sui comandi
+     * riconosciuti */
+    free(cmds);
+
+    /* restituisce quanto fornito dalla funzione
+     * sopra, lo scopo di questa funzione infatti
+     * è solo gestire tutte le informazioni di
+     * contorno per gestire al meglio l'avvio
+     * e l'help in un normale ciclo REPL */
+    return ans;
+}
