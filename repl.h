@@ -183,9 +183,8 @@ enum repl_code
  * La stringa posta tra questo e l'input
  * dell'utente (di default ">") può
  * essere modificata dichiarando la
- * variabile esterna
+ * variabile esterna:
  *  extern const char* repl_sign;
- *
  * e riassegnandola.
  */
 int repl_start(const char*, struct repl_cmd_todo*, int);
