@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 /** Struttura che sarà usata per conservare
  * i messaggi generati dai vari thread.
@@ -98,7 +99,11 @@ int unified_io_print(int flag)
         return -1;
 
     if (queue_pop(message_queue, (void*)&iom, !!flag) < 0)
+    {
+        if (errno == ENODATA)
+            errno = EWOULDBLOCK;
         return -1;
+    }
 
     switch (iom->type)
     {
