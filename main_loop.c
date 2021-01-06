@@ -6,6 +6,8 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
+#include <errno.h>
+#include <sched.h>
 
 /* variabili utili per l'help */
 static int commN;
@@ -57,16 +59,59 @@ static void cmd404(const char* cmd)
 static void repeat(void)
 {
     struct termios tp, save;
+    int err;
+    int yield;
 
     /* disabilità l'echo per evitare
      * brutti effetti estetici */
-
-    while (/* condition */)
+    if (tcgetattr(STDIN_FILENO, &tp) == -1)
     {
-        /* code */
+        errExit("***  void repeat(void) ***\n");
     }
-    /* ripristina l'echo */
 
+    save = tp;
+    tp.c_lflag &= ~ECHO;
+    if (tcsetattr(STDIN_FILENO, TCSANOW, &tp) == -1)
+    {
+        errExit("***  void repeat(void) ***\n");
+    }
+
+    yield = 0;
+    do {
+        if (yield)
+        {
+            /* per evitare di sprecare cicli CPU */
+            yield = 0;
+            sched_yield();
+        }
+        errno = 0;
+        err = unified_io_print(1);
+        if (err == -1)
+        {
+            if (errno == EWOULDBLOCK)
+            {
+                /* una lettura è andata a vuoto:
+                 * se il ciclo proseguirà rilascerà
+                 * la CPU per cederla a processi che
+                 * ne hanno più bisogno */
+                errno = 0;
+                yield = 1;
+            }
+            else
+                errExit("***  void repeat(void) ***\n");
+        }
+        err = waitForInput(1);
+    } while (err == -1 && errno == EWOULDBLOCK);
+    if (errno != EWOULDBLOCK)
+    {
+        errExit("***  void repeat(void) ***\n");
+    }
+
+    /* ripristina l'echo */
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &save) == -1)
+    {
+        errExit("***  void repeat(void) ***\n");
+    }
 }
 
 /** Genera l'array di struct repl_cmd_todo
