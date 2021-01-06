@@ -42,6 +42,33 @@ static void cmd404(const char* cmd)
     fprintf(stderr, "ERRORE: comando \"%s\" non riconosciuto\n", cmd);
 }
 
+/** Funzione ausiliaria che sarà
+ * invocata prima di ogni iterazione
+ * del ciclo REPL, essa si occupa
+ * di stampare l'output prodotto
+ * dai thread secondari fino
+ * a che l'utente non preme un tasto
+ *
+ * ATTENZIONE: se questa funzione
+ * incontra un errore termina il
+ * processo palesando uno stato di
+ * errore!
+ */
+static void repeat(void)
+{
+    struct termios tp, save;
+
+    /* disabilità l'echo per evitare
+     * brutti effetti estetici */
+
+    while (/* condition */)
+    {
+        /* code */
+    }
+    /* ripristina l'echo */
+
+}
+
 /** Genera l'array di struct repl_cmd_todo
  * a partire da quello di
  *  struct main_loop_command*
