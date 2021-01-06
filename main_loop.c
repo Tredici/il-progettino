@@ -33,6 +33,15 @@ static int help(const char* args)
     return OK_CONTINUE;
 }
 
+/** Funzione ausiliaria da invocare
+ * quando l'utente inserisce un
+ * comando non riconosciuto.
+ */
+static void cmd404(const char* cmd)
+{
+    fprintf(stderr, "ERRORE: comando \"%s\" non riconosciuto\n", cmd);
+}
+
 /** Genera l'array di struct repl_cmd_todo
  * a partire da quello di
  *  struct main_loop_command*
