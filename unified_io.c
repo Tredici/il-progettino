@@ -114,6 +114,12 @@ int unified_io_print(int flag)
     case UNIFIED_IO_ERROR:
         fprintf(stderr, "%s\n", iom->msg);
         break;
+
+    case UNIFIED_IO_LIMIT:
+        /* mai raggiunto - serve solo ad
+         * eliminare un warning durante
+         * la compilazione */
+        break;
     }
 
     return 0;
