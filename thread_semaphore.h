@@ -79,7 +79,9 @@ int thread_semaphore_signal(struct thread_semaphore*, int, void*);
  * deve segnalare al chiamante il suo corretto avvio.
  *
  * Se il primo parametro non è NULL fornisce l'id
- * del thread creato.
+ * del thread creato senza ulteriori operazioni
+ * dietro ALTRIMENTI il thread viene distaccato
+ * ("detatched").
  *
  * Il thread creato deve lasciare 0 nella variabile
  * di stato del semaforo per segnalare un corretto
