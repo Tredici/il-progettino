@@ -3,6 +3,7 @@
  */
 #include "list.h"
 #include <string.h>
+#include <errno.h>
 
 typedef struct elem
 {
@@ -31,6 +32,7 @@ struct list
 {
     void(*cleanup_f)(void*);
     elem* first;
+    elem* last;
     size_t len;
 };
 
@@ -49,9 +51,7 @@ struct list* list_init(struct list* l)
     {
         ans = l;
     }
-    ans->first = NULL;
-    ans->len = 0;
-    ans->cleanup_f = NULL;
+    memset(ans, 0, sizeof(struct list));
 
     return ans;
 }
@@ -69,6 +69,7 @@ struct list* list_clear(struct list* l)
     }
 
     l->first = NULL;
+    l->last = NULL;
     l->len = 0;
 
     return l;
@@ -170,6 +171,11 @@ int list_eliminate(struct list* l, int (*fun)(void*))
         /* solo se non si elimina nulla */
         prev = curr;
     }
+    /* aggiorna il nuovo ultimo elemento
+     * si noti che potrebbe divenire NULL
+     * se vengono eliminati tutti gli
+     * elementi */
+    l->last = prev;
 
     return ans;
 }
@@ -243,6 +249,9 @@ struct list* list_map(const struct list* l,
             ans->len++; /* lunghezza aumentata */
             base = new_e; /* nuova base */
         }
+        /* imposta l'ultimo elemento
+         * della nuova lista */
+        ans->last = base;
     }
 
     return ans;
@@ -295,6 +304,9 @@ struct list* list_reduce(const struct list* l,
             ans->len++;
             base = new_e;
         }
+        /* imposta l'ultimo elemento
+         * della nuova lista */
+        ans->last = base;
     }
 
     return ans;
@@ -321,6 +333,11 @@ int list_prepend(struct list* l, void* val)
     if (new_e == NULL)
         return -1;
 
+    /* se la lista era vuota aggiorna
+     * anche l'ultimo elemento */
+    if (l->len == 0)
+        l->last = new_e;
+
     new_e->next = l->first;
     l->first = new_e;
     l->len++;
@@ -331,7 +348,6 @@ int list_prepend(struct list* l, void* val)
 int list_append(struct list* l, void* val)
 {
     elem* new_e;
-    elem* ptr;
 
     if (l == NULL)
         return -1;
@@ -340,20 +356,52 @@ int list_append(struct list* l, void* val)
     if (new_e == NULL)
         return -1;
 
-    if (l->first == NULL)
+
+    /* se la lista era vuota aggiorna
+     * anche il primo elemento */
+    if (l->len == 0)
     {
-        /* lista inizialmente vuota */
         l->first = new_e;
+        l->last = new_e;
     }
     else
     {
-        /* scorre la lista fino alla fine */
-        for (ptr = l->first; ptr->next != NULL; ptr = ptr->next)
-            ;
-
-        ptr->next = new_e;
+        l->last->next = new_e;
+        l->last = new_e;
     }
     l->len++;
+
+    return 0;
+}
+
+int list_first(struct list* l, void** val)
+{
+    if (l == NULL || val == NULL)
+        return -1;
+
+    if (l->len == 0)
+    {
+        errno = ENODATA;
+        return -1;
+    }
+
+    *val = l->first->val;
+
+    return 0;
+}
+
+int list_last(struct list* l, void** val)
+{
+    if (l == NULL || val == NULL)
+        return -1;
+
+    if (l->len == 0)
+    {
+        errno = ENODATA;
+        return -1;
+    }
+
+    *val = l->last->val;
 
     return 0;
 }
