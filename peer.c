@@ -40,7 +40,17 @@ int main(int argc, char* argv[])
 
     unified_io_init();
     main_loop("INPUT", commands, commandNumber);
+    port = UDPstart(port);
+    if (port == -1)
+        errExit("*** Errore attivazione sottosistema UDP ***\n");
 
+    printf("Attivato sottosistema UDP con porta (%d)\n", port);
+
+
+    if (UDPstop() == -1)
+    {
+        errExit("*** Errore terminazione sottosistema UDP ***\n");
+    }
 
     printf("Peer terminato correttamente.\n");
 
