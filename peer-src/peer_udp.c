@@ -17,6 +17,12 @@ volatile int started;
  */
 pthread_t UDP_tid;
 
+/** Fino a che questa variabile
+ * non sarà azzerata il ciclo del
+ * sottosistema UDP
+ */
+volatile sig_atomic_t UDPloop = 1;
+
 /** Funzione che rappresenta il corpo del
  * thread che gestira il socket
  */
@@ -72,7 +78,8 @@ static void* UDP(void* args)
     unified_io_push("UDP thread running", UNIFIED_IO_NORMAL);
     /* qui va il loop di gestione delle richieste */
     yield = 0; /* il primo ciclo di sicuro non si lascia la CPU */
-    while (1)
+    UDPloop = 1;
+    while (UDPloop)
     {
         if (yield)
             sched_yield(); /* altruista */
@@ -110,8 +117,12 @@ int UDPstop(void)
     /* invia il segnale di terminazione */
     /* assumo che il thread non termini mai
      * prima del tempo */
-    if (pthread_kill(UDP_tid, SIGTERM) != 0)
-        return -1;
+    /*if (pthread_kill(UDP_tid, SIGTERM) != 0)
+        return -1;*/
+    /* metodo semplice ma efficace per terminare
+     * il ciclo del thread */
+    UDPloop = 0;
+
 
     if (pthread_join(UDP_tid, NULL) != 0)
         return -1;
