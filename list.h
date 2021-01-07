@@ -142,6 +142,22 @@ int list_prepend(struct list*, void*);
  */
 int list_append(struct list*, void*);
 
+/** Forniscono rispettivamente il primo e
+ * l'ultimo elemento di una lista, se questa
+ * non è vuota.
+ *
+ * Il secondo argomento non può essere
+ * NULL.
+ *
+ * Restituiscono 0 in caso di successo
+ * o -1 altrimenti.
+ *
+ * In caso di lista vuota impostano
+ * errno a ENODATA.
+ */
+int list_first(struct list*, void**);
+int list_last(struct list*, void**);
+
 #ifdef _LIST_DEBUG
 /* Stampa il contenuto di una lista considerando
  * i puntatori come dei long

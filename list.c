@@ -3,6 +3,7 @@
  */
 #include "list.h"
 #include <string.h>
+#include <errno.h>
 
 typedef struct elem
 {
@@ -369,6 +370,38 @@ int list_append(struct list* l, void* val)
         l->last = new_e;
     }
     l->len++;
+
+    return 0;
+}
+
+int list_first(struct list* l, void** val)
+{
+    if (l == NULL || val == NULL)
+        return -1;
+
+    if (l->len == 0)
+    {
+        errno = ENODATA;
+        return -1;
+    }
+
+    *val = l->first->val;
+
+    return 0;
+}
+
+int list_last(struct list* l, void** val)
+{
+    if (l == NULL || val == NULL)
+        return -1;
+
+    if (l->len == 0)
+    {
+        errno = ENODATA;
+        return -1;
+    }
+
+    *val = l->last->val;
 
     return 0;
 }
