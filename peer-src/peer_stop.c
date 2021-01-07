@@ -4,5 +4,6 @@
 
 int stop(const char* args)
 {
+    (void)args;
     return OK_TERMINATE;
 }
