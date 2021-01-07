@@ -4,6 +4,7 @@
  * definitivo
  */
 #include "peer-src/peer_stop.h"
+#include "peer-src/peer_udp.h"
 #include "repl.h"
 #include "main_loop.h"
 #include "unified_io.h"
