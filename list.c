@@ -49,9 +49,7 @@ struct list* list_init(struct list* l)
     {
         ans = l;
     }
-    ans->first = NULL;
-    ans->len = 0;
-    ans->cleanup_f = NULL;
+    memset(ans, 0, sizeof(struct list));
 
     return ans;
 }
