@@ -133,3 +133,24 @@ int waitForInput(int flag)
 
     return ans;
 }
+
+int argParseInt(const char* arg, const char* onErrorName)
+{
+    long int lnum;
+    char* end;
+
+    errno = 0;
+    lnum = strtol(arg, &end, 10);
+
+    /* esegue tutti i possibili controlli di
+     * correttezza del caso */
+    if (errno != 0 || (long)(int)lnum != lnum
+        || arg == end || *end != '\0')
+    {
+        /* controlla che il numero sia rappresentabile
+         * nella dimensione di un int */
+        errExit("Error parsing <%s>\n", onErrorName);
+    }
+
+    return (int)lnum;
+}

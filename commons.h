@@ -1,6 +1,6 @@
 /**
  * Raccolta di funzioni generiche utili in vari progetti
- * 
+ *
  * - parsing di numeri dagli argomenti,
  * - terminazione "allegra" in caso di errore irreparabile
  */
@@ -18,6 +18,17 @@ void errExit(const char *format, ...);
  * della possibilità di leggere dell'input e ritorna
  * immediatamente */
 int waitForInput(int);
+
+/** Funzione deputata al parsing di un argomento di tipo
+ * intero ottenuto da linea di comando.
+ *
+ * Il primo argomento deve essere la stringa di cui fare
+ * il parsing, il secondo è il nome dell'argomento che
+ * l'utente avrebbe dovuto fornire, utilizzato per
+ * comporre il messaggio da mostrare qualora il parsing
+ * fallisca.
+ */
+int argParseInt(const char*, const char*);
 
 #endif
 
