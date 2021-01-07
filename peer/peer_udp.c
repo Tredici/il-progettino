@@ -13,7 +13,7 @@ volatile int started;
 /** Id del thead che gestisce il socket
  * UDP
  */
-thread_t UDP_tid;
+pthread_t UDP_tid;
 
 /** Funzione che rappresenta il corpo del
  * thread che gestira il socket
