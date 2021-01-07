@@ -21,8 +21,13 @@ all: peer
 -include $(OBJS:%.o=%.d)
 
 # file esclusivi dei peer
-peer_add.o: peer/peer_add.c  peer/peer_add.h
-peer_stop.o: peer/peer_stop.c peer/peer_stop.h
+peer_add.o: peer-src/peer_add.c  peer-src/peer_add.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+peer_stop.o: peer-src/peer_stop.c peer-src/peer_stop.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+PEERDEPS = peer_stop.o
 
 # file per tutti
 list.o: 			list.h list.c
@@ -35,14 +40,16 @@ rb_tree.o:			rb_tree.h rb_tree.c
 set.o:				set.h set.c rb_tree.h rb_tree.c
 commons.o:			commons.h commons.c
 thread_semaphore.o:	thread_semaphore.h thread_semaphore.c
+unified_io.o:		unified_io.h unified_io.c
 
 # dipendenze del peer
-PEERDEPS = list.o register.o repl.o socket_utils.o queue.o main_loop.o rb_tree.o set.o commons.o thread_semaphore.o
+COMMONDEPS = list.o register.o repl.o socket_utils.o queue.o main_loop.o rb_tree.o set.o commons.o thread_semaphore.o
 
 # main dei peer
 peer.o: peer.c
 
-p2p: peer.o $(PEERDEPS)
+peer: peer.o $(COMMONDEPS) $(PEERDEPS)
+	$(CC) $(CFLAGS) -o $@ $<
 
 clean:
 	rm *.o
