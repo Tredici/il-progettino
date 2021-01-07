@@ -58,7 +58,7 @@ void (*list_set_cleanup(struct list*, void(*)(void*)))(void*);
 /**  Restituisce la funzione di cleanup corrente
  *
  */
-void (*list_get_cleanup(struct list*))(void*);
+void (*list_get_cleanup(const struct list*))(void*);
 
 
 /** Accede all'elemento i esimo della lista e
