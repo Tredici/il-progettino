@@ -187,6 +187,15 @@ struct entry* register_parse_entry(const char* s, struct entry* e)
     return ans;
 }
 
+/** Funzione ausiliaria per aggirare
+ * il problema del cast trai tipi
+ * puntatore a funzione
+ */
+static void rfe_AUX(void* E)
+{
+    register_free_entry((struct entry*)E);
+}
+
 void register_free_entry(struct entry* E)
 {
     free(E);
@@ -294,7 +303,7 @@ struct e_register* register_create(struct e_register* r, int flag)
 
         return NULL;
     }
-    list_set_cleanup(ans->l, &register_free_entry);
+    list_set_cleanup(ans->l, &rfe_AUX);
 
     return ans;
 }
