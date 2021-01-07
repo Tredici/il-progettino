@@ -40,7 +40,11 @@ int main(int argc, char* argv[])
     port = argParseIntRange(argv[1], ARGNAME, 0, (1<<16)-1);
 
 
-    unified_io_init();
+    if (unified_io_init() == -1)
+        errExit("*** Errore attivazione sottosistema di I/O ***\n");
+
+    printf("Attivato sottosistema di I/O.\n");
+
     port = UDPstart(port);
     if (port == -1)
         errExit("*** Errore attivazione sottosistema UDP ***\n");
