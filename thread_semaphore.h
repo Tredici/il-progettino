@@ -113,4 +113,12 @@ int start_long_life_thread(pthread_t*, void*(*)(void *), void*, void**);
  */
 struct thread_semaphore* thread_semaphore_form_args(void*);
 
+/** Ricava gli argomenti passati a un
+ * thread creato tramite
+ * start_long_life_thread
+ * dall'parametro (void*) della funzione
+ * che costituisce di questo
+ */
+void* thread_semaphore_get_args(void*);
+
 #endif

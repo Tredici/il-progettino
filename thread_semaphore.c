@@ -126,7 +126,7 @@ int start_long_life_thread(pthread_t *thread, void*(*t_fun)(void *), void* args,
 
     argv[0] = ts;
     argv[1] = args;
-    if (pthread_create(&t, NULL, t_fun, (void*)&argv) != 0)
+    if (pthread_create(&t, NULL, t_fun, (void*)argv) != 0)
     {
         thread_semaphore_destroy(ts);
         return -1;
@@ -178,4 +178,13 @@ struct thread_semaphore* thread_semaphore_form_args(void* args)
         return NULL;
 
     return (struct thread_semaphore*)((void**)args)[0];
+}
+
+void* thread_semaphore_get_args(void* args)
+{
+    /* argomenti mancanti */
+    if (args == NULL)
+        return NULL;
+
+    return (struct thread_semaphore*)((void**)args)[1];
 }
