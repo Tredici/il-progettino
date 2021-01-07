@@ -179,6 +179,27 @@ enum repl_code
  * NULL indica una stringa da stampare
  * ogni volta che si desidera chiedere
  * l'input all'utente.
+ *
+ * La stringa posta tra questo e l'input
+ * dell'utente (di default ">") può
+ * essere modificata dichiarando la
+ * variabile esterna:
+ *  extern const char* repl_sign;
+ * e riassegnandola.
+ *
+ * È possibile specificare una funzione
+ * speciale che gestirà il caso in cui
+ * un comando inserito non è riconosciuto
+ * tra quelli indicati dichiarando e
+ * riassegnando la variabile esterna:
+ *  extern void (*repl_not_found_f)
+ *          (const char*);
+ *
+ * È possibile specificare una funzione
+ * da eseguire all'inizio di ogni
+ * iterazione del ciclo REPL riassegnando
+ * la variabile esterna:
+ *  extern void (*repl_repeat)(void);
  */
 int repl_start(const char*, struct repl_cmd_todo*, int);
 
