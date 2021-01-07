@@ -24,6 +24,8 @@ void usageHelp(const char* p)
 
 int main(int argc, char* argv[])
 {
+    char peerID[10];
+
     struct main_loop_command commands[] = {
         { "stop", &stop, "termina il peer" }
     };
@@ -39,13 +41,15 @@ int main(int argc, char* argv[])
 
 
     unified_io_init();
-    main_loop("INPUT", commands, commandNumber);
     port = UDPstart(port);
     if (port == -1)
         errExit("*** Errore attivazione sottosistema UDP ***\n");
 
     printf("Attivato sottosistema UDP con porta (%d)\n", port);
 
+    sprintf(peerID, "[%d]", port);
+
+    main_loop(peerID, commands, commandNumber);
 
     if (UDPstop() == -1)
     {
