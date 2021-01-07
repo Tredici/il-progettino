@@ -5,6 +5,7 @@
  */
 #include "peer-src/peer_stop.h"
 #include "peer-src/peer_udp.h"
+#include "commons.h"
 #include "repl.h"
 #include "main_loop.h"
 #include "unified_io.h"
@@ -28,9 +29,13 @@ int main(int argc, char* argv[])
     };
 
     int commandNumber = sizeof(commands)/sizeof(struct main_loop_command );
+    int port;
 
     if (argc != 2 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)
         usageHelp(argv[0]);
+
+    /* parsing dellìargomento */
+    port = argParseIntRange(argv[1], ARGNAME, 0, (1<<16)-1);
 
 
     unified_io_init();
