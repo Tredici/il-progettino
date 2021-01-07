@@ -10,6 +10,10 @@
  * UDP e restituisce il numero di porta
  * su cui il processo ascolta.
  *
+ * L'argomento è il numero di porta da
+ * utilizzare oppure 0 se qualsiasi
+ * porta va bene.
+ *
  * In caso di errore ritorna -1;
  */
 int UDPstart(int);
