@@ -90,13 +90,11 @@ static void* UDP(void* args)
 
 int UDPstart(int port)
 {
-    int status;
     int listeningOn;
 
     listeningOn = port;
     /* si mette in attesa dell'avvio del thread UDP */
-    start_long_life_thread(&UDP_tid, &UDP, (void*)&listeningOn, NULL);
-    if (status == -1)
+    if (start_long_life_thread(&UDP_tid, &UDP, (void*)&listeningOn, NULL) == -1)
         return -1;
 
     return listeningOn;
