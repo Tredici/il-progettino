@@ -13,7 +13,7 @@
 
 void usageHelp(const char* p)
 {
-    printf("%p <porta>\n");
+    printf("%s <porta>\n", p);
 
     exit(EXIT_FAILURE);
 }
