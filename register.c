@@ -334,7 +334,7 @@ static void sumType(void* elem, void* tot)
         return;
 
     E = (struct entry*)elem;
-    if (E->type == ((int*)tot)[1])
+    if ((int)E->type == ((int*)tot)[1])
         *(int*)tot += E->counter;
 }
 

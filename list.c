@@ -79,7 +79,7 @@ void list_destroy(struct list* l) {
     free(l);
 }
 
-void (*list_get_cleanup(struct list* l))(void*)
+void (*list_get_cleanup(const struct list* l))(void*)
 {
     return l->cleanup_f;
 }
