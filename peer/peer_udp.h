@@ -7,7 +7,10 @@
 #define PEER_UDP
 
 /** Avvia il thread a gestione del socket
- * UDP
+ * UDP e restituisce il numero di porta
+ * su cui il processo ascolta.
+ *
+ * In caso di errore ritorna -1;
  */
 int UDPstart(int);
 
