@@ -14,5 +14,12 @@
  */
 int UDPstart(int);
 
+/** Termina il processo che gestisce il
+ * socket UDP
+ *
+ * In caso di errore ritorna -1;
+ */
+int UDPstop(void);
+
 
 #endif

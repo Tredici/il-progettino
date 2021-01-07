@@ -100,3 +100,10 @@ int UDPstart(int port)
     return listeningOn;
 }
 
+
+int UDPstop(void)
+{
+    ;
+
+    return 0;
+}
