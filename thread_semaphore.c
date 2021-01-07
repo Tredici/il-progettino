@@ -132,11 +132,6 @@ int start_long_life_thread(pthread_t *thread, void*(*t_fun)(void *), void* args,
         return -1;
     }
 
-    if (pthread_detach(t) != 0)
-    {
-        thread_semaphore_destroy(ts);
-        return -1;
-    }
 
     if (thread_semaphore_wait(ts) != 0)
     {
@@ -152,6 +147,7 @@ int start_long_life_thread(pthread_t *thread, void*(*t_fun)(void *), void* args,
 
     if (status != 0)
     {
+        pthread_detach(t); /* il figlio è andato, staccalo */
         thread_semaphore_destroy(ts);
         return -1;
     }
@@ -159,8 +155,21 @@ int start_long_life_thread(pthread_t *thread, void*(*t_fun)(void *), void* args,
     if (thread_semaphore_destroy(ts) != 0)
         return -1;
 
-    if (thread != NULL)
+    if (thread == NULL)
+    {
+        /* se il creatore non è interessato
+         * a conoscere l'id del figlio
+         * "fire and forget" */
+        if (pthread_detach(t) != 0)
+        {
+            return -1;
+        }
+    }
+    else
+    {
+        /* altrimenti il figlio rimarrà joinable */
         *thread = t;
+    }
 
     if (data != NULL)
         *data = d;
