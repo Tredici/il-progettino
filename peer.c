@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 
     int commandNumber = sizeof(commands)/sizeof(struct main_loop_command );
 
-    if (argc != 1 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)
+    if (argc != 2 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)
         usageHelp(argv[0]);
 
 
