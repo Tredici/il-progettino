@@ -294,7 +294,7 @@ struct e_register* register_create(struct e_register* r, int flag)
 
         return NULL;
     }
-    list_set_cleanup(ans->l, &register_free_entry);
+    list_set_cleanup(ans->l, (void*)&register_free_entry);
 
     return ans;
 }
