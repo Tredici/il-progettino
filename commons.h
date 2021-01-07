@@ -27,8 +27,16 @@ int waitForInput(int);
  * l'utente avrebbe dovuto fornire, utilizzato per
  * comporre il messaggio da mostrare qualora il parsing
  * fallisca.
+ *
+ * In caso di errore invoca errExit e termina
+ * l'esecuzione.
  */
 int argParseInt(const char*, const char*);
+
+/** Come argParseInt ma permette di specificare un range
+ * [min;max] entro cui deve ricadere l'argomento.
+ */
+int argParseIntRange(const char*, const char*, int, int);
 
 #endif
 

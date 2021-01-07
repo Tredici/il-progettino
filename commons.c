@@ -154,3 +154,14 @@ int argParseInt(const char* arg, const char* onErrorName)
 
     return (int)lnum;
 }
+
+int argParseIntRange(const char* arg, const char* onErrorName, int min, int max)
+{
+    int val;
+
+    val = argParseInt(arg, onErrorName);
+    if (!(min <= val && val <= max))
+        errExit("Error <%s> out of range [%d;%d]\n", onErrorName, min, max);
+
+    return val;
+}
