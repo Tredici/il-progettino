@@ -43,13 +43,13 @@ thread_semaphore.o:	thread_semaphore.h thread_semaphore.c
 unified_io.o:		unified_io.h unified_io.c
 
 # dipendenze del peer
-COMMONDEPS = list.o register.o repl.o socket_utils.o queue.o main_loop.o rb_tree.o set.o commons.o thread_semaphore.o
+COMMONDEPS = list.o register.o repl.o socket_utils.o queue.o main_loop.o rb_tree.o set.o commons.o thread_semaphore.o unified_io.o
 
 # main dei peer
 peer.o: peer.c
 
 peer: peer.o $(COMMONDEPS) $(PEERDEPS)
-	$(CC) $(CFLAGS) -o $@ $<
+	$(CC) $(CFLAGS) -o $@ peer.o $(COMMONDEPS) $(PEERDEPS)
 
 clean:
 	rm *.o
