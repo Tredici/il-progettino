@@ -1,3 +1,5 @@
+#define _XOPEN_SOURCE 500 /* per pthread_kill */
+
 #include "peer_udp.h"
 #include <pthread.h>
 #include "../socket_utils.h"
@@ -103,7 +105,18 @@ int UDPstart(int port)
 
 int UDPstop(void)
 {
-    ;
+    /* controlla che fosse partito */
+    if (UDP_tid == 0)
+        return -1;
+
+    /* invia il segnale di terminazione */
+    /* assumo che il thread non termini mai
+     * prima del tempo */
+    if (pthread_kill(UDP_tid, SIGTERM) != 0)
+        return -1;
+
+    if (pthread_join(UDP_tid, NULL) != 0)
+        return -1;
 
     return 0;
 }
