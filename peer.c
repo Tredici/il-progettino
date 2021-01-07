@@ -12,9 +12,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#define ARGNAME "porta"
+
 void usageHelp(const char* p)
 {
-    printf("Usage:\n\t%s <porta>\n", p);
+    printf("Usage:\n\t%s <" ARGNAME ">\n", p);
 
     exit(EXIT_FAILURE);
 }
