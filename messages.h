@@ -7,26 +7,6 @@
 #ifndef MESSAGES
 #define MESSAGES
 
-/** Enumerazione per identificare
- * tutti i tipi di messaggi che
- * client e server si possono
- * scambiare.
- */
-enum messages_types
-{
-    /* messaggi per l'interazione
-     * client server */
-    BOOT_REQ,
-    BOOT_ACK,
-
-    /* tipi di messaggio
-     * per interagire con
-     * gli altri peer */
-    REQ_DATA,
-    REPLY_DATA,
-    FLOOD_FOR_ENTRIES,
-    REQ_ENTRIES
-};
 
 /** La struttura dei messaggi
  * scambiati sarà la seguente:
@@ -52,6 +32,32 @@ enum messages_types
  * del resto del corpo del messaggio ]
  * 
  */
+
+/** Enumerazione per identificare
+ * tutti i tipi di messaggi che
+ * client e server si possono
+ * scambiare.
+ */
+enum messages_types
+{
+    /* per identificare i messaggi
+     * che non rispettano il formato
+     * atteso di seguito definito */
+    MSG_UNKWN,
+
+    /* messaggi per l'interazione
+     * client server */
+    BOOT_REQ,
+    BOOT_ACK,
+
+    /* tipi di messaggio
+     * per interagire con
+     * gli altri peer */
+    REQ_DATA,
+    REPLY_DATA,
+    FLOOD_FOR_ENTRIES,
+    REQ_ENTRIES
+};
 
 
 #endif
