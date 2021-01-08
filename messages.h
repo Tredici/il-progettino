@@ -21,7 +21,7 @@
  * ++++ la parte successiva è variabile ++++
  * 
  * [ 4 byte contengono un id univoco
- * dell'autore, il numero di porta
+ * dell'autore, fornito dal server
  * in questo sistema semplificato 
  * - in network order]
  * [ 4 byte contengono l'id della
