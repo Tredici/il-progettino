@@ -173,3 +173,12 @@ int ns_host_addr_set_port(struct ns_host_addr* ns_addr, uint16_t port)
     ns_addr->port = htons(port);
     return 0;
 }
+
+int ns_host_addr_get_port(const struct ns_host_addr* ns_addr, uint16_t* port)
+{
+    if (ns_addr == NULL || port == NULL)
+        return -1;
+
+    *port = ntohs(ns_addr->port);
+    return 0;
+}
