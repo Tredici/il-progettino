@@ -119,4 +119,11 @@ int ns_host_addr_set_port(struct ns_host_addr*, uint16_t);
  */
 int ns_host_addr_get_port(const struct ns_host_addr*, uint16_t*);
 
+/** Ottiene la versione di IP specificata
+ * nell'oggetto struct ns_host_addr.
+ *
+ * Restituisce 0 in caso di errore.
+ */
+uint8_t ns_host_addr_get_ip_version(const struct ns_host_addr*);
+
 #endif

@@ -182,3 +182,11 @@ int ns_host_addr_get_port(const struct ns_host_addr* ns_addr, uint16_t* port)
     *port = ntohs(ns_addr->port);
     return 0;
 }
+
+uint8_t ns_host_addr_get_ip_version(const struct ns_host_addr* ns_addr)
+{
+    if (ns_addr == NULL)
+        return 0;
+
+    return ns_addr->ip_version;
+}
