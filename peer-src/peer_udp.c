@@ -62,7 +62,7 @@ static void* UDP(void* args)
     }
     /* verifica la porta */
     usedPort = getSocketPort(socket);
-    if (usedPort == -1 || (requestedPort == 0 && requestedPort != usedPort))
+    if (usedPort == -1 || (requestedPort != 0 && requestedPort != usedPort))
     {
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
             errExit("*** UDP ***\n");
