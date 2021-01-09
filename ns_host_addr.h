@@ -90,4 +90,16 @@ int ns_host_addr_as_string(char*, size_t, const struct ns_host_addr*);
  */
 int sockaddr_as_string(char*, size_t, const struct sockaddr*, socklen_t);
 
+/** Cambia il valore della porta della
+ * struct ns_host_addr con quello fornito in
+ * input.
+ *
+ * Il valore fornito rispetta l'endianness
+ * dell'host.
+ *
+ * Restituisce -1 in caso di errore e 0 in caso
+ * di successo.
+ */
+int ns_host_addr_set_port(struct ns_host_addr*, uint16_t);
+
 #endif

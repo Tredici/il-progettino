@@ -164,3 +164,12 @@ int sockaddr_as_string(char* buffer, size_t buffLen,
 
     return testLen;
 }
+
+int ns_host_addr_set_port(struct ns_host_addr* ns_addr, uint16_t port)
+{
+    if (ns_addr == NULL)
+        return -1;
+
+    ns_addr->port = htons(port);
+    return 0;
+}
