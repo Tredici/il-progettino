@@ -21,7 +21,7 @@
  */
 struct ns_host_addr
 {
-    uint8_t ipVersion; /* versione di ip - 4 o 6 */
+    uint8_t ip_version; /* versione di ip - 4 o 6 */
     uint16_t port; /* porta utilizzata - network order */
     /* cosa che mi tocca fare per poter trasferire
      * indirizzi sia ipV4 sia ipV6 */
@@ -30,8 +30,8 @@ struct ns_host_addr
         /* questa cosa funziona solo perché
          * queste informazioni sono di default
          * in network order */
-        struct in_addr ipV4;
-        struct in6_addr ipV6;
+        struct in_addr v4;
+        struct in6_addr v6;
     } ip __attribute__ ((packed));
 };
 
