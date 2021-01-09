@@ -155,7 +155,7 @@ int sockaddr_as_string(char* buffer, size_t buffLen,
     testLen = snprintf(testBuffer, sizeof(testBuffer),
                 "[ipv%d]%s:%s", (int)ipVersion(sk_addr->sa_family),
                 hostname, portname);
-    if (testLen == -1 || testLen > buffLen)
+    if (testLen == -1 || (size_t)testLen > buffLen)
         return -1;
 
     strcpy(buffer, testBuffer);
