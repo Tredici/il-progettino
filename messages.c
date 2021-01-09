@@ -90,3 +90,22 @@ int messages_make_boot_req(void** buffer, size_t* sz, int socket)
 
     return 0;
 }
+
+int messages_send_boot_req(int sockfd, const struct sockaddr* dest, socklen_t destLen, int sk)
+{
+    void* bootmsg;
+    size_t msgLen;
+    ssize_t sendLen;
+
+    if (dest == NULL)
+        return -1;
+
+    if (messages_make_boot_req(&bootmsg, msgLen, sk) == -1)
+        return -1;
+
+    sendLen = sendto(sockfd, bootmsg, msgLen, 0, dest, destLen);
+    if (sendLen != msgLen)
+        return -1;
+
+    return 0;
+}

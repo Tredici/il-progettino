@@ -88,4 +88,14 @@ int recognise_messages_type(void*);
  */
 int messages_make_boot_req(void**, size_t*, int);
 
+/** Invia un messaggio di boot usando il socket
+ * specificato come primo argomento, la destinazione
+ * indicata come secondo argomento e inviando le
+ * informazioni per raggiungere il socket
+ * specificato come terzo argomento.
+ *
+ * Restituisce 0 in caso di successo
+ */
+int messages_send_boot_req(int, const struct sockaddr*, socklen_t, int);
+
 #endif
