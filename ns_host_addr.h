@@ -35,7 +35,6 @@ struct ns_host_addr
     } ip __attribute__ ((packed));
 };
 
-
 /** Due funzioni ausiliarie per scambiare in modo
  * sicuro via rete il formato degli indirizzi che
  * ci si invia via internet. */
