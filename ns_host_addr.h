@@ -35,5 +35,16 @@ struct ns_host_addr
     } ip __attribute__ ((packed));
 };
 
+/** Inizializza un oggetto struct ns_host_addr
+ * a partire da un oggetto struct sockaddr
+ *
+ * Il primo argomento, utilizzato per fornire
+ * il risultato, non può essere NULL.
+ *
+ * Restituisce 0 in caso di successo e -1 in
+ * caso di errore.
+ */
+int ns_host_addr_from_sockaddr(struct ns_host_addr*, const struct sockaddr*);
+
 
 #endif
