@@ -1,6 +1,19 @@
 #include "messages.h"
 #include <arpa/inet.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+
+/** ATTENZIONE:
+ * dato che in questo file andrò
+ * a generare il contenuto dei
+ * pacchetti da inviare via rete
+ * utilizzerò più volte l'estensione
+ * di GCC __attribute__ ((packed))
+ * per essere sicuro che la struttura
+ * delle strutture non sia alterata
+ * attraverso la rete.
+ */
 
 /** Contiene i primi
  * due cambi di un messaggio
@@ -10,7 +23,7 @@ struct messages_head
 {
     uint16_t sentinel;
     uint16_t type;
-};
+} __attribute__ ((packed));
 
 
 int recognise_messages_type(void* msg)
