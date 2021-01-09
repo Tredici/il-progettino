@@ -1,6 +1,18 @@
 #include "ds_peers.h"
 #include "../rb_tree.h"
+#include "../ns_host_addr.h"
 #include <pthread.h>
+
+/** Struttura che sarà usata per
+ * mantenere i dati associati ad
+ * ogni peer presente nella rete.
+ */
+struct peer
+{
+    long int id; /* id progressivo associato ai peer */
+    struct ns_host_addr ns_addr; /* dati per raggiungerlo */
+};
+
 
 /** Le operazioni gestite da qui vanno
  * gestite utilizzando dei mutex per
@@ -12,6 +24,9 @@
 
 pthread_mutex_t guard = PTHREAD_MUTEX_INITIALIZER;
 struct rb_tree* tree;
+/* serve per assegnare un id progressivo a ciascun
+ * peer si connetta alla rete */
+long int counter;
 
 int peers_init(void)
 {
@@ -19,6 +34,7 @@ int peers_init(void)
         return -1;
 
     tree = rb_tree_init(NULL);
+    counter = 0;
 }
 
 int peers_clear(void)
