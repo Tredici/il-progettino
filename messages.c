@@ -91,6 +91,31 @@ int messages_make_boot_req(void** buffer, size_t* sz, int socket)
     return 0;
 }
 
+int messages_check_boot_req(void* buffer, size_t len)
+{
+    struct boot_req* req;
+    uint16_t port;
+
+    if (buffer == NULL || len != sizeof(struct boot_req))
+        return -1;
+
+    req = (struct boot_req*)buffer;
+
+    /* controllo dell'header */
+    if (req->head.sentinel != 0 || ntohs(req->head.type) != MESSAGES_BOOT_REQ)
+        return -1;
+
+    /* controlla la validità della versione IP */
+    if (ns_host_addr_get_ip_version(req) == 0) /* caso raro in cui 0 segnala l'errore */
+        return -1;
+
+    /* controlla che la porta non sia 0 */
+    if (ns_host_addr_get_port(req, &port) == -1 || port == 0)
+        return -1;
+
+    return 0;
+}
+
 int messages_send_boot_req(int sockfd, const struct sockaddr* dest, socklen_t destLen, int sk)
 {
     void* bootmsg;

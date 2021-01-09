@@ -88,6 +88,14 @@ int recognise_messages_type(void*);
  */
 int messages_make_boot_req(void**, size_t*, int);
 
+/** Verifica l'integrità del messaggo di
+ * boot di cui sono forniti inizio e dimensione.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_check_boot_req(void*, size_t);
+
 /** Invia un messaggio di boot usando il socket
  * specificato come primo argomento, la destinazione
  * indicata come secondo argomento e inviando le
