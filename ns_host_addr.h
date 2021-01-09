@@ -35,28 +35,5 @@ struct ns_host_addr
     } ip __attribute__ ((packed));
 };
 
-/** Due funzioni ausiliarie per scambiare in modo
- * sicuro via rete il formato degli indirizzi che
- * ci si invia via internet. */
-
-/** Ottiene la versione di IP a partire
- * dalla famiglia dell'indirizzo.
- *
- * Il tipo utilizzato per il risultato
- * può essere trasferito in maniera sicura
- * attraverso la rete.
- *
- * Restituisce 0 in caso di errore.
- */
-static uint8_t ipVersion(sa_family_t);
-
-/** Fornisce la famiglia di indirizzo
- * a partire dalla versione di IP
- * specificata, è complementare a
- * ipVersion.
- *
- * Restituisce -1 in caso di errore.
- */
-static sa_family_t ipFamily(uint8_t);
 
 #endif
