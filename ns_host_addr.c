@@ -130,6 +130,10 @@ int ns_host_addr_as_string(char* buffer, size_t buffLen, const struct ns_host_ad
     struct sockaddr_storage ss;
     socklen_t size = sizeof(struct sockaddr_storage);
 
+    /* controllo validità dei parametri */
+    if (buffer == NULL || buffLen == 0 || ns_addr == NULL)
+        return -1;
+
     /* servono i dati in un formato sockaddr_* */
     if (sockaddr_from_ns_host_addr(&ss, &size, ns_addr) == -1)
         return -1;
