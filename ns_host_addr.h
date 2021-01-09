@@ -134,4 +134,13 @@ uint8_t ns_host_addr_get_ip_version(const struct ns_host_addr*);
  */
 sa_family_t ns_host_addr_get_ip_family(const struct ns_host_addr*);
 
+/** Verifica se l'indirizzo specificato
+ * è 0.0.0.0 o 0::0.
+ * Restituisce 1 se è l'indirizzo di
+ * loopback e 0 se è un altro.
+ *
+ * Restituisce -1 in caso di errore.
+ */
+int ns_host_addr_loopback(const struct ns_host_addr*);
+
 #endif

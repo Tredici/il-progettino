@@ -198,3 +198,24 @@ sa_family_t ns_host_addr_get_ip_family(const struct ns_host_addr* ns_addr)
 
     return ipFamily(ns_addr->ip_version);
 }
+
+int ns_host_addr_loopback(const struct ns_host_addr* ns_addr)
+{
+    struct in_addr ipv4any = { INADDR_ANY };
+
+    if (ns_addr == NULL)
+        return -1;
+
+    switch (ns_addr->ip_version)
+    {
+    case 4:
+        /* IPv4 */
+        return memcmp(&ns_addr->ip.v4, &ipv4any, sizeof(INADDR_LOOPBACK)) == 0;
+    case 6:
+        /* IPv6 */
+        return memcmp(&ns_addr->ip.v4, &in6addr_any, sizeof(INADDR_LOOPBACK)) == 0;
+
+    default:
+        return -1;
+    }
+}
