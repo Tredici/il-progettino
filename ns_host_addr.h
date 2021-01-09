@@ -58,4 +58,20 @@ int ns_host_addr_from_sockaddr(struct ns_host_addr*, const struct sockaddr*);
  */
 int sockaddr_from_ns_host_addr(struct sockaddr*, socklen_t*, const struct ns_host_addr*);
 
+/** Fornisce tramite il puntatore a char fornito
+ * una rappresentazione in formato stringa
+ * della struttura ns_host_addr.
+ *
+ * La dimensione dell'array fornito è data dal
+ * secondo parametro.
+ *
+ * Restituisce -1 in caso di errore, oppure il
+ * numero di caratteri scritti nell'array dato
+ * MENO il carattere '\0' di terminazione.
+ *
+ * Il formato utilizzato è:
+ *      [ip(versione)](hostname):(porta)
+ */
+int ns_host_addr_as_string(char*, size_t, const struct ns_host_addr*);
+
 #endif

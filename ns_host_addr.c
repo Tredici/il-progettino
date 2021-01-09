@@ -1,8 +1,13 @@
+#define _POSIX_C_SOURCE 201112L /* per getnameinfo */
+#define _XOPEN_SOURCE 500 /* per snprintf */
+
 #include "ns_host_addr.h"
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netdb.h>
+#include <stdio.h>
 
 /** Due funzioni ausiliarie per scambiare in modo
  * sicuro via rete il formato degli indirizzi che
@@ -113,4 +118,34 @@ int sockaddr_from_ns_host_addr(struct sockaddr* sk_addr, socklen_t* sz, const st
     }
 
     return 0;
+}
+
+int ns_host_addr_as_string(char* buffer, size_t buffLen, const struct ns_host_addr* ns_addr)
+{
+    char testBuffer[64];
+    int testLen;
+    char hostname[56];
+    char portname[8];
+
+    struct sockaddr_storage ss;
+    socklen_t size = sizeof(struct sockaddr_storage);
+
+    /* servono i dati in un formato sockaddr_* */
+    if (sockaddr_from_ns_host_addr(&ss, &size, ns_addr) == -1)
+        return -1;
+
+    if (getnameinfo(&ss, &size,
+            hostname, sizeof(hostname),
+            portname, sizeof(portname), NI_NUMERICSERV) != 0)
+        return -1;
+
+    testLen = snprintf(testBuffer, sizeof(testBuffer),
+                "[ipv%d]%s:%s", (int)ipVersion(ss.ss_family),
+                hostname, portname);
+    if (testLen == -1 || testLen > buffLen)
+        return -1;
+
+    strcpy(buffer, testBuffer);
+
+    return testLen;
 }
