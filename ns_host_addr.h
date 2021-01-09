@@ -13,6 +13,7 @@
 #define NS_HOST_ADDR
 
 #include <arpa/inet.h>
+#include <sys/socket.h>
 
 /** Questa struttura raccoglie in
  * un formato trasferibile in modo
@@ -125,5 +126,12 @@ int ns_host_addr_get_port(const struct ns_host_addr*, uint16_t*);
  * Restituisce 0 in caso di errore.
  */
 uint8_t ns_host_addr_get_ip_version(const struct ns_host_addr*);
+
+/** Ottiene la famiglia di indirizzo IP
+ * nell'oggetto struct ns_host_addr.
+ *
+ * Restituisce -1 in caso di errore.
+ */
+sa_family_t ns_host_addr_get_ip_family(const struct ns_host_addr*);
 
 #endif

@@ -190,3 +190,11 @@ uint8_t ns_host_addr_get_ip_version(const struct ns_host_addr* ns_addr)
 
     return ns_addr->ip_version;
 }
+
+sa_family_t ns_host_addr_get_ip_family(const struct ns_host_addr* ns_addr)
+{
+    if (ns_addr == NULL)
+        return 0;
+
+    return ipFamily(ns_addr->ip_version);
+}
