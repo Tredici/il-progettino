@@ -122,11 +122,6 @@ int sockaddr_from_ns_host_addr(struct sockaddr* sk_addr, socklen_t* sz, const st
 
 int ns_host_addr_as_string(char* buffer, size_t buffLen, const struct ns_host_addr* ns_addr)
 {
-    char testBuffer[64];
-    int testLen;
-    char hostname[56];
-    char portname[8];
-
     struct sockaddr_storage ss;
     socklen_t size = sizeof(struct sockaddr_storage);
 
@@ -138,13 +133,27 @@ int ns_host_addr_as_string(char* buffer, size_t buffLen, const struct ns_host_ad
     if (sockaddr_from_ns_host_addr(&ss, &size, ns_addr) == -1)
         return -1;
 
-    if (getnameinfo(&ss, &size,
+    return sockaddr_as_string(buffer, buffLen, &ss, size);
+}
+
+int sockaddr_as_string(char* buffer, size_t buffLen,
+        const struct sockaddr* sk_addr, socklen_t skLen)
+{
+    char testBuffer[64];
+    int testLen;
+    char hostname[56];
+    char portname[8];
+
+    if (sk_addr == NULL || skLen == 0 || ipVersion(sk_addr->sa_family) == 0)
+        return -1;
+
+    if (getnameinfo(sk_addr, skLen,
             hostname, sizeof(hostname),
             portname, sizeof(portname), NI_NUMERICSERV) != 0)
         return -1;
 
     testLen = snprintf(testBuffer, sizeof(testBuffer),
-                "[ipv%d]%s:%s", (int)ipVersion(ss.ss_family),
+                "[ipv%d]%s:%s", (int)ipVersion(sk_addr->sa_family),
                 hostname, portname);
     if (testLen == -1 || testLen > buffLen)
         return -1;
