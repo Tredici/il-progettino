@@ -46,5 +46,16 @@ struct ns_host_addr
  */
 int ns_host_addr_from_sockaddr(struct ns_host_addr*, const struct sockaddr*);
 
+/** Inizializza un oggetto struct sockaddr,
+ * ottenendone anche la dimensione,
+ * a partire da un oggetto struct ns_host_addr
+ *
+ * I primi due argomenti, utilizzati per fornire
+ * i risultati, non possono essere NULL.
+ *
+ * Restituisce 0 in caso di successo e -1 in
+ * caso di errore.
+ */
+int sockaddr_from_ns_host_addr(struct sockaddr*, socklen_t*, const struct ns_host_addr*);
 
 #endif

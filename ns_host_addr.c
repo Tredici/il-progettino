@@ -1,5 +1,8 @@
 #include "ns_host_addr.h"
 #include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 /** Due funzioni ausiliarie per scambiare in modo
  * sicuro via rete il formato degli indirizzi che
@@ -69,6 +72,40 @@ int ns_host_addr_from_sockaddr(struct ns_host_addr* ns_addr, const struct sockad
         ns_addr->ip_version = ipVersion(sk_addr->sa_family);
         ns_addr->port = ((struct sockaddr_in6*) ns_addr)->sin6_port;
         ns_addr->ip.v6 = ((struct sockaddr_in6*) ns_addr)->sin6_addr;
+        break;
+
+    default: /* tipo dell'indirizzo non riconosciuto */
+        return -1;
+    }
+
+    return 0;
+}
+
+int sockaddr_from_ns_host_addr(struct sockaddr* sk_addr, socklen_t* sz, const struct ns_host_addr* ns_addr)
+{
+    if (ns_addr == NULL || sk_addr == NULL || sz == NULL)
+        return -1;
+
+    switch (ns_addr->ip_version)
+    {
+    case 4:
+        /* azzera e assegna la dimensione del risultato */
+        memset(sk_addr, 0, sizeof(struct sockaddr_in));
+        *sz = sizeof(struct sockaddr_in);
+        /* inizializza il risultato con i dati forniti */
+        sk_addr->sa_family = ipFamily(ns_addr->ip_version);
+        ((struct sockaddr_in*) sk_addr)->sin_port = ns_addr->port;
+        ((struct sockaddr_in*) sk_addr)->sin_addr = ns_addr->ip.v4;
+        break;
+
+    case 6:
+        /* azzera e assegna la dimensione del risultato */
+        memset(sk_addr, 0, sizeof(struct sockaddr_in6));
+        *sz = sizeof(struct sockaddr_in6);
+        /* inizializza il risultato con i dati forniti */
+        sk_addr->sa_family = ipFamily(ns_addr->ip_version);
+        ((struct sockaddr_in6*) sk_addr)->sin6_port = ns_addr->port;
+        ((struct sockaddr_in6*) sk_addr)->sin6_addr = ns_addr->ip.v6;
         break;
 
     default: /* tipo dell'indirizzo non riconosciuto */
