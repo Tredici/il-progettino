@@ -7,6 +7,8 @@
 #ifndef MESSAGES
 #define MESSAGES
 
+#include "ns_host_addr.h"
+#include <stdlib.h>
 
 /** La struttura dei messaggi
  * scambiati sarà la seguente:
@@ -67,5 +69,23 @@ enum messages_types
  * in enum messages_types.
  */
 int recognise_messages_type(void*);
+
+/** Genera un messaggio di boot con i parametri
+ * passati.
+ *
+ * Utilizza gli argomenti per restituire
+ * puntatore e dimensione del buffer allocato.
+ *
+ * Il terzo parametro è il file descriptor del
+ * socket su cui ci si aspetta di ricevere i
+ * messaggi dai peer.
+ *
+ * In caso di successo la memoria occupata può
+ * essere liberata tranquillamente tramite free.
+ *
+ * Restituisce -1 in caso di errore, 0 in caso
+ * di successo.
+ */
+int messages_make_boot_req(void**, size_t*, int);
 
 #endif
