@@ -68,12 +68,14 @@ int ns_host_addr_from_sockaddr(struct ns_host_addr* ns_addr, const struct sockad
     switch (sk_addr->sa_family)
     {
     case AF_INET:
+        memset(ns_addr, 0, sizeof(struct ns_host_addr));
         ns_addr->ip_version = ipVersion(sk_addr->sa_family);
         ns_addr->port = ((struct sockaddr_in*) sk_addr)->sin_port;
         ns_addr->ip.v4 = ((struct sockaddr_in*) sk_addr)->sin_addr;
         break;
 
     case AF_INET6:
+        memset(ns_addr, 0, sizeof(struct ns_host_addr));
         ns_addr->ip_version = ipVersion(sk_addr->sa_family);
         ns_addr->port = ((struct sockaddr_in6*) sk_addr)->sin6_port;
         ns_addr->ip.v6 = ((struct sockaddr_in6*) sk_addr)->sin6_addr;
