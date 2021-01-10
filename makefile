@@ -21,6 +21,9 @@ all: peer
 -include $(OBJS:%.o=%.d)
 
 # file esclusivi dei peer
+peer_start.o: peer-src/peer_start.c  peer-src/peer_start.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 peer_udp.o: peer-src/peer_udp.c  peer-src/peer_udp.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
@@ -30,7 +33,7 @@ peer_add.o: peer-src/peer_add.c  peer-src/peer_add.h
 peer_stop.o: peer-src/peer_stop.c peer-src/peer_stop.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-PEERDEPS = peer_stop.o peer_add.o peer_udp.o
+PEERDEPS = peer_stop.o peer_add.o peer_udp.o peer_start.o
 
 # file per tutti
 list.o: 			list.h list.c
