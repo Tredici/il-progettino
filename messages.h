@@ -23,12 +23,12 @@
  * [2 byte contengono un intero
  * rappresentante il tipo del
  * messaggio - in network order]
- * 
+ *
  * ++++ la parte successiva è variabile ++++
- * 
+ *
  * [ 4 byte contengono un id univoco
  * dell'autore, fornito dal server
- * in questo sistema semplificato 
+ * in questo sistema semplificato
  * - in network order]
  * [ 4 byte contengono l'id della
  * richiesta, per evitare problemi
@@ -36,7 +36,7 @@
  * network order ]
  * [ 4 byte contengono la lunghezza
  * del resto del corpo del messaggio ]
- * 
+ *
  */
 
 /** Enumerazione per identificare
@@ -108,7 +108,7 @@ struct boot_ack
 
 
 /** Dato il puntatore al buffer che ospita il
- * messaggio fornisce il tipo di questo. 
+ * messaggio fornisce il tipo di questo.
  *
  * Restituisce -1 in caso di errore (e.g.
  * l'argomento è null), altrimenti un valore
