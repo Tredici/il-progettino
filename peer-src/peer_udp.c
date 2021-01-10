@@ -23,6 +23,12 @@ pthread_t UDP_tid;
  */
 volatile sig_atomic_t UDPloop = 1;
 
+/* fd del socket
+ * è globale poiché deve essere
+ * potenzialmente condiviso da
+ * più thread */
+int socket;
+
 /** Funzione che rappresenta il corpo del
  * thread che gestira il socket
  */
@@ -34,8 +40,6 @@ static void* UDP(void* args)
     int requestedPort;
     /* porta usata dal thread */
     int usedPort;
-    /* fd del socket */
-    int socket;
     /* flag per evitare di sprecare
      * troppi cicli di CPU cedendone
      * il controllo al altri thread
