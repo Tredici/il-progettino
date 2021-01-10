@@ -10,6 +10,10 @@
 #include "ns_host_addr.h"
 #include <stdlib.h>
 
+/* in questo progetto minimale */
+#define MAX_NEIGHBOUR_NUMBER 2
+
+
 /** La struttura dei messaggi
  * scambiati sarà la seguente:
  * (da leggersi dall'alto verso
@@ -60,6 +64,48 @@ enum messages_types
     MESSAGES_FLOOD_FOR_ENTRIES,
     MESSAGES_REQ_ENTRIES
 };
+
+
+/** Contiene i primi
+ * due cambi di un messaggio
+ * ben strutturato
+ */
+struct messages_head
+{
+    uint16_t sentinel;
+    uint16_t type;
+} __attribute__ ((packed));
+
+/** Questa struttura definisce
+ * il formato di una richiesta
+ * di boot
+ */
+struct boot_req
+{
+    /* header */
+    struct messages_head head;
+    /* corpo: contenuto */
+    struct ns_host_addr body;
+} __attribute__ ((packed));
+
+/** Questa struttura definisce il
+ * formato di un messaggio di boot
+ * inviato dal server in risposta
+ * a un ack
+ */
+struct boot_ack
+{
+    /* header */
+    struct messages_head head;
+    /* corpo della domanda */
+    struct boot_ack_body
+    {
+        /* numero di vicini, deve valere neighbours<MAX_NEIGHBOUR_NUMBER */
+        uint16_t neighbours;
+        struct ns_host_addr neighbours[MAX_NEIGHBOUR_NUMBER];
+    } body __attribute__ ((packed));
+} __attribute__ ((packed));
+
 
 /** Dato il puntatore al buffer che ospita il
  * messaggio fornisce il tipo di questo. 

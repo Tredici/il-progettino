@@ -4,9 +4,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-/* in questo progetto minimale */
-#define MAX_NEIGHBOUR_NUMBER 2
-
 /** ATTENZIONE:
  * dato che in questo file andrò
  * a generare il contenuto dei
@@ -17,16 +14,6 @@
  * delle strutture non sia alterata
  * attraverso la rete.
  */
-
-/** Contiene i primi
- * due cambi di un messaggio
- * ben strutturato
- */
-struct messages_head
-{
-    uint16_t sentinel;
-    uint16_t type;
-} __attribute__ ((packed));
 
 
 int recognise_messages_type(void* msg)
@@ -43,17 +30,6 @@ int recognise_messages_type(void* msg)
     return (int)ntohs(p->type);
 }
 
-/** Questa struttura definisce
- * il formato di una richiesta
- * di boot
- */
-struct boot_req
-{
-    /* header */
-    struct messages_head head;
-    /* corpo: contenuto */
-    struct ns_host_addr body;
-} __attribute__ ((packed));
 
 int messages_make_boot_req(void** buffer, size_t* sz, int socket)
 {
@@ -93,24 +69,6 @@ int messages_make_boot_req(void** buffer, size_t* sz, int socket)
 
     return 0;
 }
-
-/** Questa struttura definisce il
- * formato di un messaggio di boot
- * inviato dal server in risposta
- * a un ack
- */
-struct boot_ack
-{
-    /* header */
-    struct messages_head head;
-    /* corpo della domanda */
-    struct boot_ack_body
-    {
-        /* numero di vicini, deve valere neighbours<MAX_NEIGHBOUR_NUMBER */
-        uint16_t neighbours;
-        struct ns_host_addr neighbours[MAX_NEIGHBOUR_NUMBER];
-    } body __attribute__ ((packed));
-} __attribute__ ((packed));
 
 
 int messages_check_boot_req(void* buffer, size_t len)
