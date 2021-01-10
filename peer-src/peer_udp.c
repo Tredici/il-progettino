@@ -7,6 +7,7 @@
 #include "../thread_semaphore.h"
 #include "../commons.h"
 #include "../unified_io.h"
+#include "../messages.h"
 #include <signal.h>
 #include <sched.h>
 #include <fcntl.h>
