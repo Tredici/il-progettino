@@ -6,6 +6,7 @@
 #include "../thread_semaphore.h"
 #include "../commons.h"
 #include "../unified_io.h"
+#include "../messages.h"
 #include <signal.h>
 #include <sched.h>
 #include <setjmp.h> /* arte */
@@ -145,7 +146,26 @@ static void* UDP(void* args)
 
             /* inizia il lavoro sul pacchetto */
             /* controlla se è regolare */
+            switch (recognise_messages_type((void*)buffer))
+            {
+            case -1:
+                /* errore - non dovrebbe mai accadere */
+                errExit("*** recognise_messages_type ***\n");
+                break;
 
+            case MESSAGES_MSG_UNKWN:
+                /* sentinella violata, quasi certamente
+                 * è un messaggio di debugging */
+                break;
+
+            case MESSAGES_BOOT_REQ:
+                /* ricevuta richiesta di boot da gestire */
+                break;
+
+            default:
+                /* ricevuto un tipo di messaggio sconosciuto */
+                break;
+            }
 
             if (pthread_sigmask(SIG_UNBLOCK, &toBlock, NULL) != 0)
                 errExit("*** pthread_sigmask ***\n");
