@@ -42,6 +42,27 @@ static void io_message_destroy(struct io_message* iom)
     free(iom);
 }
 
+
+static void print_message(enum unified_io_type type, const char* msg)
+{
+    switch (type)
+    {
+    case UNIFIED_IO_NORMAL:
+        fprintf(stdout, "%s\n", msg);
+        break;
+
+    case UNIFIED_IO_ERROR:
+        fprintf(stderr, "%s\n", msg);
+        break;
+
+    case UNIFIED_IO_LIMIT:
+        /* mai raggiunto - serve solo ad
+         * eliminare un warning durante
+         * la compilazione */
+        break;
+    }
+}
+
 /** Coda per i messaggi che genereranno
  * i vari thread.
  */
@@ -128,22 +149,7 @@ int unified_io_print(int flag)
         return -1;
     }
 
-    switch (iom->type)
-    {
-    case UNIFIED_IO_NORMAL:
-        fprintf(stdout, "%s\n", iom->msg);
-        break;
-
-    case UNIFIED_IO_ERROR:
-        fprintf(stderr, "%s\n", iom->msg);
-        break;
-
-    case UNIFIED_IO_LIMIT:
-        /* mai raggiunto - serve solo ad
-         * eliminare un warning durante
-         * la compilazione */
-        break;
-    }
+    print_message(iom->type, iom->msg);
 
     return 0;
 }
