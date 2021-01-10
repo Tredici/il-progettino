@@ -18,6 +18,15 @@
  */
 int UDPstart(int);
 
+/** Metodo utilizzabile SOLO dal thread
+ * principale!
+ *
+ * Prova a connettere il peer al network
+ * contattando il server usando
+ * l'indirizzo e la porta forniti.
+ */
+int UDPconnect(const char*, const char*);
+
 /** Termina il processo che gestisce il
  * socket UDP
  *
