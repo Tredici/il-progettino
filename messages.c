@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <string.h>
 
 /** ATTENZIONE:
  * dato che in questo file andrò
@@ -53,6 +54,7 @@ int messages_make_boot_req(void** buffer, size_t* sz, int socket)
 
     /* se siamo arrivati qui forse le cose funzionano */
     ans = malloc(sizeof(struct boot_req)); /* allochiamo il buffer */
+    memset(ans, 0, sizeof(struct boot_req));
     /* prepariamo l'header */
     ans->head.sentinel = 0;
     ans->head.type = htons(MESSAGES_BOOT_REQ);
