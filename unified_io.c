@@ -47,6 +47,8 @@ static void io_message_destroy(struct io_message* iom)
  */
 struct queue* message_queue = NULL; /* per leggibilità */
 
+enum unified_io_mode mode = UNIFIED_IO_ASYNC_MODE;
+
 int unified_io_init()
 {
     struct queue* Q;
@@ -62,6 +64,27 @@ int unified_io_init()
     message_queue = Q;
 
     return 0;
+}
+
+int unified_io_set_mode(enum unified_io_mode new_mode)
+{
+    switch (new_mode)
+    {
+    case UNIFIED_IO_ASYNC_MODE:
+    case UNIFIED_IO_SYNC_MODE:
+        mode = new_mode;
+        break;
+
+    default:
+        return -1;
+    }
+
+    return 0;
+}
+
+enum unified_io_mode unified_io_get_mode(void)
+{
+    return mode;
 }
 
 int unified_io_close()
