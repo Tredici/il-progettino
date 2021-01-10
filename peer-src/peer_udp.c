@@ -1,4 +1,5 @@
 #define _XOPEN_SOURCE 500 /* per pthread_kill */
+#define _GNU_SOURCE /* per pipe2 */
 
 #include "peer_udp.h"
 #include <pthread.h>
@@ -8,6 +9,50 @@
 #include "../unified_io.h"
 #include <signal.h>
 #include <sched.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+/** APPROCCIO SEGUITO:
+ * un thread PASSIVO che si occupa
+ * ESCLUSIVAMENTE di vagliare i messaggi
+ * in ARRIVO e di inoltrarli alle funzioni
+ * che li debbono gestire
+ *
+ * più funzioni secondarie che hanno
+ * esclusivamente un ruolo ATTIVO, dopodiché,
+ * se la specifica lo richiede, si mettono in
+ * attesa di una risposta tramite
+ * l'interfaccia fornitagli dal thread
+ * PASSIVO.
+ *
+ * PROBLEMA: in alcuni casi è necessario
+ * implementare un timeout e multithreading e
+ * segnali (la via più naturale per
+ * implementare un timeout tramite alarm) non
+ * lavorano bene insieme. alarm infatti non
+ * permette di specificare il thread a cui
+ * inviare il segnale (e non garantisce sia
+ * quello che ha invocata), inoltre non ho
+ * fiducia nell'interrompere un tentativo
+ * di lock su un socket tramite un segnale.
+ *
+ * Ho bisogno quindi di metodi sicuri, offerti
+ * da sistema operativo che offrono quindi
+ * garanzia di robustezza e di mutua esclusione.
+ * In particolare intendo utilizzare PIPES
+ * (unidirezionali, a cui accede in scrittura il
+ * thread passivo e il lettura la funzione
+ * apposita). Farò eventualmente impego di
+ * mutex e simili per evitare problemi dovuti
+ * alla ricezione di risposte a messaggi mai
+ * inviati.
+ *
+ * Per utilizzare un meccanismo di TIMEOUT farò
+ * utilizzo di timerfd_create che, non facendo
+ * uso di segnali, risulta quindi thread safe.
+ */
+
+
 
 
 /** Id del thead che gestisce il socket
