@@ -4,6 +4,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+/* in questo progetto minimale */
+#define MAX_NEIGHBOUR_NUMBER 2
+
 /** ATTENZIONE:
  * dato che in questo file andrò
  * a generare il contenuto dei
@@ -90,6 +93,25 @@ int messages_make_boot_req(void** buffer, size_t* sz, int socket)
 
     return 0;
 }
+
+/** Questa struttura definisce il
+ * formato di un messaggio di boot
+ * inviato dal server in risposta
+ * a un ack
+ */
+struct boot_ack
+{
+    /* header */
+    struct messages_head head;
+    /* corpo della domanda */
+    struct boot_ack_body
+    {
+        /* numero di vicini, deve valere neighbours<MAX_NEIGHBOUR_NUMBER */
+        uint16_t neighbours;
+        struct ns_host_addr neighbours[MAX_NEIGHBOUR_NUMBER];
+    } body __attribute__ ((packed));
+} __attribute__ ((packed));
+
 
 int messages_check_boot_req(void* buffer, size_t len)
 {
