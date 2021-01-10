@@ -152,4 +152,33 @@ int messages_check_boot_req(void*, size_t);
  */
 int messages_send_boot_req(int, const struct sockaddr*, socklen_t, int);
 
+/** Genera un messaggio di risposta a quello di
+ * boot fornito utilizzando le informazioni dei
+ * peer dati.
+ *
+ * I primi due argomenti sono utilizzati per
+ * ottenere il messaggio e la sua dimensione
+ * per inviarli attraverso un socket.
+ *
+ * Il terzo argomento è il messaggio a cui si
+ * vuole rispondere.
+ *
+ * Gli ultimi due parametri permettono di
+ * accedere all'elenco di neighbour da inviare
+ * al peer richiedente. Il penultimo parametro
+ * può essere NULL se l'ultimo è 0.
+ * Si tratta di un array di puntatori.
+ *
+ * La memoria allocata e il cui puntatore è
+ * fornito mediante il primo argomento può
+ * essere eliminata in maniera sicura con
+ * una chiamata a free.
+ *
+ * Restituisce 0 in caso di successo e -1 in
+ * caso di errore.
+ *
+ * È pensata per essere usata solo dal server.
+ */
+int messages_make_boot_ack(struct boot_ack**, size_t*, const struct boot_req*, const struct ns_host_addr**, size_t)
+
 #endif

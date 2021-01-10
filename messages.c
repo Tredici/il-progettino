@@ -116,3 +116,36 @@ int messages_send_boot_req(int sockfd, const struct sockaddr* dest, socklen_t de
 
     return 0;
 }
+
+int
+messages_make_boot_ack(struct boot_ack** buffer,
+            size_t* sz,
+            const struct boot_req* req,
+            const struct ns_host_addr** peers,
+            size_t nPeers)
+{
+    struct boot_ack* ans;
+    int i;
+
+    /* verifica integrità dei parametri */
+    if (buffer == NULL || sz == NULL || req == NULL
+        || (peers == NULL && nPeers != 0)
+        || nPeers > MAX_NEIGHBOUR_NUMBER )
+        return -1;
+
+    /* prepara la potenziale risposta */
+    ans = malloc(sizeof(struct boot_ack));
+    memset(ans, 0, sizeof(struct boot_ack));
+
+    /* prepara l'header */
+    ans->head.sentinel = 0;
+    ans->head.type = MESSAGES_BOOT_ACK;
+    /* prepara il corpo */
+    ans->body.length = nPeers;
+    for (i = 0; i < nPeers; ++i)
+        ans->body.neighbours[i] = *peers[i];
+
+    *buffer = ans;
+    *sz = sizeof(struct boot_ack);
+    return 0;
+}
