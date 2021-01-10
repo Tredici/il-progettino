@@ -46,7 +46,7 @@ int unified_io_close();
  * Restituisce 0 in caso di successo, -1 in
  * caso di errore.
  */
-int unified_io_push(const char*, enum unified_io_type);
+int unified_io_push(enum unified_io_type, const char*);
 
 /** Prova a stampare un messaggio in coda.
  *

@@ -14,7 +14,7 @@ struct io_message
     char* msg;
 };
 
-static struct io_message* io_message_init(const char* msg, enum unified_io_type type)
+static struct io_message* io_message_init(enum unified_io_type type, const char* msg)
 {
     struct io_message* ans;
 
@@ -74,11 +74,11 @@ int unified_io_close()
     return 0;
 }
 
-int unified_io_push(const char* msg, enum unified_io_type type)
+int unified_io_push(enum unified_io_type type, const char* msg)
 {
     struct io_message* iom;
 
-    iom = io_message_init(msg, type);
+    iom = io_message_init(type, msg);
     if (iom == NULL)
         return -1;
 
