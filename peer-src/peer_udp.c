@@ -9,8 +9,6 @@
 #include <signal.h>
 #include <sched.h>
 
-/* flag che verifica che il thread non sia già stato avviato */
-volatile int started;
 
 /** Id del thead che gestisce il socket
  * UDP
