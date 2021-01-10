@@ -100,8 +100,8 @@ struct boot_ack
     /* corpo della domanda */
     struct boot_ack_body
     {
-        /* numero di vicini, deve valere neighbours<MAX_NEIGHBOUR_NUMBER */
-        uint16_t neighbours;
+        /* numero di vicini, deve valere length<MAX_NEIGHBOUR_NUMBER */
+        uint16_t length;
         struct ns_host_addr neighbours[MAX_NEIGHBOUR_NUMBER];
     } body __attribute__ ((packed));
 } __attribute__ ((packed));
