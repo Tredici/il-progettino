@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <string.h>
 
 /** ATTENZIONE:
  * dato che in questo file andrò
@@ -14,16 +15,6 @@
  * delle strutture non sia alterata
  * attraverso la rete.
  */
-
-/** Contiene i primi
- * due cambi di un messaggio
- * ben strutturato
- */
-struct messages_head
-{
-    uint16_t sentinel;
-    uint16_t type;
-} __attribute__ ((packed));
 
 
 int recognise_messages_type(void* msg)
@@ -40,17 +31,6 @@ int recognise_messages_type(void* msg)
     return (int)ntohs(p->type);
 }
 
-/** Questa struttura definisce
- * il formato di una richiesta
- * di boot
- */
-struct boot_req
-{
-    /* header */
-    struct messages_head head;
-    /* corpo: contenuto */
-    struct ns_host_addr body;
-} __attribute__ ((packed));
 
 int messages_make_boot_req(void** buffer, size_t* sz, int socket)
 {
@@ -74,6 +54,7 @@ int messages_make_boot_req(void** buffer, size_t* sz, int socket)
 
     /* se siamo arrivati qui forse le cose funzionano */
     ans = malloc(sizeof(struct boot_req)); /* allochiamo il buffer */
+    memset(ans, 0, sizeof(struct boot_req));
     /* prepariamo l'header */
     ans->head.sentinel = 0;
     ans->head.type = htons(MESSAGES_BOOT_REQ);
@@ -90,6 +71,7 @@ int messages_make_boot_req(void** buffer, size_t* sz, int socket)
 
     return 0;
 }
+
 
 int messages_check_boot_req(void* buffer, size_t len)
 {
@@ -132,5 +114,38 @@ int messages_send_boot_req(int sockfd, const struct sockaddr* dest, socklen_t de
     if (sendLen != msgLen)
         return -1;
 
+    return 0;
+}
+
+int
+messages_make_boot_ack(struct boot_ack** buffer,
+            size_t* sz,
+            const struct boot_req* req,
+            const struct ns_host_addr** peers,
+            size_t nPeers)
+{
+    struct boot_ack* ans;
+    int i;
+
+    /* verifica integrità dei parametri */
+    if (buffer == NULL || sz == NULL || req == NULL
+        || (peers == NULL && nPeers != 0)
+        || nPeers > MAX_NEIGHBOUR_NUMBER )
+        return -1;
+
+    /* prepara la potenziale risposta */
+    ans = malloc(sizeof(struct boot_ack));
+    memset(ans, 0, sizeof(struct boot_ack));
+
+    /* prepara l'header */
+    ans->head.sentinel = 0;
+    ans->head.type = MESSAGES_BOOT_ACK;
+    /* prepara il corpo */
+    ans->body.length = nPeers;
+    for (i = 0; i < nPeers; ++i)
+        ans->body.neighbours[i] = *peers[i];
+
+    *buffer = ans;
+    *sz = sizeof(struct boot_ack);
     return 0;
 }

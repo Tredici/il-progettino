@@ -10,6 +10,10 @@
 #include "ns_host_addr.h"
 #include <stdlib.h>
 
+/* in questo progetto minimale */
+#define MAX_NEIGHBOUR_NUMBER 2
+
+
 /** La struttura dei messaggi
  * scambiati sarà la seguente:
  * (da leggersi dall'alto verso
@@ -19,12 +23,12 @@
  * [2 byte contengono un intero
  * rappresentante il tipo del
  * messaggio - in network order]
- * 
+ *
  * ++++ la parte successiva è variabile ++++
- * 
+ *
  * [ 4 byte contengono un id univoco
  * dell'autore, fornito dal server
- * in questo sistema semplificato 
+ * in questo sistema semplificato
  * - in network order]
  * [ 4 byte contengono l'id della
  * richiesta, per evitare problemi
@@ -32,7 +36,7 @@
  * network order ]
  * [ 4 byte contengono la lunghezza
  * del resto del corpo del messaggio ]
- * 
+ *
  */
 
 /** Enumerazione per identificare
@@ -61,8 +65,50 @@ enum messages_types
     MESSAGES_REQ_ENTRIES
 };
 
+
+/** Contiene i primi
+ * due cambi di un messaggio
+ * ben strutturato
+ */
+struct messages_head
+{
+    uint16_t sentinel;
+    uint16_t type;
+} __attribute__ ((packed));
+
+/** Questa struttura definisce
+ * il formato di una richiesta
+ * di boot
+ */
+struct boot_req
+{
+    /* header */
+    struct messages_head head;
+    /* corpo: contenuto */
+    struct ns_host_addr body;
+} __attribute__ ((packed));
+
+/** Questa struttura definisce il
+ * formato di un messaggio di boot
+ * inviato dal server in risposta
+ * a un ack
+ */
+struct boot_ack
+{
+    /* header */
+    struct messages_head head;
+    /* corpo della domanda */
+    struct boot_ack_body
+    {
+        /* numero di vicini, deve valere length<MAX_NEIGHBOUR_NUMBER */
+        uint16_t length;
+        struct ns_host_addr neighbours[MAX_NEIGHBOUR_NUMBER];
+    } body __attribute__ ((packed));
+} __attribute__ ((packed));
+
+
 /** Dato il puntatore al buffer che ospita il
- * messaggio fornisce il tipo di questo. 
+ * messaggio fornisce il tipo di questo.
  *
  * Restituisce -1 in caso di errore (e.g.
  * l'argomento è null), altrimenti un valore
@@ -105,5 +151,34 @@ int messages_check_boot_req(void*, size_t);
  * Restituisce 0 in caso di successo
  */
 int messages_send_boot_req(int, const struct sockaddr*, socklen_t, int);
+
+/** Genera un messaggio di risposta a quello di
+ * boot fornito utilizzando le informazioni dei
+ * peer dati.
+ *
+ * I primi due argomenti sono utilizzati per
+ * ottenere il messaggio e la sua dimensione
+ * per inviarli attraverso un socket.
+ *
+ * Il terzo argomento è il messaggio a cui si
+ * vuole rispondere.
+ *
+ * Gli ultimi due parametri permettono di
+ * accedere all'elenco di neighbour da inviare
+ * al peer richiedente. Il penultimo parametro
+ * può essere NULL se l'ultimo è 0.
+ * Si tratta di un array di puntatori.
+ *
+ * La memoria allocata e il cui puntatore è
+ * fornito mediante il primo argomento può
+ * essere eliminata in maniera sicura con
+ * una chiamata a free.
+ *
+ * Restituisce 0 in caso di successo e -1 in
+ * caso di errore.
+ *
+ * È pensata per essere usata solo dal server.
+ */
+int messages_make_boot_ack(struct boot_ack**, size_t*, const struct boot_req*, const struct ns_host_addr**, size_t)
 
 #endif

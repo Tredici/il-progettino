@@ -34,7 +34,7 @@ struct ns_host_addr
         struct in_addr v4;
         struct in6_addr v6;
     } ip __attribute__ ((packed));
-};
+} __attribute__ ((packed));
 
 /** Inizializza un oggetto struct ns_host_addr
  * a partire da un oggetto struct sockaddr
