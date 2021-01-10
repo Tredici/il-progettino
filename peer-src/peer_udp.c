@@ -98,8 +98,8 @@ static void* UDP(void* args)
     if (data == NULL)
         errExit("*** UDP ***\n");
 
+    /* codice per gestire l'apertura del socket */
     requestedPort = *data;
-
     /* crea il socket UDP */
     socket = initUDPSocket(requestedPort);
     if (socket == -1)
@@ -117,6 +117,7 @@ static void* UDP(void* args)
     /* metodo per fornire al chiamante
      * la porta utilizzata */
     *data = usedPort;
+
     /* socket creato, porta nota, si può iniziare */
     if (thread_semaphore_signal(ts, 0, NULL) == -1)
         errExit("*** UDP ***\n");
