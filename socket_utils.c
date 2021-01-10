@@ -2,7 +2,7 @@
 
 
 /** The Linux Programming Interface pag. 1229
- * 
+ *
  */
 int initUDPSocket(int port)
 {
@@ -59,7 +59,7 @@ int initUDPSocket(int port)
 
     /* Libera la memoria allocata */
     freeaddrinfo(res);
-    
+
     if (iter == NULL)
         return -1;  /* Le ha provate tutte ma ha fallito */
 
@@ -94,4 +94,50 @@ int getSocketPort(int socket)
     }
 
     return port;
+}
+
+int getSockAddr(struct sockaddr* sk_addr,
+                socklen_t* sk_len,
+                const char* hostname,
+                const char* portname,
+                int socktype,
+                int sockprotocol)
+{
+    struct addrinfo hints;
+    struct addrinfo* res, *iter;
+
+    if (sk_addr == NULL || sk_len == NULL
+    || hostname == NULL || portname == NULL)
+        return -1;
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+
+    hints.ai_family = AF_UNSPEC; /* ipv4|ipv6 */
+    hints.ai_flags = AI_NUMERICSERV | AI_ADDRCONFIG;
+
+    if (getaddrinfo(hostname, portname, &hints, &res) != 0)
+        return -1;
+
+    for (iter = res; iter; iter = iter->ai_next)
+    {
+        /* controlla il tipo */
+        if (socktype != 0)
+            if (socktype != iter->ai_socktype)
+                continue;
+        /* controlla il protocollo */
+        if (sockprotocol != 0)
+            if (sockprotocol != iter->ai_protocol)
+                continue;
+
+        /* se arriva qui rispetta tutti i test */
+        freeaddrinfo(res);
+        *sk_addr = *iter->ai_addr;
+        *sk_len = iter->ai_addrlen;
+        return 0;
+    }
+
+    freeaddrinfo(res);
+
+    /* non ha trovato nulla */
+    return -1;
 }
