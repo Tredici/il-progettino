@@ -66,9 +66,10 @@ static void print_message(enum unified_io_type type, const char* msg)
 /** Coda per i messaggi che genereranno
  * i vari thread.
  */
-struct queue* message_queue = NULL; /* per leggibilità */
+static struct queue* message_queue = NULL; /* per leggibilità */
 
-enum unified_io_mode mode = UNIFIED_IO_ASYNC_MODE;
+
+static enum unified_io_mode mode = UNIFIED_IO_ASYNC_MODE;
 
 int unified_io_init()
 {
