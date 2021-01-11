@@ -92,7 +92,7 @@ int messages_check_boot_req(void* buffer, size_t len)
         return -1;
 
     /* controlla che la porta non sia 0 */
-    if (ns_host_addr_get_port(req, &port) == -1 || port == 0)
+    if (ns_host_addr_get_port(&req->body, &port) == -1 || port == 0)
         return -1;
 
     return 0;
