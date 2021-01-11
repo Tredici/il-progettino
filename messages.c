@@ -143,7 +143,7 @@ messages_make_boot_ack(struct boot_ack** buffer,
             size_t nPeers)
 {
     struct boot_ack* ans;
-    int i;
+    size_t i;
 
     /* verifica integrità dei parametri */
     if (buffer == NULL || sz == NULL || req == NULL
