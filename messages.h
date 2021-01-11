@@ -152,6 +152,19 @@ int messages_check_boot_req(void*, size_t);
  */
 int messages_send_boot_req(int, const struct sockaddr*, socklen_t, int);
 
+/** Dato un puntatore a una messaggio di boot
+ * fornisce (una copia de) il contenuto della
+ * richiesta accessibile mediante il puntatore
+ * argomento.
+ *
+ * La memoria allocata può essere liberata in
+ * modo sicuro con free.
+ *
+ * Restituisce 0 in caso di successo o -1 in
+ * caso di errore.
+ */
+int messages_get_boot_body(struct ns_host_addr**, const struct boot_req*);
+
 /** Genera un messaggio di risposta a quello di
  * boot fornito utilizzando le informazioni dei
  * peer dati.

@@ -118,6 +118,24 @@ int messages_send_boot_req(int sockfd, const struct sockaddr* dest, socklen_t de
 }
 
 int
+messages_get_boot_body(struct ns_host_addr** ns_addr,
+            const struct boot_req* req)
+{
+    struct ns_host_addr* ans;
+    /* controllo dei parametri */
+    if (ns_addr == NULL || req == NULL)
+        return -1;
+
+    ans = malloc(sizeof(struct ns_host_addr));
+    if (ans == NULL)
+        return -1;
+
+    *ans = req->body;
+    *ns_addr = ans;
+    return 0;
+}
+
+int
 messages_make_boot_ack(struct boot_ack** buffer,
             size_t* sz,
             const struct boot_req* req,
