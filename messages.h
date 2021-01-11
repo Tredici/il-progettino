@@ -192,6 +192,6 @@ int messages_get_boot_body(struct ns_host_addr**, const struct boot_req*);
  *
  * È pensata per essere usata solo dal server.
  */
-int messages_make_boot_ack(struct boot_ack**, size_t*, const struct boot_req*, const struct ns_host_addr**, size_t)
+int messages_make_boot_ack(struct boot_ack**, size_t*, const struct boot_req*, const struct ns_host_addr**, size_t);
 
 #endif
