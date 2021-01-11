@@ -151,6 +151,7 @@ int unified_io_print(int flag)
     }
 
     print_message(iom->type, iom->msg);
+    io_message_destroy(iom);
 
     return 0;
 }
