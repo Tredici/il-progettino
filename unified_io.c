@@ -1,3 +1,5 @@
+#define _GNU_SOURCE /* per PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP */
+
 #include "unified_io.h"
 #include "queue.h"
 #include <stdio.h>
@@ -68,6 +70,11 @@ static void print_message(enum unified_io_type type, const char* msg)
  */
 static struct queue* message_queue = NULL; /* per leggibilità */
 
+/** Per gestire la mutua esclusione e permettere di
+ * utilizzare un sistema diverso dalla coda, quando
+ * possibile.
+ */
+static pthread_mutex_t mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 
 static enum unified_io_mode mode = UNIFIED_IO_ASYNC_MODE;
 
@@ -94,7 +101,19 @@ int unified_io_set_mode(enum unified_io_mode new_mode)
     {
     case UNIFIED_IO_ASYNC_MODE:
     case UNIFIED_IO_SYNC_MODE:
+        if (pthread_mutex_lock(&mutex) != 0)
+            return -1;
         mode = new_mode;
+        /* si occupa di svuotare la coda */
+        if (new_mode == UNIFIED_IO_SYNC_MODE)
+        {
+            errno = 0;
+            while (unified_io_print(1) == 0)
+                ;
+        }
+        /* gestisce anche l'eventuale errore con unified_io_print */
+        if (pthread_mutex_unlock(&mutex) != 0 || errno != EWOULDBLOCK)
+            return -1;
         break;
 
     default:
@@ -126,8 +145,29 @@ int unified_io_push(enum unified_io_type type, const char* msg)
     iom = io_message_init(type, msg);
     if (iom == NULL)
         return -1;
+    if (pthread_mutex_lock(&mutex) != 0)
+    {
+        io_message_destroy(iom);
+        return -1;
+    }
 
-    if (queue_push(message_queue, (void*)iom) < 0)
+    /* se bisogna accodare */
+    if (mode == UNIFIED_IO_ASYNC_MODE)
+    {
+        if (queue_push(message_queue, (void*)iom) < 0)
+        {
+            io_message_destroy(iom);
+            pthread_mutex_unlock(&mutex);
+            return -1;
+        }
+    }
+    else /* altrimenti stampa direttamente */
+    {
+        print_message(iom->type, iom->msg);
+        io_message_destroy(iom); /* libera la memoria */
+    }
+
+    if (pthread_mutex_unlock(&mutex) != 0)
     {
         io_message_destroy(iom);
         return -1;
