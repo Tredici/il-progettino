@@ -88,7 +88,7 @@ int messages_check_boot_req(void* buffer, size_t len)
         return -1;
 
     /* controlla la validità della versione IP */
-    if (ns_host_addr_get_ip_version(req) == 0) /* caso raro in cui 0 segnala l'errore */
+    if (ns_host_addr_get_ip_version(&req->body) == 0) /* caso raro in cui 0 segnala l'errore */
         return -1;
 
     /* controlla che la porta non sia 0 */
