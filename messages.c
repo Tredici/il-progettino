@@ -100,7 +100,7 @@ int messages_check_boot_req(void* buffer, size_t len)
 
 int messages_send_boot_req(int sockfd, const struct sockaddr* dest, socklen_t destLen, int sk)
 {
-    void* bootmsg;
+    struct boot_req* bootmsg;
     size_t msgLen;
     ssize_t sendLen;
 
@@ -110,7 +110,7 @@ int messages_send_boot_req(int sockfd, const struct sockaddr* dest, socklen_t de
     if (messages_make_boot_req(&bootmsg, &msgLen, sk) == -1)
         return -1;
 
-    sendLen = sendto(sockfd, bootmsg, msgLen, 0, dest, destLen);
+    sendLen = sendto(sockfd, (void*)bootmsg, msgLen, 0, dest, destLen);
     if ((size_t)sendLen != msgLen)
         return -1;
 
