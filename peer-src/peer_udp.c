@@ -112,7 +112,7 @@ static void* UDP(void* args)
         errExit("*** UDP ***\n");
 
     /* inizializza la pipe da usare con UDPstart */
-    if (pipe2(startPipe, O_DIRECT) != 0)
+    if (pipe(startPipe) != 0)
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
             errExit("*** pipe2 ***\n");
 
