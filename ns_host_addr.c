@@ -219,3 +219,25 @@ int ns_host_addr_loopback(const struct ns_host_addr* ns_addr)
         return -1;
     }
 }
+
+int ns_host_addr_update_addr(struct ns_host_addr* ns_addr, const struct sockaddr* sk_addr)
+{
+    struct ns_host_addr ans;
+    uint16_t port;
+
+    if (ns_addr == NULL || sk_addr == NULL)
+        return -1;
+
+    if (ns_host_addr_from_sockaddr(&ans, sk_addr) == -1)
+        return -1;
+
+    if (ns_host_addr_get_port(ns_addr, &port) == -1)
+        return -1;
+
+    if (ns_host_addr_set_port(&ans, port) == -1)
+        return -1;
+
+    *ns_addr = ans;
+
+    return 0;
+}

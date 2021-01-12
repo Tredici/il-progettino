@@ -143,4 +143,16 @@ sa_family_t ns_host_addr_get_ip_family(const struct ns_host_addr*);
  */
 int ns_host_addr_loopback(const struct ns_host_addr*);
 
+/** Può essere necessario cambiare
+ * l'indirizzo IP indicato in una
+ * struct ns_host_addr. Questa funzione
+ * lo fa prendendo l'indirizzo dall'oggetto
+ * struct sockaddr fornito e inserendolo
+ * nella struttura fornita.
+ *
+ * Restituisce 0 in caso di successo,
+ * -1 in caso di errore.
+ */
+int ns_host_addr_update_addr(struct ns_host_addr*, const struct sockaddr*);
+
 #endif
