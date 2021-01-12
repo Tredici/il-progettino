@@ -83,7 +83,7 @@ volatile sig_atomic_t UDPloop = 1;
  * è globale poiché deve essere
  * potenzialmente condiviso da
  * più thread */
-int socket;
+int socketfd;
 
 /** Funzione che rappresenta il corpo del
  * thread che gestira il socket
@@ -119,8 +119,8 @@ static void* UDP(void* args)
     /* codice per gestire l'apertura del socket */
     requestedPort = *data;
     /* crea il socket UDP */
-    socket = initUDPSocket(requestedPort);
-    if (socket == -1)
+    socketfd = initUDPSocket(requestedPort);
+    if (socketfd == -1)
     {
         /* chiude la pipe */
         close(startPipe[0]); close(startPipe[1]);
@@ -128,7 +128,7 @@ static void* UDP(void* args)
             errExit("*** UDP ***\n");
     }
     /* verifica la porta */
-    usedPort = getSocketPort(socket);
+    usedPort = getSocketPort(socketfd);
     if (usedPort == -1 || (requestedPort != 0 && requestedPort != usedPort))
     {
         /* chiude la pipe */
@@ -205,7 +205,7 @@ int UDPconnect(const char* hostname, const char* portname)
         /* prova a inviare il messaggio */
         /* se fallisce qui c'è proprio un problema
          * di invio */
-        if (messages_send_boot_req(socket, (struct sockaddr*)&ss, sl, socket) != 0)
+        if (messages_send_boot_req(socketfd, (struct sockaddr*)&ss, sl, socketfd) != 0)
             goto failedBoot;
 
         /* si mette in attesa di un risultato o del timeout */
