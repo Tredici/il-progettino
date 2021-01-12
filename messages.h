@@ -146,7 +146,7 @@ int messages_check_boot_req(void*, size_t);
  * specificato come primo argomento, la destinazione
  * indicata come secondo argomento e inviando le
  * informazioni per raggiungere il socket
- * specificato come terzo argomento.
+ * specificato come quarto argomento.
  *
  * Restituisce 0 in caso di successo
  */
