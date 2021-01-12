@@ -149,7 +149,7 @@ static void* UDP(void* args)
     }
 
     /* a questo punto il padre può riprendere */
-    unified_io_push("UDP thread running", UNIFIED_IO_NORMAL);
+    unified_io_push(UNIFIED_IO_NORMAL, "UDP thread running");
     /* qui va il loop di gestione delle richieste */
     yield = 0; /* il primo ciclo di sicuro non si lascia la CPU */
     UDPloop = 1;
