@@ -131,6 +131,7 @@ static void* UDP(void* args)
         while (UDPloop)
         {
             /* ascolta per una richiesta */
+            senderLen = sizeof(sender);
             msgLen = recvfrom(socket, (void*)buffer, sizeof(buffer),
                 0, (struct sockaddr*)&sender, &senderLen);
 
