@@ -148,9 +148,15 @@ int messages_check_boot_req(void*, size_t);
  * informazioni per raggiungere il socket
  * specificato come quarto argomento.
  *
+ * L'ultimo argomento, che deve essere il
+ * puntatore a un puntatore a una struttura
+ * (struct ns_host_addr), oppure NULL,
+ * permette di ottenere una copia del
+ * dato inviato nel messaggio di boot.
+ *
  * Restituisce 0 in caso di successo
  */
-int messages_send_boot_req(int, const struct sockaddr*, socklen_t, int);
+int messages_send_boot_req(int, const struct sockaddr*, socklen_t, int, struct ns_host_addr**);
 
 /** Dato un puntatore a una messaggio di boot
  * fornisce (una copia de) il contenuto della

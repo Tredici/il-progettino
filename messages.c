@@ -98,22 +98,50 @@ int messages_check_boot_req(void* buffer, size_t len)
     return 0;
 }
 
-int messages_send_boot_req(int sockfd, const struct sockaddr* dest, socklen_t destLen, int sk)
+int messages_send_boot_req(int sockfd, const struct sockaddr* dest, socklen_t destLen, int sk, struct ns_host_addr** ns_addr)
 {
     struct boot_req* bootmsg;
+    struct ns_host_addr* ns_addr_val;
     size_t msgLen;
     ssize_t sendLen;
 
     if (dest == NULL)
         return -1;
 
+    /* verifica, se il chiamante ha richiesto
+     * una copia del messaggio, di avere abbastanza
+     * memoria per fornirgliela */
+    if (ns_addr != NULL)
+    {
+        ns_addr_val = malloc(sizeof(struct ns_host_addr));
+        if (ns_addr_val == NULL)
+            return -1;
+    }
+    else
+        ns_addr_val = NULL;
+
     if (messages_make_boot_req(&bootmsg, &msgLen, sk) == -1)
+    {
+        free((void*)ns_addr_val);
         return -1;
+    }
 
     sendLen = sendto(sockfd, (void*)bootmsg, msgLen, 0, dest, destLen);
-    free((void*)bootmsg);
     if ((size_t)sendLen != msgLen)
+    {
+        free((void*)ns_addr_val);
+        free((void*)bootmsg);
         return -1;
+    }
+    /* copia il corpo del messaggio, se richiesto */
+    if (ns_addr_val != NULL)
+    {
+        *ns_addr_val = bootmsg->body;
+        /* e lo fornisce */
+        *ns_addr = ns_addr_val;
+    }
+
+    free((void*)bootmsg);
 
     return 0;
 }
