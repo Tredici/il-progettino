@@ -21,6 +21,9 @@ all: peer
 -include $(OBJS:%.o=%.d)
 
 # file esclusivi dei peer
+peer_start.o: peer-src/peer_start.c  peer-src/peer_start.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 peer_udp.o: peer-src/peer_udp.c  peer-src/peer_udp.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
@@ -30,7 +33,7 @@ peer_add.o: peer-src/peer_add.c  peer-src/peer_add.h
 peer_stop.o: peer-src/peer_stop.c peer-src/peer_stop.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-PEERDEPS = peer_stop.o peer_add.o peer_udp.o
+PEERDEPS = peer_stop.o peer_add.o peer_udp.o peer_start.o
 
 # file per tutti
 list.o: 			list.h list.c
@@ -44,9 +47,11 @@ set.o:				set.h set.c rb_tree.h rb_tree.c
 commons.o:			commons.h commons.c
 thread_semaphore.o:	thread_semaphore.h thread_semaphore.c
 unified_io.o:		unified_io.h unified_io.c
+ns_host_addr.o:		ns_host_addr.h ns_host_addr.c
+messages.o:			messages.h messages.c
 
 # dipendenze del peer
-COMMONDEPS = list.o register.o repl.o socket_utils.o queue.o main_loop.o rb_tree.o set.o commons.o thread_semaphore.o unified_io.o
+COMMONDEPS = list.o register.o repl.o socket_utils.o queue.o main_loop.o rb_tree.o set.o commons.o thread_semaphore.o unified_io.o ns_host_addr.o messages.o
 
 # main dei peer
 peer.o: peer.c

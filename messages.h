@@ -132,7 +132,7 @@ int recognise_messages_type(void*);
  * Restituisce -1 in caso di errore, 0 in caso
  * di successo.
  */
-int messages_make_boot_req(void**, size_t*, int);
+int messages_make_boot_req(struct boot_req**, size_t*, int);
 
 /** Verifica l'integrità del messaggo di
  * boot di cui sono forniti inizio e dimensione.
@@ -146,11 +146,30 @@ int messages_check_boot_req(void*, size_t);
  * specificato come primo argomento, la destinazione
  * indicata come secondo argomento e inviando le
  * informazioni per raggiungere il socket
- * specificato come terzo argomento.
+ * specificato come quarto argomento.
+ *
+ * L'ultimo argomento, che deve essere il
+ * puntatore a un puntatore a una struttura
+ * (struct ns_host_addr), oppure NULL,
+ * permette di ottenere una copia del
+ * dato inviato nel messaggio di boot.
  *
  * Restituisce 0 in caso di successo
  */
-int messages_send_boot_req(int, const struct sockaddr*, socklen_t, int);
+int messages_send_boot_req(int, const struct sockaddr*, socklen_t, int, struct ns_host_addr**);
+
+/** Dato un puntatore a una messaggio di boot
+ * fornisce (una copia de) il contenuto della
+ * richiesta accessibile mediante il puntatore
+ * argomento.
+ *
+ * La memoria allocata può essere liberata in
+ * modo sicuro con free.
+ *
+ * Restituisce 0 in caso di successo o -1 in
+ * caso di errore.
+ */
+int messages_get_boot_body(struct ns_host_addr**, const struct boot_req*);
 
 /** Genera un messaggio di risposta a quello di
  * boot fornito utilizzando le informazioni dei
@@ -179,6 +198,6 @@ int messages_send_boot_req(int, const struct sockaddr*, socklen_t, int);
  *
  * È pensata per essere usata solo dal server.
  */
-int messages_make_boot_ack(struct boot_ack**, size_t*, const struct boot_req*, const struct ns_host_addr**, size_t)
+int messages_make_boot_ack(struct boot_ack**, size_t*, const struct boot_req*, const struct ns_host_addr**, size_t);
 
 #endif

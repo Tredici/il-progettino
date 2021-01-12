@@ -1,3 +1,5 @@
+#define _GNU_SOURCE /* per PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP */
+
 #include "unified_io.h"
 #include "queue.h"
 #include <stdio.h>
@@ -14,7 +16,7 @@ struct io_message
     char* msg;
 };
 
-static struct io_message* io_message_init(const char* msg, enum unified_io_type type)
+static struct io_message* io_message_init(enum unified_io_type type, const char* msg)
 {
     struct io_message* ans;
 
@@ -42,10 +44,39 @@ static void io_message_destroy(struct io_message* iom)
     free(iom);
 }
 
+
+static void print_message(enum unified_io_type type, const char* msg)
+{
+    switch (type)
+    {
+    case UNIFIED_IO_NORMAL:
+        fprintf(stdout, "%s\n", msg);
+        break;
+
+    case UNIFIED_IO_ERROR:
+        fprintf(stderr, "%s\n", msg);
+        break;
+
+    case UNIFIED_IO_LIMIT:
+        /* mai raggiunto - serve solo ad
+         * eliminare un warning durante
+         * la compilazione */
+        break;
+    }
+}
+
 /** Coda per i messaggi che genereranno
  * i vari thread.
  */
-struct queue* message_queue = NULL; /* per leggibilità */
+static struct queue* message_queue = NULL; /* per leggibilità */
+
+/** Per gestire la mutua esclusione e permettere di
+ * utilizzare un sistema diverso dalla coda, quando
+ * possibile.
+ */
+static pthread_mutex_t mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+
+static enum unified_io_mode mode = UNIFIED_IO_ASYNC_MODE;
 
 int unified_io_init()
 {
@@ -64,6 +95,39 @@ int unified_io_init()
     return 0;
 }
 
+int unified_io_set_mode(enum unified_io_mode new_mode)
+{
+    switch (new_mode)
+    {
+    case UNIFIED_IO_ASYNC_MODE:
+    case UNIFIED_IO_SYNC_MODE:
+        if (pthread_mutex_lock(&mutex) != 0)
+            return -1;
+        mode = new_mode;
+        /* si occupa di svuotare la coda */
+        if (new_mode == UNIFIED_IO_SYNC_MODE)
+        {
+            errno = 0;
+            while (unified_io_print(1) == 0)
+                ;
+        }
+        /* gestisce anche l'eventuale errore con unified_io_print */
+        if (pthread_mutex_unlock(&mutex) != 0 || errno != EWOULDBLOCK)
+            return -1;
+        break;
+
+    default:
+        return -1;
+    }
+
+    return 0;
+}
+
+enum unified_io_mode unified_io_get_mode(void)
+{
+    return mode;
+}
+
 int unified_io_close()
 {
     if (message_queue == NULL)
@@ -74,15 +138,36 @@ int unified_io_close()
     return 0;
 }
 
-int unified_io_push(const char* msg, enum unified_io_type type)
+int unified_io_push(enum unified_io_type type, const char* msg)
 {
     struct io_message* iom;
 
-    iom = io_message_init(msg, type);
+    iom = io_message_init(type, msg);
     if (iom == NULL)
         return -1;
+    if (pthread_mutex_lock(&mutex) != 0)
+    {
+        io_message_destroy(iom);
+        return -1;
+    }
 
-    if (queue_push(message_queue, (void*)iom) < 0)
+    /* se bisogna accodare */
+    if (mode == UNIFIED_IO_ASYNC_MODE)
+    {
+        if (queue_push(message_queue, (void*)iom) < 0)
+        {
+            io_message_destroy(iom);
+            pthread_mutex_unlock(&mutex);
+            return -1;
+        }
+    }
+    else /* altrimenti stampa direttamente */
+    {
+        print_message(iom->type, iom->msg);
+        io_message_destroy(iom); /* libera la memoria */
+    }
+
+    if (pthread_mutex_unlock(&mutex) != 0)
     {
         io_message_destroy(iom);
         return -1;
@@ -105,22 +190,8 @@ int unified_io_print(int flag)
         return -1;
     }
 
-    switch (iom->type)
-    {
-    case UNIFIED_IO_NORMAL:
-        fprintf(stdout, "%s\n", iom->msg);
-        break;
-
-    case UNIFIED_IO_ERROR:
-        fprintf(stderr, "%s\n", iom->msg);
-        break;
-
-    case UNIFIED_IO_LIMIT:
-        /* mai raggiunto - serve solo ad
-         * eliminare un warning durante
-         * la compilazione */
-        break;
-    }
+    print_message(iom->type, iom->msg);
+    io_message_destroy(iom);
 
     return 0;
 }

@@ -21,12 +21,38 @@ enum unified_io_type
     UNIFIED_IO_LIMIT
 };
 
+/** Specifica il comportamento di
+ * unified_io_push
+ */
+enum unified_io_mode
+{
+    /* accoda il messaggio - default */
+    UNIFIED_IO_ASYNC_MODE,
+    /* come scrivi output */
+    UNIFIED_IO_SYNC_MODE
+};
+
 /** Inizializza tutto il sistema,
  * va chiamata all'inizio dal thread
  * principale prima di eseguire ogni
  * sorta di operazione.
  */
 int unified_io_init();
+
+/** Imposta il comportamento del
+ * sottosistema di I/O, ovvero se
+ * la scrittura dell'output deve essere
+ * sincrona oppure no.
+ *
+ * Restituisce 0 in caso di successo e
+ * -1 in caso di errore
+ */
+int unified_io_set_mode(enum unified_io_mode);
+
+/** Ottiene la modalità in cui ora si
+ * trova il sottosistema di io.
+ */
+enum unified_io_mode unified_io_get_mode(void);
 
 /** Da chiamare alla fine dell'utilizzo.
  * Libera tutte le risorse utilizzate.
@@ -46,7 +72,7 @@ int unified_io_close();
  * Restituisce 0 in caso di successo, -1 in
  * caso di errore.
  */
-int unified_io_push(const char*, enum unified_io_type);
+int unified_io_push(enum unified_io_type, const char*);
 
 /** Prova a stampare un messaggio in coda.
  *
