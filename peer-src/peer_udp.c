@@ -192,6 +192,10 @@ int UDPconnect(const char* hostname, const char* portname)
     struct pollfd ps;
     int ans; /* per tenere il risultato */
     int attempt; /* quanti tentativi ha fatto fin ora */
+    /* variabili usate per mostrare quanto inviato */
+    struct ns_host_addr* ns_addr_send; /* mesg inviato */
+    char msgBody[32]; /* per stampare il dato inviato */
+    char destStr[32]; /* per stampare a chi viene inviato. */
 
     ans = -1; /* errore di default */
 
@@ -205,8 +209,16 @@ int UDPconnect(const char* hostname, const char* portname)
         /* prova a inviare il messaggio */
         /* se fallisce qui c'è proprio un problema
          * di invio */
-        if (messages_send_boot_req(socketfd, (struct sockaddr*)&ss, sl, socketfd) != 0)
+        if (messages_send_boot_req(socketfd, (struct sockaddr*)&ss, sl, socketfd, &ns_addr_send) != 0)
             goto failedBoot;
+
+        /* resoconto di cosa è stato inviato a chi */
+        if (ns_host_addr_as_string(msgBody, sizeof(msgBody), ns_addr_send) == -1)
+            errExit("*** ns_host_addr_as_string ***\n");
+        if (sockaddr_as_string(destStr, sizeof(destStr), (struct sockaddr*)&ss, sl) == -1)
+            errExit("*** ns_host_addr_as_string ***\n");
+
+        printf("Inviato messaggio di boot:\n\tdest: %s\n\tcont: %s\n", destStr, msgBody);
 
         /* si mette in attesa di un risultato o del timeout */
         memset(&ps, 0, sizeof(ps)); /* azzera per sicurezza */
