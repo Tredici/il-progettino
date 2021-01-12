@@ -67,7 +67,7 @@ int messages_make_boot_req(struct boot_req** buffer, size_t* sz, int socket)
         return -1;
 
     *buffer = ans;
-    *sz = sizeof(sizeof(struct boot_req));
+    *sz = sizeof(struct boot_req);
 
     return 0;
 }
