@@ -5,6 +5,7 @@
  */
 #include "peer-src/peer_stop.h"
 #include "peer-src/peer_udp.h"
+#include "peer-src/peer_start.h"
 #include "commons.h"
 #include "repl.h"
 #include "main_loop.h"
@@ -27,6 +28,7 @@ int main(int argc, char* argv[])
     char peerID[10];
 
     struct main_loop_command commands[] = {
+        { "start", &start, "<DS_addr DS_port> termina il peer" },
         { "stop", &stop, "termina il peer" }
     };
 
