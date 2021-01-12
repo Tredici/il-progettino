@@ -132,7 +132,7 @@ int recognise_messages_type(void*);
  * Restituisce -1 in caso di errore, 0 in caso
  * di successo.
  */
-int messages_make_boot_req(void**, size_t*, int);
+int messages_make_boot_req(struct boot_req**, size_t*, int);
 
 /** Verifica l'integrità del messaggo di
  * boot di cui sono forniti inizio e dimensione.
