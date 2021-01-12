@@ -111,6 +111,7 @@ int messages_send_boot_req(int sockfd, const struct sockaddr* dest, socklen_t de
         return -1;
 
     sendLen = sendto(sockfd, (void*)bootmsg, msgLen, 0, dest, destLen);
+    free((void*)bootmsg);
     if ((size_t)sendLen != msgLen)
         return -1;
 
