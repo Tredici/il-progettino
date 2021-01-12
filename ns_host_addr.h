@@ -141,7 +141,7 @@ sa_family_t ns_host_addr_get_ip_family(const struct ns_host_addr*);
  *
  * Restituisce -1 in caso di errore.
  */
-int ns_host_addr_loopback(const struct ns_host_addr*);
+int ns_host_addr_any(const struct ns_host_addr*);
 
 /** Può essere necessario cambiare
  * l'indirizzo IP indicato in una
