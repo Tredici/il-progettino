@@ -2,6 +2,7 @@
 
 #include "ds_udp.h"
 #include <pthread.h>
+#include "ds_peers.h"
 #include "../socket_utils.h"
 #include "../thread_semaphore.h"
 #include "../commons.h"
@@ -117,6 +118,14 @@ static void* UDP(void* args)
     data = (int*)thread_semaphore_get_args(args);
     if (data == NULL)
         errExit("*** UDP ***\n");
+
+    /* attiva il sottosistema per gestire i peer */
+    if (peers_init() == -1)
+    {
+        if (thread_semaphore_signal(ts, -1, NULL) == -1)
+            errExit("*** sigaction ***\n");
+        pthread_exit(NULL);
+    }
 
     /* prepara l'handler di terminazione */
     memset(&toStop, 0, sizeof(struct sigaction));
@@ -237,6 +246,10 @@ static void* UDP(void* args)
     }
     /* ora il segnale è di nuovo bloccato */
     /* mai raggiunto prima del termine */
+
+    /* distrugge gli ultimi registri dei peer */
+    if (peers_clear() == -1)
+        errExit("*** peers_clear ***\n");
 
     return NULL;
 }
