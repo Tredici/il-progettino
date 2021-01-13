@@ -248,4 +248,12 @@ int messages_check_boot_ack(void*, size_t);
  */
 int messages_get_boot_ack_body(const struct boot_ack*, uint32_t*, struct ns_host_addr**, size_t*);
 
+/** Ricava il pseudo id del messaggio
+ * fornito.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_get_pid(const void*, uint32_t*);
+
 #endif

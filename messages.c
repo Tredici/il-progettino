@@ -259,3 +259,12 @@ messages_get_boot_ack_body(
 
     return 0;
 }
+
+int messages_get_pid(const void* head, uint32_t* pid)
+{
+    if (head == NULL || pid == NULL)
+        return -1;
+
+    *pid =  ((struct messages_head*)head)->pid;
+    return 0;
+}
