@@ -11,6 +11,8 @@
 #ifndef UNIFIED_IO
 #define UNIFIED_IO
 
+#define UNIFIED_IO_MAX_MSGLEN 512
+
 enum unified_io_type
 {
     UNIFIED_IO_NORMAL,
@@ -67,12 +69,19 @@ int unified_io_close();
 
 /** Aggiunge un messaggio da stampare a video.
  * È possibile specificare se si tratta di un
- * messaggio "normale" o di un "errore"
+ * messaggio "normale" o di un "errore".
+ * Utilizza la stessa convenzione seguita dalla
+ * famiglia delle funzioni printf.
+ *
+ * Se il messaggio dovesse superare per
+ * lunghezza il valore UNIFIED_IO_MAX_MSGLEN
+ * (512) la parte in eccesso verrebbe troncata
+ * senza alcuna avvertenza.
  *
  * Restituisce 0 in caso di successo, -1 in
  * caso di errore.
  */
-int unified_io_push(enum unified_io_type, const char*);
+int unified_io_push(enum unified_io_type, const char*, ...);
 
 /** Prova a stampare un messaggio in coda.
  *

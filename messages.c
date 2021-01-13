@@ -32,7 +32,7 @@ int recognise_messages_type(void* msg)
 }
 
 
-int messages_make_boot_req(struct boot_req** buffer, size_t* sz, int socket)
+int messages_make_boot_req(struct boot_req** buffer, size_t* sz, int socket, uint32_t pid)
 {
     struct boot_req* ans;
 
@@ -58,6 +58,7 @@ int messages_make_boot_req(struct boot_req** buffer, size_t* sz, int socket)
     /* prepariamo l'header */
     ans->head.sentinel = 0;
     ans->head.type = htons(MESSAGES_BOOT_REQ);
+    ans->head.pid = htonl(pid);
 
     /** bisogna trasferire:
      * +versione di IP
@@ -98,7 +99,7 @@ int messages_check_boot_req(void* buffer, size_t len)
     return 0;
 }
 
-int messages_send_boot_req(int sockfd, const struct sockaddr* dest, socklen_t destLen, int sk, struct ns_host_addr** ns_addr)
+int messages_send_boot_req(int sockfd, const struct sockaddr* dest, socklen_t destLen, int sk, uint32_t pid, struct ns_host_addr** ns_addr)
 {
     struct boot_req* bootmsg;
     struct ns_host_addr* ns_addr_val;
@@ -120,7 +121,7 @@ int messages_send_boot_req(int sockfd, const struct sockaddr* dest, socklen_t de
     else
         ns_addr_val = NULL;
 
-    if (messages_make_boot_req(&bootmsg, &msgLen, sk) == -1)
+    if (messages_make_boot_req(&bootmsg, &msgLen, sk, pid) == -1)
     {
         free((void*)ns_addr_val);
         return -1;
@@ -147,7 +148,7 @@ int messages_send_boot_req(int sockfd, const struct sockaddr* dest, socklen_t de
 }
 
 int
-messages_get_boot_body(struct ns_host_addr** ns_addr,
+messages_get_boot_req_body(struct ns_host_addr** ns_addr,
             const struct boot_req* req)
 {
     struct ns_host_addr* ans;
@@ -168,6 +169,7 @@ int
 messages_make_boot_ack(struct boot_ack** buffer,
             size_t* sz,
             const struct boot_req* req,
+            uint32_t ID,
             const struct ns_host_addr** peers,
             size_t nPeers)
 {
@@ -187,12 +189,90 @@ messages_make_boot_ack(struct boot_ack** buffer,
     /* prepara l'header */
     ans->head.sentinel = 0;
     ans->head.type = MESSAGES_BOOT_ACK;
+    ans->head.pid = req->head.pid;
     /* prepara il corpo */
+    ans->body.ID = ID;
     ans->body.length = nPeers;
     for (i = 0; i < nPeers; ++i)
         ans->body.neighbours[i] = *peers[i];
 
     *buffer = ans;
     *sz = sizeof(struct boot_ack);
+    return 0;
+}
+
+int messages_check_boot_ack(void* buffer, size_t len)
+{
+    struct boot_ack *ack;
+
+    if (buffer == NULL || len != sizeof(struct boot_ack))
+        return -1;
+
+    ack = (struct boot_ack*)buffer;
+
+    /* controllo dell'header */
+    if (ack->head.sentinel != 0 || ntohs(ack->head.type) != MESSAGES_BOOT_ACK)
+        return -1;
+
+    /* controllo del corpo */
+    if (ack->body.length > MAX_NEIGHBOUR_NUMBER)
+        return -1;
+
+    return 0;
+}
+
+int
+messages_get_boot_ack_body(
+            const struct boot_ack* ack,
+            uint32_t* ID,
+            struct ns_host_addr** ns_addrs,
+            size_t* addrN)
+{
+    int i, j, len;
+    struct ns_host_addr* ns;
+
+    if (ack == NULL || ID == NULL
+        || ns_addrs == NULL || addrN == NULL)
+        return -1;
+
+    len = (int) ack->body.length;
+    for (i = 0; i != len; ++i)
+    {
+        ns = malloc(sizeof(struct ns_host_addr));
+        if (ns == NULL)
+        {
+            /* distrugge gli elementi precedenti */
+            for (j = 0; j != i; ++j)
+            {
+                free(ns_addrs[j]);
+                ns_addrs[j] = NULL;
+            }
+            /* segnala l'errore */
+            return -1;
+        }
+        /* altrimenti copia il valore */
+        *ns = ack->body.neighbours[i];
+        ns_addrs[i] = ns;
+    }
+    *addrN = (size_t)len;
+    *ID = ack->body.ID;
+
+    return 0;
+}
+
+int messages_cmp_boot_ack_pid(const struct boot_ack* ack, uint32_t pid)
+{
+    if (ack == NULL)
+        return -1;
+
+    return ack->head.pid == pid;
+}
+
+int messages_get_pid(const void* head, uint32_t* pid)
+{
+    if (head == NULL || pid == NULL)
+        return -1;
+
+    *pid =  ((struct messages_head*)head)->pid;
     return 0;
 }

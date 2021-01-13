@@ -23,6 +23,11 @@
  * [2 byte contengono un intero
  * rappresentante il tipo del
  * messaggio - in network order]
+ * [4 byte che identificano il messaggio,
+ * usabile o meno a seconda del tipo di
+ * messaggio per il controllo dei duplicati
+ * o per qualsiasi altra ragione - in
+ * network order]
  *
  * ++++ la parte successiva è variabile ++++
  *
@@ -74,6 +79,7 @@ struct messages_head
 {
     uint16_t sentinel;
     uint16_t type;
+    uint32_t pid; /* pseudo id */
 } __attribute__ ((packed));
 
 /** Questa struttura definisce
@@ -100,6 +106,11 @@ struct boot_ack
     /* corpo della domanda */
     struct boot_ack_body
     {
+        /* id che permetterà di identificare
+         * il peer nelle comunicazioni future,
+         * in questo sistema semplificato sarà
+         * dato dal numero di porta */
+        uint32_t ID;
         /* numero di vicini, deve valere length<MAX_NEIGHBOUR_NUMBER */
         uint16_t length;
         struct ns_host_addr neighbours[MAX_NEIGHBOUR_NUMBER];
@@ -126,13 +137,17 @@ int recognise_messages_type(void*);
  * socket su cui ci si aspetta di ricevere i
  * messaggi dai peer.
  *
+ * Il quarto argomento permette di specificare
+ * il pseudo id che va associato alla richiesta
+ * di boot.
+ *
  * In caso di successo la memoria occupata può
  * essere liberata tranquillamente tramite free.
  *
  * Restituisce -1 in caso di errore, 0 in caso
  * di successo.
  */
-int messages_make_boot_req(struct boot_req**, size_t*, int);
+int messages_make_boot_req(struct boot_req**, size_t*, int, uint32_t);
 
 /** Verifica l'integrità del messaggo di
  * boot di cui sono forniti inizio e dimensione.
@@ -148,15 +163,19 @@ int messages_check_boot_req(void*, size_t);
  * informazioni per raggiungere il socket
  * specificato come quarto argomento.
  *
+ * Il quinto argomento permette di specificare
+ * l'id della richiesta da inviare.
+ *
  * L'ultimo argomento, che deve essere il
  * puntatore a un puntatore a una struttura
  * (struct ns_host_addr), oppure NULL,
  * permette di ottenere una copia del
  * dato inviato nel messaggio di boot.
  *
- * Restituisce 0 in caso di successo
+ * Restituisce 0 in caso di successo e
+ * -1 in caso di errore.
  */
-int messages_send_boot_req(int, const struct sockaddr*, socklen_t, int, struct ns_host_addr**);
+int messages_send_boot_req(int, const struct sockaddr*, socklen_t, int, uint32_t, struct ns_host_addr**);
 
 /** Dato un puntatore a una messaggio di boot
  * fornisce (una copia de) il contenuto della
@@ -169,7 +188,7 @@ int messages_send_boot_req(int, const struct sockaddr*, socklen_t, int, struct n
  * Restituisce 0 in caso di successo o -1 in
  * caso di errore.
  */
-int messages_get_boot_body(struct ns_host_addr**, const struct boot_req*);
+int messages_get_boot_req_body(struct ns_host_addr**, const struct boot_req*);
 
 /** Genera un messaggio di risposta a quello di
  * boot fornito utilizzando le informazioni dei
@@ -198,6 +217,53 @@ int messages_get_boot_body(struct ns_host_addr**, const struct boot_req*);
  *
  * È pensata per essere usata solo dal server.
  */
-int messages_make_boot_ack(struct boot_ack**, size_t*, const struct boot_req*, const struct ns_host_addr**, size_t);
+int messages_make_boot_ack(struct boot_ack**, size_t*, const struct boot_req*, uint32_t, const struct ns_host_addr**, size_t);
+
+/** Verifica che il messaggio di tipo
+ * MESSAGES_BOOT_ACK, di cui vengono
+ * forniti il puntatore e la dimensione,
+ * sia valido.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_check_boot_ack(void*, size_t);
+
+/** Permette di estrarre in maniera sicura
+ * il contenuto di un messaggio di tipo
+ * MESSAGES_BOOT_ACK.
+ *
+ * Il primo argomento indica il messaggio.
+ * Il secondo è un puntatore alla variabile
+ * dove viene immagazzinato l'ID fornito
+ * dal server.
+ * Il terzo argomento punta a un array, la
+ * cui lunghezza è fornita tramite il
+ * quarto argomento, di puntatori a oggetti
+ * struct ns_host_addr ricavati dal
+ * messaggio.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int messages_get_boot_ack_body(const struct boot_ack*, uint32_t*, struct ns_host_addr**, size_t*);
+
+/** Verifica che il pid del messaggio di
+ * tipo MESSAGES_BOOT_ACK sia pare a
+ * quello fornito.
+ *
+ * Restituisce 1 se il pid del messaggio
+ * è uguale a quello fornito, 0 se sono
+ * diversi e -1 in caso di errore.
+ */
+int messages_cmp_boot_ack_pid(const struct boot_ack*, uint32_t);
+
+/** Ricava il pseudo id del messaggio
+ * fornito.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_get_pid(const void*, uint32_t*);
 
 #endif

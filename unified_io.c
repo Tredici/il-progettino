@@ -1,4 +1,5 @@
 #define _GNU_SOURCE /* per PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP */
+#define _XOPEN_SOURCE 500
 
 #include "unified_io.h"
 #include "queue.h"
@@ -6,6 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <stdarg.h>
 
 /** Struttura che sarà usata per conservare
  * i messaggi generati dai vari thread.
@@ -138,9 +140,21 @@ int unified_io_close()
     return 0;
 }
 
-int unified_io_push(enum unified_io_type type, const char* msg)
+int unified_io_push(enum unified_io_type type, const char* format, ...)
 {
     struct io_message* iom;
+    char msg[UNIFIED_IO_MAX_MSGLEN+1];
+    va_list al;
+    int err;
+
+    /* assicura che funzioni tutto correttamente */
+    msg[UNIFIED_IO_MAX_MSGLEN] = '\0';
+
+    va_start(al, format);
+    err = vsnprintf(msg, UNIFIED_IO_MAX_MSGLEN, format, al);
+    va_end(al);
+    if (err < 0)
+        return -1;
 
     iom = io_message_init(type, msg);
     if (iom == NULL)

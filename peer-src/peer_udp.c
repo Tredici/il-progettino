@@ -13,6 +13,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <poll.h>
+#include <time.h>
+#include <errno.h>
 
 /* Una richiesta di boot viene
  * inviata al più 5 volte con un
@@ -115,6 +117,14 @@ static void* UDP(void* args)
     if (pipe(startPipe) != 0)
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
             errExit("*** pipe2 ***\n");
+    /* imposta la parte in lettura come nonblocking */
+    if (fcntl(startPipe[0], F_SETFL, O_NONBLOCK) == -1)
+    {
+        /* chiude la pipe */
+        close(startPipe[0]); close(startPipe[1]);
+        if (thread_semaphore_signal(ts, -1, NULL) == -1)
+            errExit("*** UDP ***\n");
+    }
 
     /* codice per gestire l'apertura del socket */
     requestedPort = *data;
@@ -196,6 +206,26 @@ int UDPconnect(const char* hostname, const char* portname)
     struct ns_host_addr* ns_addr_send; /* mesg inviato */
     char msgBody[32]; /* per stampare il dato inviato */
     char destStr[32]; /* per stampare a chi viene inviato. */
+    /* per la gestione della risposta */
+    struct boot_ack* ack; /* puntatore alla risposta */
+    ssize_t err;
+
+    /* codice per assegnare il pseudo id ai messaggi
+     * inviati */
+    static int once = 1; /* per usare il tutto solo la prima volta */
+    static uint32_t pid; /* pid da associare a ciascuna nuova richiesta */
+
+    if (once) /* solo la prima volta */
+    {
+        once = 0;
+        srand(time(NULL));
+        /* primo valore casuale */
+        pid = (uint32_t)rand();
+    }
+    else
+    {
+        ++pid;
+    }
 
     ans = -1; /* errore di default */
 
@@ -203,13 +233,31 @@ int UDPconnect(const char* hostname, const char* portname)
     if (getSockAddr((struct sockaddr*)&ss, &sl, hostname, portname, 0, 0) == -1)
         return -1;
 
+    /* svuota la pipe in lettura */
+    errno = 0;
+    while ((err = read(startPipe[0], (void*)&ack, sizeof(ack))) ==  sizeof(ack))
+        ;
+    switch (err)
+    {
+    case -1:
+        if (errno != EWOULDBLOCK)
+            errExit("*** UDPstart ***\n");
+        /* pipe correttamente svuotata */
+        break;
+
+    default:
+        /* errore irrecuperabile */
+        errExit("*** UDPstart ***\n");
+        break;
+    }
+
     attempt = 0;
     /* ripete fino a che non connette */
     do {
         /* prova a inviare il messaggio */
         /* se fallisce qui c'è proprio un problema
          * di invio */
-        if (messages_send_boot_req(socketfd, (struct sockaddr*)&ss, sl, socketfd, &ns_addr_send) != 0)
+        if (messages_send_boot_req(socketfd, (struct sockaddr*)&ss, sl, socketfd, pid, &ns_addr_send) != 0)
             goto failedBoot;
 
         /* resoconto di cosa è stato inviato a chi */
