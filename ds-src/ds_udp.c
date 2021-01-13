@@ -80,6 +80,8 @@ static int handle_MESSAGES_BOOT_REQ(void* buffer, size_t msgLen, struct sockaddr
     {
         unified_io_push(UNIFIED_IO_ERROR, "\tMalformed message");
     }
+
+    return 0;
 }
 
 /** Corpo del thread che gestisce il
