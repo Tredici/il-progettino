@@ -215,4 +215,23 @@ int messages_make_boot_ack(struct boot_ack**, size_t*, const struct boot_req*, u
  */
 int messages_check_boot_ack(void*, size_t);
 
+/** Permette di estrarre in maniera sicura
+ * il contenuto di un messaggio di tipo
+ * MESSAGES_BOOT_ACK.
+ *
+ * Il primo argomento indica il messaggio.
+ * Il secondo è un puntatore alla variabile
+ * dove viene immagazzinato l'ID fornito
+ * dal server.
+ * Il terzo argomento punta a un array, la
+ * cui lunghezza è fornita tramite il
+ * quarto argomento, di puntatori a oggetti
+ * struct ns_host_addr ricavati dal
+ * messaggio.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int messages_get_boot_ack_body(const struct boot_ack*, uint32_t*, struct ns_host_addr**, size_t*);
+
 #endif
