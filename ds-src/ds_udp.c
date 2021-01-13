@@ -102,6 +102,9 @@ static void* UDP(void* args)
     char buffer[1024];
     struct sockaddr_storage sender;
     socklen_t senderLen;
+    char srcStr[32]; /* per stampare l'indirizzo del mittente */
+    char timeStr[64]; /* per stampare ts ricezione messaggi */
+    time_t currTime;
 
     /* per il segnale di terminazione */
     struct sigaction toStop;
@@ -193,6 +196,15 @@ static void* UDP(void* args)
             /* controlla che tutto sia andato bene */
             if (msgLen == -1)
                 errExit("*** recvfrom ***\n");
+
+            /* orario e mittente del pacchetti */
+            if (sockaddr_as_string(srcStr, sizeof(srcStr), (struct sockaddr*)&sender, senderLen) == -1)
+                errExit("*** sockaddr_as_string ***\n");
+            currTime = time(NULL);
+            if (ctime_r(&currTime, timeStr) == NULL)
+                errExit("*** ctime_r ***\n");
+            timeStr[strlen(timeStr)-1] = '\0';
+            unified_io_push(UNIFIED_IO_NORMAL, "[%s\b] packet from %s", timeStr, srcStr);
 
             /* inizia il lavoro sul pacchetto */
             /* controlla se è regolare */
