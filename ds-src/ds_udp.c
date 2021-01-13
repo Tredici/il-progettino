@@ -42,12 +42,37 @@ static void sigHandler(int sigNum)
 static int handle_MESSAGES_BOOT_REQ(void* buffer, size_t msgLen, struct sockaddr* source, socklen_t sourceLen)
 {
     struct ns_host_addr* ns_addr;
+    char msgStr[32]; /* per stampare il contenuto del messaggio */
+    char srcStr[32]; /* per stampare l'indirizzo del mittente */
+    char svdStr[32]; /* per stampare ciò che sarà effettivamente memorizzato */
 
     unified_io_push(UNIFIED_IO_NORMAL, "Received msg [MESSAGES_BOOT_REQ]");
+    /* verifica l'integrità del messaggio */
     if (messages_check_boot_req(buffer, msgLen) == 0)
     {
+        /* estrae il contenuto del messaggio */
         if (messages_get_boot_req_body(&ns_addr, (struct boot_req*)buffer) == -1)
             errExit("*** messages_get_boot_ack_body ***\n");
+
+        /* lo trasforma in stringa */
+        if (ns_host_addr_as_string(msgStr, sizeof(msgStr), ns_addr) == -1)
+                    errExit("*** ns_host_addr_as_string ***\n");
+        /* ottiene in formato stringa l'indirizzo sorgente */
+        if (sockaddr_as_string(srcStr, sizeof(srcStr), source, sourceLen) == -1)
+            errExit("*** sockaddr_as_string ***\n");
+        /* controlla se l'indirizzo speficificato nel messaggio è 0.0.0.0 o equivalente */
+        if (ns_host_addr_any(ns_addr) == 1)
+        {
+            if (ns_host_addr_update_addr(ns_addr, source) == -1)
+                errExit("*** ns_host_addr_update_addr ***\n");
+        }
+        /* rende in formato strinfa anche quello che sarà salvato */
+        if (ns_host_addr_as_string(svdStr, sizeof(svdStr), ns_addr) == -1)
+            errExit("*** ns_host_addr_as_string ***\n");
+
+        /* invia l'output al sottosistema di io */
+        unified_io_push(UNIFIED_IO_NORMAL,
+            "\tsource:\t%s\n\tsource:\t%s\n\tsource:\t%s", msgStr, srcStr, svdStr);
 
     }
     else
