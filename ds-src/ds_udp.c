@@ -31,6 +31,7 @@ volatile sig_atomic_t UDPloop = 1;
 sigjmp_buf sigSetJmp; /* bellissimo */
 static void sigHandler(int sigNum)
 {
+    (void)sigNum;
     UDPloop = 0;
     siglongjmp(sigSetJmp, 1); /* magia */
 }
