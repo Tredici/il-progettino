@@ -116,6 +116,14 @@ static void* UDP(void* args)
     if (pipe(startPipe) != 0)
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
             errExit("*** pipe2 ***\n");
+    /* imposta la parte in lettura come nonblocking */
+    if (fcntl(startPipe[0], F_SETFL, O_NONBLOCK) == -1)
+    {
+        /* chiude la pipe */
+        close(startPipe[0]); close(startPipe[1]);
+        if (thread_semaphore_signal(ts, -1, NULL) == -1)
+            errExit("*** UDP ***\n");
+    }
 
     /* codice per gestire l'apertura del socket */
     requestedPort = *data;
