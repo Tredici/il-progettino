@@ -252,7 +252,7 @@ messages_get_boot_ack_body(
         }
         /* altrimenti copia il valore */
         *ns = ack->body.neighbours[i];
-        ns_addrs[j] = ns;
+        ns_addrs[i] = ns;
     }
     *addrN = (size_t)len;
     *ID = ack->body.ID;
