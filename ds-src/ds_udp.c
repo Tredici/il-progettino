@@ -35,6 +35,27 @@ static void sigHandler(int sigNum)
     siglongjmp(sigSetJmp, 1); /* magia */
 }
 
+/** Funzioni che gestiscono i vari casi.
+ * Restituiscono 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+static int handle_MESSAGES_BOOT_REQ(void* buffer, size_t msgLen)
+{
+    struct ns_host_addr* ns_addr;
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Received msg [MESSAGES_BOOT_REQ]");
+    if (messages_check_boot_req(buffer, msgLen) == 0)
+    {
+        if (messages_get_boot_req_body(&ns_addr, (struct boot_req*)buffer) == -1)
+            errExit("*** messages_get_boot_ack_body ***\n");
+
+    }
+    else
+    {
+        unified_io_push(UNIFIED_IO_ERROR, "\tMalformed message");
+    }
+}
+
 /** Corpo del thread che gestisce il
  * socket UDP.
  */
@@ -162,6 +183,7 @@ static void* UDP(void* args)
 
             case MESSAGES_BOOT_REQ:
                 /* ricevuta richiesta di boot da gestire */
+                handle_MESSAGES_BOOT_REQ(buffer, msgLen);
                 break;
 
             default:
