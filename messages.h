@@ -205,4 +205,14 @@ int messages_get_boot_req_body(struct ns_host_addr**, const struct boot_req*);
  */
 int messages_make_boot_ack(struct boot_ack**, size_t*, const struct boot_req*, uint32_t, const struct ns_host_addr**, size_t);
 
+/** Verifica che il messaggio di tipo
+ * MESSAGES_BOOT_ACK, di cui vengono
+ * forniti il puntatore e la dimensione,
+ * sia valido.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_check_boot_ack(void*, size_t);
+
 #endif

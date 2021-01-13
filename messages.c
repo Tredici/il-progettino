@@ -198,3 +198,23 @@ messages_make_boot_ack(struct boot_ack** buffer,
     *sz = sizeof(struct boot_ack);
     return 0;
 }
+
+int messages_check_boot_ack(void* buffer, size_t len)
+{
+    struct boot_ack *ack;
+
+    if (buffer == NULL || len != sizeof(struct boot_ack))
+        return -1;
+
+    ack = (struct boot_ack*)buffer;
+
+    /* controllo dell'header */
+    if (ack->head.sentinel != 0 || ntohs(ack->head.type) != MESSAGES_BOOT_ACK)
+        return -1;
+
+    /* controllo del corpo */
+    if (ack->body.length > MAX_NEIGHBOUR_NUMBER)
+        return -1;
+
+    return 0;
+}
