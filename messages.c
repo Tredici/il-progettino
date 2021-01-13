@@ -147,7 +147,7 @@ int messages_send_boot_req(int sockfd, const struct sockaddr* dest, socklen_t de
 }
 
 int
-messages_get_boot_body(struct ns_host_addr** ns_addr,
+messages_get_boot_req_body(struct ns_host_addr** ns_addr,
             const struct boot_req* req)
 {
     struct ns_host_addr* ans;
