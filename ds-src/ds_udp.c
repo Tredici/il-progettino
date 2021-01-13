@@ -39,7 +39,7 @@ static void sigHandler(int sigNum)
  * Restituiscono 0 in caso di successo
  * e -1 in caso di errore.
  */
-static int handle_MESSAGES_BOOT_REQ(void* buffer, size_t msgLen, struct sockaddr* source)
+static int handle_MESSAGES_BOOT_REQ(void* buffer, size_t msgLen, struct sockaddr* source, socklen_t sourceLen)
 {
     struct ns_host_addr* ns_addr;
 
@@ -183,7 +183,7 @@ static void* UDP(void* args)
 
             case MESSAGES_BOOT_REQ:
                 /* ricevuta richiesta di boot da gestire */
-                handle_MESSAGES_BOOT_REQ(buffer, msgLen, (struct sockaddr*)&sender);
+                handle_MESSAGES_BOOT_REQ(buffer, msgLen, (struct sockaddr*)&sender, senderLen);
                 break;
 
             default:
