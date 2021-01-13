@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <poll.h>
 #include <time.h>
+#include <errno.h>
 
 /* Una richiesta di boot viene
  * inviata al più 5 volte con un
@@ -205,6 +206,9 @@ int UDPconnect(const char* hostname, const char* portname)
     struct ns_host_addr* ns_addr_send; /* mesg inviato */
     char msgBody[32]; /* per stampare il dato inviato */
     char destStr[32]; /* per stampare a chi viene inviato. */
+    /* per la gestione della risposta */
+    struct boot_ack* ack; /* puntatore alla risposta */
+    ssize_t err;
 
     /* codice per assegnare il pseudo id ai messaggi
      * inviati */
@@ -228,6 +232,24 @@ int UDPconnect(const char* hostname, const char* portname)
     /* prova a ricavare l'indirizzo di destinazione */
     if (getSockAddr((struct sockaddr*)&ss, &sl, hostname, portname, 0, 0) == -1)
         return -1;
+
+    /* svuota la pipe in lettura */
+    errno = 0;
+    while ((err = read(startPipe[0], (void*)&ack, sizeof(ack))) ==  sizeof(ack))
+        ;
+    switch (err)
+    {
+    case -1:
+        if (errno != EWOULDBLOCK)
+            errExit("*** UDPstart ***\n");
+        /* pipe correttamente svuotata */
+        break;
+
+    default:
+        /* errore irrecuperabile */
+        errExit("*** UDPstart ***\n");
+        break;
+    }
 
     attempt = 0;
     /* ripete fino a che non connette */
