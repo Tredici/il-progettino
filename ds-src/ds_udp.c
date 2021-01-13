@@ -157,6 +157,7 @@ static void* UDP(void* args)
             case MESSAGES_MSG_UNKWN:
                 /* sentinella violata, quasi certamente
                  * è un messaggio di debugging */
+                unified_io_push(UNIFIED_IO_NORMAL, "Received msg [MESSAGES_MSG_UNKWN]");
                 break;
 
             case MESSAGES_BOOT_REQ:
