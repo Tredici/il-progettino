@@ -13,6 +13,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <poll.h>
+#include <time.h>
 
 /* Una richiesta di boot viene
  * inviata al più 5 volte con un
@@ -197,6 +198,23 @@ int UDPconnect(const char* hostname, const char* portname)
     char msgBody[32]; /* per stampare il dato inviato */
     char destStr[32]; /* per stampare a chi viene inviato. */
 
+    /* codice per assegnare il pseudo id ai messaggi
+     * inviati */
+    static int once = 1; /* per usare il tutto solo la prima volta */
+    static uint32_t pid; /* pid da associare a ciascuna nuova richiesta */
+
+    if (once) /* solo la prima volta */
+    {
+        once = 0;
+        srand(time(NULL));
+        /* primo valore casuale */
+        pid = (uint32_t)rand();
+    }
+    else
+    {
+        ++pid;
+    }
+
     ans = -1; /* errore di default */
 
     /* prova a ricavare l'indirizzo di destinazione */
@@ -209,7 +227,7 @@ int UDPconnect(const char* hostname, const char* portname)
         /* prova a inviare il messaggio */
         /* se fallisce qui c'è proprio un problema
          * di invio */
-        if (messages_send_boot_req(socketfd, (struct sockaddr*)&ss, sl, socketfd, &ns_addr_send) != 0)
+        if (messages_send_boot_req(socketfd, (struct sockaddr*)&ss, sl, socketfd, pid, &ns_addr_send) != 0)
             goto failedBoot;
 
         /* resoconto di cosa è stato inviato a chi */
