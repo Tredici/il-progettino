@@ -73,7 +73,7 @@ static int handle_MESSAGES_BOOT_REQ(void* buffer, size_t msgLen, struct sockaddr
 
         /* invia l'output al sottosistema di io */
         unified_io_push(UNIFIED_IO_NORMAL,
-            "\tsource:\t%s\n\tsource:\t%s\n\tsource:\t%s", msgStr, srcStr, svdStr);
+            "\tmsg:\t%s\n\tsource:\t%s\n\tsaved:\t%s", msgStr, srcStr, svdStr);
 
     }
     else
