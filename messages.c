@@ -32,7 +32,7 @@ int recognise_messages_type(void* msg)
 }
 
 
-int messages_make_boot_req(struct boot_req** buffer, size_t* sz, int socket)
+int messages_make_boot_req(struct boot_req** buffer, size_t* sz, int socket, uint32_t pid)
 {
     struct boot_req* ans;
 
@@ -58,6 +58,7 @@ int messages_make_boot_req(struct boot_req** buffer, size_t* sz, int socket)
     /* prepariamo l'header */
     ans->head.sentinel = 0;
     ans->head.type = htons(MESSAGES_BOOT_REQ);
+    ans->head.pid = htonl(pid);
 
     /** bisogna trasferire:
      * +versione di IP
@@ -98,7 +99,7 @@ int messages_check_boot_req(void* buffer, size_t len)
     return 0;
 }
 
-int messages_send_boot_req(int sockfd, const struct sockaddr* dest, socklen_t destLen, int sk, struct ns_host_addr** ns_addr)
+int messages_send_boot_req(int sockfd, const struct sockaddr* dest, socklen_t destLen, int sk, uint32_t pid, struct ns_host_addr** ns_addr)
 {
     struct boot_req* bootmsg;
     struct ns_host_addr* ns_addr_val;
@@ -120,7 +121,7 @@ int messages_send_boot_req(int sockfd, const struct sockaddr* dest, socklen_t de
     else
         ns_addr_val = NULL;
 
-    if (messages_make_boot_req(&bootmsg, &msgLen, sk) == -1)
+    if (messages_make_boot_req(&bootmsg, &msgLen, sk, pid) == -1)
     {
         free((void*)ns_addr_val);
         return -1;
@@ -188,6 +189,7 @@ messages_make_boot_ack(struct boot_ack** buffer,
     /* prepara l'header */
     ans->head.sentinel = 0;
     ans->head.type = MESSAGES_BOOT_ACK;
+    ans->head.pid = req->head.pid;
     /* prepara il corpo */
     ans->body.ID = ID;
     ans->body.length = nPeers;

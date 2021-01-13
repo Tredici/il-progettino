@@ -23,6 +23,11 @@
  * [2 byte contengono un intero
  * rappresentante il tipo del
  * messaggio - in network order]
+ * [4 byte che identificano il messaggio,
+ * usabile o meno a seconda del tipo di
+ * messaggio per il controllo dei duplicati
+ * o per qualsiasi altra ragione - in
+ * network order]
  *
  * ++++ la parte successiva è variabile ++++
  *
@@ -74,6 +79,7 @@ struct messages_head
 {
     uint16_t sentinel;
     uint16_t type;
+    uint32_t pid; /* pseudo id */
 } __attribute__ ((packed));
 
 /** Questa struttura definisce
@@ -131,13 +137,17 @@ int recognise_messages_type(void*);
  * socket su cui ci si aspetta di ricevere i
  * messaggi dai peer.
  *
+ * Il quarto argomento permette di specificare
+ * il pseudo id che va associato alla richiesta
+ * di boot.
+ *
  * In caso di successo la memoria occupata può
  * essere liberata tranquillamente tramite free.
  *
  * Restituisce -1 in caso di errore, 0 in caso
  * di successo.
  */
-int messages_make_boot_req(struct boot_req**, size_t*, int);
+int messages_make_boot_req(struct boot_req**, size_t*, int, uint32_t);
 
 /** Verifica l'integrità del messaggo di
  * boot di cui sono forniti inizio e dimensione.
@@ -153,15 +163,19 @@ int messages_check_boot_req(void*, size_t);
  * informazioni per raggiungere il socket
  * specificato come quarto argomento.
  *
+ * Il quinto argomento permette di specificare
+ * l'id della richiesta da inviare.
+ *
  * L'ultimo argomento, che deve essere il
  * puntatore a un puntatore a una struttura
  * (struct ns_host_addr), oppure NULL,
  * permette di ottenere una copia del
  * dato inviato nel messaggio di boot.
  *
- * Restituisce 0 in caso di successo
+ * Restituisce 0 in caso di successo e
+ * -1 in caso di errore.
  */
-int messages_send_boot_req(int, const struct sockaddr*, socklen_t, int, struct ns_host_addr**);
+int messages_send_boot_req(int, const struct sockaddr*, socklen_t, int, uint32_t, struct ns_host_addr**);
 
 /** Dato un puntatore a una messaggio di boot
  * fornisce (una copia de) il contenuto della
