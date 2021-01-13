@@ -100,6 +100,11 @@ struct boot_ack
     /* corpo della domanda */
     struct boot_ack_body
     {
+        /* id che permetterà di identificare
+         * il peer nelle comunicazioni future,
+         * in questo sistema semplificato sarà
+         * dato dal numero di porta */
+        uint32_t ID;
         /* numero di vicini, deve valere length<MAX_NEIGHBOUR_NUMBER */
         uint16_t length;
         struct ns_host_addr neighbours[MAX_NEIGHBOUR_NUMBER];
@@ -198,6 +203,6 @@ int messages_get_boot_req_body(struct ns_host_addr**, const struct boot_req*);
  *
  * È pensata per essere usata solo dal server.
  */
-int messages_make_boot_ack(struct boot_ack**, size_t*, const struct boot_req*, const struct ns_host_addr**, size_t);
+int messages_make_boot_ack(struct boot_ack**, size_t*, const struct boot_req*, uint32_t, const struct ns_host_addr**, size_t);
 
 #endif

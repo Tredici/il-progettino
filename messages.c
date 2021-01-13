@@ -168,6 +168,7 @@ int
 messages_make_boot_ack(struct boot_ack** buffer,
             size_t* sz,
             const struct boot_req* req,
+            uint32_t ID,
             const struct ns_host_addr** peers,
             size_t nPeers)
 {
@@ -188,6 +189,7 @@ messages_make_boot_ack(struct boot_ack** buffer,
     ans->head.sentinel = 0;
     ans->head.type = MESSAGES_BOOT_ACK;
     /* prepara il corpo */
+    ans->body.ID = ID;
     ans->body.length = nPeers;
     for (i = 0; i < nPeers; ++i)
         ans->body.neighbours[i] = *peers[i];
