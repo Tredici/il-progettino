@@ -42,4 +42,9 @@ int peers_clear(void);
  */
 int peers_add_and_find_neighbours(const struct ns_host_addr*, uint32_t*, struct ns_host_addr**, uint16_t*);
 
+/** Stampa l'elenco dei peer al momento
+ * connessi insieme ai loro dati.
+ */
+int peers_showpeers(void);
+
 #endif

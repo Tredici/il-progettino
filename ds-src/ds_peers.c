@@ -3,6 +3,7 @@
 #include "../ns_host_addr.h"
 #include "../commons.h"
 #include <pthread.h>
+#include <stdio.h>
 
 /** Struttura che sarà usata per
  * mantenere i dati associati ad
@@ -183,3 +184,39 @@ peers_add_and_find_neighbours(
     return 0;
 }
 
+static void print_elem(long int key, void* value)
+{
+    char addrStr[32];
+    struct peer* pr = (struct peer*)value;
+    /* si esclude che l'argomento possa essere NULL */
+
+    if (ns_host_addr_as_string(addrStr, sizeof(addrStr), &pr->ns_addr) == -1)
+        errExit("*** peers_add_and_find_neighbours double fault[pthread_mutex_unlock:rb_tree_remove] ***\n");
+
+    printf("\tport[%ld] - addr: %s\n", key);
+}
+
+/* stampa tutti gli elementi dell'albero */
+int peers_showpeers(void)
+{
+    if (pthread_mutex_lock(&guard) != 0)
+        return -1;
+
+    /* il sistema non è ancora stato inizializzato */
+    if (tree == NULL)
+    {
+        pthread_mutex_unlock(&guard);
+        return -1;
+    }
+
+    if (rb_tree_foreach(tree, &print_elem))
+    {
+        pthread_mutex_unlock(&guard);
+        return -1;
+    }
+
+    if (pthread_mutex_unlock(&guard) != 0)
+        return -1;
+
+    return 0;
+}
