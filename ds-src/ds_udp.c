@@ -247,6 +247,9 @@ static void* UDP(void* args)
     /* ora il segnale è di nuovo bloccato */
     /* mai raggiunto prima del termine */
 
+    if (close(socket) != 0)
+        errExit("*** close ***\n");
+
     /* distrugge gli ultimi registri dei peer */
     if (peers_clear() == -1)
         errExit("*** peers_clear ***\n");
