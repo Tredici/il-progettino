@@ -4,6 +4,8 @@
  * di cui esso ha bisogno.
  */
 #include "ds-src/ds_esc.h"
+#include "ds-src/ds_showpeers.h"
+#include "ds-src/ds_udp.h"
 #include "commons.h"
 #include "repl.h"
 #include "main_loop.h"
@@ -26,6 +28,7 @@ int main(int argc, char* argv[])
     char serverID[10];
 
     struct main_loop_command commands[] = {
+        { "showpeers", &showpeers, "mostra un elenco dei peer connessi" },
         { "esc", &esc, "termina il server e tutti i peer" }
     };
 
