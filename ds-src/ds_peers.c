@@ -1,6 +1,7 @@
 #include "ds_peers.h"
 #include "../rb_tree.h"
 #include "../ns_host_addr.h"
+#include "../commons.h"
 #include <pthread.h>
 
 /** Struttura che sarà usata per
@@ -54,6 +55,130 @@ int peers_clear(void)
     tree = NULL;
     if (pthread_mutex_unlock(&guard) != 0)
         return -1;
+
+    return 0;
+}
+
+int
+peers_add_and_find_neighbours(
+            const struct ns_host_addr* ns_addr,
+            uint32_t* newID,
+            struct ns_host_addr** neighbours,
+            uint16_t* length)
+{
+    long int key;
+    struct peer* value;
+    uint16_t port;
+    long int peerKey; /* chiave del vicinos */
+    struct peer* peerValue; /* vicino */
+
+    /* controllo dei parametri */
+    if (ns_addr == NULL || newID == NULL
+        || neighbours == NULL || length == NULL)
+        return -1;
+
+    if (ns_host_addr_get_port(ns_addr, &port) == -1)
+        return -1;
+
+    key = (long int)port;
+    value = (struct peer*)malloc(sizeof(struct peer));
+    if (value == NULL)
+        return -1;
+
+    value->ns_addr = *ns_addr;
+
+    if (pthread_mutex_lock(&guard) != 0)
+    {
+        free(value);
+        return -1;
+    }
+
+    /* nuovo ID */
+    *newID = ++counterID;
+    value->id = counterID;
+
+    /* inserisce un nuovo valore */
+    if (rb_tree_set(tree, key, (void*)value) == -1)
+    {
+        free(value);
+        if (pthread_mutex_unlock(&guard) != 0)
+            errExit("*** peers_add_and_find_neighbours double fault[rb_tree_set:pthread_mutex_unlock] ***\n");
+
+        return -1;
+    }
+    /* ora cerca i vicini */
+    switch (rb_tree_size(tree))
+    {
+    case -1:
+        /* errore */
+        free(value);
+        if (pthread_mutex_unlock(&guard) != 0)
+            errExit("*** peers_add_and_find_neighbours double fault[rb_tree_set:pthread_mutex_unlock] ***\n");
+
+        return -1;
+
+    case 0:
+        errExit("*** peers_add_and_find_neighbours fault (rb_tree_size(tree)==0) ***\n");
+        break; /* non necessario; per sopprimere il warning */
+
+    case 1:
+        /* l'albero era prima vuoto */
+        //nPeers = 0; /* elementi dellìalbero -1 */
+        *length = 0;
+        break;
+
+    case 2:
+        /* l'albero ha solo un altro elemento */
+        /* cerca il vicino */
+        /* cerca a sinistra */
+        if (rb_tree_prev(tree, key, &peerKey, (void**)&peerValue) == 0);
+        /* cerca a sinistra */
+        else if (rb_tree_next(tree, key, &peerKey, (void**)&peerValue) == 0);
+        /* non ha senso che si raggiunga */
+        else
+            errExit("*** peers_add_and_find_neighbours fault (size==2 no neighbour) ***\n");
+
+        /* aggiunge il peer */
+        neighbours[0] = &peerValue->ns_addr;
+        *length = 1; /* e segna il numero a 1 */
+        break;
+
+    default:
+        /* ci sono due vicini */
+        /* cerca quello a sinistra */
+        if (rb_tree_prev(tree, key, &peerKey, (void**)&peerValue) == 0);
+        /* altrimenti deve prendere il maggiore di tutti */
+        else if(rb_tree_max(tree, &peerKey, (void**)&peerValue) == 0);
+        /*  altrimenti disastro */
+        else
+            errExit("*** peers_add_and_find_neighbours fault (size>2 no left neighbour) ***\n");
+        /* assegna il primo peer */
+        neighbours[0] = &peerValue->ns_addr;
+
+        /* cerca quello a destra */
+        if (rb_tree_next(tree, key, &peerKey, (void**)&peerValue) == 0);
+        /* altrimenti deve prendere il minore di tutti */
+        else if(rb_tree_min(tree, &peerKey, (void**)&peerValue) == 0);
+        /*  altrimenti disastro */
+        else
+            errExit("*** peers_add_and_find_neighbours fault (size>2 no right neighbour) ***\n");
+        /* assegna il secondo peer */
+        neighbours[1] = &peerValue->ns_addr;
+
+        /* e segna che i peer sono 2 */
+        *length = 2;
+
+        break;
+    }
+
+    if (pthread_mutex_unlock(&guard) != 0)
+    {
+        /* se fallisce anche questo addio */
+        if (rb_tree_remove(tree, key, NULL) != 0)
+            errExit("*** peers_add_and_find_neighbours double fault[pthread_mutex_unlock:rb_tree_remove] ***\n");
+        /* prova a rimuovere il nodo inserito */
+        return -1;
+    }
 
     return 0;
 }

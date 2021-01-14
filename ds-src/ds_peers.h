@@ -7,6 +7,8 @@
 #ifndef DS_PEERS
 #define DS_PEERS
 
+#include "../ns_host_addr.h"
+
 /** Inizializza il sottosistema a gestione
  * dei peers.
  *
@@ -23,5 +25,21 @@ int peers_init(void);
  * fine del lavoro.
  */
 int peers_clear(void);
+
+/** Aggiunge un peer all'insieme di quelli
+ * "tracciati" e ne restituisce i vicini.
+ *
+ * Il primo argomento identifica il nuovo
+ * peer, il secondo permette di ottenere
+ * l'ID fornito dal sistema al nuovo peer
+ * e gli ultimi due argomenti permetto
+ * di ottenere  rispettivamente un elenco
+ * di peer, ottenibile mediante un array
+ * di puntatori a struct ns_host_addr che
+ * deve essere già stato precedentemente
+ * allocato dal chiamante, e la lunghezza
+ * di questo.
+ */
+int peers_add_and_find_neighbours(const struct ns_host_addr*, uint32_t*, struct ns_host_addr**, uint16_t*);
 
 #endif
