@@ -42,6 +42,16 @@ int peers_clear(void);
  */
 int peers_add_and_find_neighbours(const struct ns_host_addr*, uint32_t*, struct ns_host_addr**, uint16_t*);
 
+/** Trova i vicini di un peer dato il suo
+ * identificativo (coincidente con il suo
+ * numero di porta in questo sistema 
+ * semplificato).
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int peers_find_neighbours(long int, struct ns_host_addr**, uint16_t*);
+
 /** Stampa l'elenco dei peer al momento
  * connessi insieme ai loro dati.
  */

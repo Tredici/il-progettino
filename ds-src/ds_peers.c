@@ -62,66 +62,40 @@ int peers_clear(void)
     return 0;
 }
 
+/* si limita a trovare i soli vicini */
 int
-peers_add_and_find_neighbours(
-            const struct ns_host_addr* ns_addr,
-            uint32_t* newID,
-            struct ns_host_addr** neighbours,
-            uint16_t* length)
+peers_find_neighbours(
+        long int key,
+        struct ns_host_addr** neighbours,
+        uint16_t* length)
 {
-    long int key;
-    struct peer* value;
-    uint16_t port;
     long int peerKey; /* chiave del vicinos */
     struct peer* peerValue; /* vicino */
 
-    /* controllo dei parametri */
-    if (ns_addr == NULL || newID == NULL
-        || neighbours == NULL || length == NULL)
-        return -1;
-
-    if (ns_host_addr_get_port(ns_addr, &port) == -1)
-        return -1;
-
-    key = (long int)port;
-    value = (struct peer*)malloc(sizeof(struct peer));
-    if (value == NULL)
-        return -1;
-
-    value->ns_addr = *ns_addr;
-
     if (pthread_mutex_lock(&guard) != 0)
-    {
-        free(value);
         return -1;
-    }
 
-    /* nuovo ID */
-    *newID = ++counterID;
-    value->id = counterID;
-
-    /* inserisce un nuovo valore */
-    if (rb_tree_set(tree, key, (void*)value) == -1)
+    /* controllo valori ed esistenza elemento */
+    if (tree == NULL || rb_tree_get(tree, key, NULL) != 0)
     {
-        free(value);
         if (pthread_mutex_unlock(&guard) != 0)
-            errExit("*** peers_add_and_find_neighbours double fault[rb_tree_set:pthread_mutex_unlock] ***\n");
-
+            errExit("*** peers_find_neighbours double fault [pthread_mutex_unlock] ***\n");
         return -1;
     }
-    /* ora cerca i vicini */
+
+    /* ricerca dei vicini */
     switch (rb_tree_size(tree))
     {
     case -1:
         /* errore */
-        free(value);
         if (pthread_mutex_unlock(&guard) != 0)
-            errExit("*** peers_add_and_find_neighbours double fault[rb_tree_set:pthread_mutex_unlock] ***\n");
+            errExit("*** peers_find_neighbours double fault[pthread_mutex_unlock] ***\n");
 
         return -1;
 
     case 0:
-        errExit("*** peers_add_and_find_neighbours fault (rb_tree_size(tree)==0) ***\n");
+        /* qui non dovrebbe mai poter arrivare */
+        errExit("*** peers_find_neighbours fault (rb_tree_size(tree)==0) ***\n");
         break; /* non necessario; per sopprimere il warning */
 
     case 1:
@@ -172,6 +146,64 @@ peers_add_and_find_neighbours(
         *length = 2;
 
         break;
+    }
+
+    if (pthread_mutex_unlock(&guard) != 0)
+        return -1;
+}
+
+int
+peers_add_and_find_neighbours(
+            const struct ns_host_addr* ns_addr,
+            uint32_t* newID,
+            struct ns_host_addr** neighbours,
+            uint16_t* length)
+{
+    long int key;
+    struct peer* value;
+    uint16_t port;
+
+    /* controllo dei parametri */
+    if (ns_addr == NULL || newID == NULL
+        || neighbours == NULL || length == NULL)
+        return -1;
+
+    if (ns_host_addr_get_port(ns_addr, &port) == -1)
+        return -1;
+
+    key = (long int)port;
+    value = (struct peer*)malloc(sizeof(struct peer));
+    if (value == NULL)
+        return -1;
+
+    value->ns_addr = *ns_addr;
+
+    if (pthread_mutex_lock(&guard) != 0)
+    {
+        free(value);
+        return -1;
+    }
+
+    /* nuovo ID */
+    *newID = ++counterID;
+    value->id = counterID;
+
+    /* inserisce un nuovo valore */
+    if (rb_tree_set(tree, key, (void*)value) == -1)
+    {
+        free(value);
+        if (pthread_mutex_unlock(&guard) != 0)
+            errExit("*** peers_add_and_find_neighbours double fault[rb_tree_set:pthread_mutex_unlock] ***\n");
+
+        return -1;
+    }
+    /* ora cerca i vicini */
+    if (peers_find_neighbours(key, neighbours, length) == -1)
+    {
+        free(value);
+        if (pthread_mutex_unlock(&guard) != 0)
+            errExit("*** peers_add_and_find_neighbours double fault[rb_tree_set:pthread_mutex_unlock] ***\n");
+        return -1;
     }
 
     if (pthread_mutex_unlock(&guard) != 0)
