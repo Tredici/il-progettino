@@ -193,7 +193,7 @@ static void print_elem(long int key, void* value)
     if (ns_host_addr_as_string(addrStr, sizeof(addrStr), &pr->ns_addr) == -1)
         errExit("*** peers_add_and_find_neighbours double fault[pthread_mutex_unlock:rb_tree_remove] ***\n");
 
-    printf("\tport[%ld] - addr: %s\n", key);
+    printf("\tport[%ld] - addr: %s\n", key, addrStr);
 }
 
 /* stampa tutti gli elementi dell'albero */
