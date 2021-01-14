@@ -21,6 +21,9 @@ all: peer
 -include $(OBJS:%.o=%.d)
 
 # file esclusivi dei peer
+ds_showpeers.o: ds-src/ds_showpeers.c  ds-src/ds_showpeers.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 ds_peers.o: ds-src/ds_peers.c  ds-src/ds_peers.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
@@ -30,7 +33,7 @@ ds_udp.o: ds-src/ds_udp.c  ds-src/ds_udp.h
 ds_esc.o: ds-src/ds_esc.c ds-src/ds_esc.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-DSDEPS = ds_esc.o ds_udp.o ds_peers.o
+DSDEPS = ds_esc.o ds_udp.o ds_peers.o ds_showpeers.o
 
 
 # file esclusivi dei peer
