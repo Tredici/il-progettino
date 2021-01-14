@@ -1,3 +1,5 @@
+#define _GNU_SOURCE /* per i mutex ricorsivi */
+
 #include "ds_peers.h"
 #include "../rb_tree.h"
 #include "../ns_host_addr.h"
@@ -24,7 +26,7 @@ struct peer
  * sottosistema UDP.
  */
 
-pthread_mutex_t guard = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t guard = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 struct rb_tree* tree;
 /* serve per assegnare un id progressivo a ciascun
  * peer si connetta alla rete */
