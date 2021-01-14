@@ -9,7 +9,7 @@
  */
 struct peer
 {
-    long int id; /* id progressivo associato ai peer */
+    uint32_t id; /* id progressivo associato ai peer */
     struct ns_host_addr ns_addr; /* dati per raggiungerlo */
 };
 
@@ -26,7 +26,7 @@ pthread_mutex_t guard = PTHREAD_MUTEX_INITIALIZER;
 struct rb_tree* tree;
 /* serve per assegnare un id progressivo a ciascun
  * peer si connetta alla rete */
-long int counter;
+uint32_t counterID;
 
 int peers_init(void)
 {
@@ -34,7 +34,7 @@ int peers_init(void)
         return -1;
 
     tree = rb_tree_init(NULL);
-    counter = 0;
+    counterID = 0;
     rb_tree_set_cleanup_f(tree, &free);
 }
 
