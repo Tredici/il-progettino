@@ -43,17 +43,24 @@ static void sigHandler(int sigNum)
  */
 static int handle_MESSAGES_BOOT_REQ(void* buffer, size_t msgLen, struct sockaddr* source, socklen_t sourceLen)
 {
+    struct boot_req* req;
     struct ns_host_addr* ns_addr;
     char msgStr[32]; /* per stampare il contenuto del messaggio */
     char srcStr[32]; /* per stampare l'indirizzo del mittente */
     char svdStr[32]; /* per stampare ciò che sarà effettivamente memorizzato */
+    /* per costruire la risposta */
+    uint32_t newID;
+    uint16_t length;
+    struct ns_host_addr* neighbours[MAX_NEIGHBOUR_NUMBER];
+    int i;
 
     unified_io_push(UNIFIED_IO_NORMAL, "Received msg [MESSAGES_BOOT_REQ]");
     /* verifica l'integrità del messaggio */
     if (messages_check_boot_req(buffer, msgLen) == 0)
     {
+        req = (struct boot_req*)buffer;
         /* estrae il contenuto del messaggio */
-        if (messages_get_boot_req_body(&ns_addr, (struct boot_req*)buffer) == -1)
+        if (messages_get_boot_req_body(&ns_addr, req) == -1)
             errExit("*** messages_get_boot_ack_body ***\n");
 
         /* lo trasforma in stringa */
@@ -76,6 +83,20 @@ static int handle_MESSAGES_BOOT_REQ(void* buffer, size_t msgLen, struct sockaddr
         unified_io_push(UNIFIED_IO_NORMAL,
             "\tmsg:\t%s\n\tsource:\t%s\n\tsaved:\t%s", msgStr, srcStr, svdStr);
 
+        if (peers_add_and_find_neighbours(ns_addr, &newID, neighbours, &length) == -1)
+            errExit("*** ns_host_addr_as_string ***\n");
+
+        /* stampa i vicini */
+        unified_io_push(UNIFIED_IO_NORMAL, "[ID:%d] N. neighbours: %d", newID, length);
+        for (i = 0; i != length; ++i)
+        {
+            if (ns_host_addr_as_string(svdStr, sizeof(svdStr), neighbours[i]) == -1)
+                errExit("*** ns_host_addr_as_string ***\n");
+            unified_io_push(UNIFIED_IO_NORMAL, "[ID:%d] neighbour (%d): %s", newID, i, svdStr);
+        }
+
+        /* infine libera la memoria */
+        free((void*)ns_addr);
     }
     else
     {
