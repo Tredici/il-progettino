@@ -35,6 +35,7 @@ int peers_init(void)
 
     tree = rb_tree_init(NULL);
     counter = 0;
+    rb_tree_set_cleanup_f(tree, &free);
 }
 
 int peers_clear(void)
