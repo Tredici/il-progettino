@@ -33,7 +33,10 @@ ds_udp.o: ds-src/ds_udp.c  ds-src/ds_udp.h
 ds_esc.o: ds-src/ds_esc.c ds-src/ds_esc.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-DSDEPS = ds_esc.o ds_udp.o ds_peers.o ds_showpeers.o
+ds_showneighbours.o: ds-src/ds_showneighbours.c ds-src/ds_showneighbours.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+DSDEPS = ds_esc.o ds_udp.o ds_peers.o ds_showpeers.o ds_showneighbours.o
 
 
 # file esclusivi dei peer
