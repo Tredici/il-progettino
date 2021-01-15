@@ -284,11 +284,11 @@ static void print_showneighbour(long int node, void* arg)
         switch (length)
         {
         case 2:
-            if (ns_host_addr_as_string(nextStr, sizeof(nextStr), &neighbours[1]) == -1)
+            if (ns_host_addr_as_string(nextStr, sizeof(nextStr), neighbours[1]) == -1)
                 errExit("print_showneighbour fault [ns_host_addr_as_string]\n");
 
         case 1:
-            if (ns_host_addr_as_string(nextStr, sizeof(nextStr), &neighbours[0]) == -1)
+            if (ns_host_addr_as_string(nextStr, sizeof(nextStr), neighbours[0]) == -1)
                 errExit("print_showneighbour fault [ns_host_addr_as_string]\n");
         }
 
