@@ -4,6 +4,7 @@
 #include "../rb_tree.h"
 #include "../ns_host_addr.h"
 #include "../commons.h"
+#include "../messages.h"
 #include <pthread.h>
 #include <stdio.h>
 
@@ -294,3 +295,39 @@ static void print_showneighbour(long int node, void* arg)
     }
 }
 
+int peers_showneighbour(long int* peer)
+{
+    struct peer* value;
+
+    if (pthread_mutex_lock(&guard) != 0)
+        return -1;
+
+    if (peer == NULL)
+    {
+        /* li stampa tutti */
+        printf("Totale peers: %ld\n", (long)rb_tree_size(tree));
+        if (rb_tree_foreach(tree, &print_showneighbour) == -1)
+        {
+            pthread_mutex_unlock(&guard);
+            return -1;
+        }
+    }
+    else
+    {
+        if (rb_tree_get(tree, *peer, (void**)&value) == -1)
+        {
+            fprintf(stderr, "\tpeer (%ld) inesistente\n", *peer);
+            pthread_mutex_unlock(&guard);
+            return -1;
+        }
+        else
+        {
+            print_showneighbour(*peer, value);
+        }
+    }
+
+    if (pthread_mutex_unlock(&guard) != 0)
+        return -1;
+
+    return 0;
+}

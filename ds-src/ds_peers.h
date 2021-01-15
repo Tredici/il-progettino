@@ -57,4 +57,10 @@ int peers_find_neighbours(long int, struct ns_host_addr**, uint16_t*);
  */
 int peers_showpeers(void);
 
+/** Se l'argomento è NULL mostra i vicini
+ * di ogni peer, altrimenti mostra i
+ * vicini solo del peer indicato.
+ */
+int peers_showneighbour(long int*);
+
 #endif
