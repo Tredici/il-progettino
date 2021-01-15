@@ -244,7 +244,7 @@ int peers_showpeers(void)
     }
 
     printf("Totale peers: %ld\n", (long)rb_tree_size(tree));
-    if (rb_tree_foreach(tree, &print_elem))
+    if (rb_tree_foreach(tree, &print_elem) == -1)
     {
         pthread_mutex_unlock(&guard);
         return -1;
