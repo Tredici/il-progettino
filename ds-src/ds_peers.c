@@ -288,7 +288,7 @@ static void print_showneighbour(long int node, void* arg)
                 errExit("print_showneighbour fault [ns_host_addr_as_string]\n");
 
         case 1:
-            if (ns_host_addr_as_string(nextStr, sizeof(nextStr), neighbours[0]) == -1)
+            if (ns_host_addr_as_string(prevStr, sizeof(prevStr), neighbours[0]) == -1)
                 errExit("print_showneighbour fault [ns_host_addr_as_string]\n");
         }
 
