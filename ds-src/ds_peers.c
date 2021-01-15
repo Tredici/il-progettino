@@ -255,3 +255,42 @@ int peers_showpeers(void)
 
     return 0;
 }
+
+static void print_showneighbour(long int node, void* arg)
+{
+    char currStr[32];
+    char prevStr[32];
+    char nextStr[32];
+    struct ns_host_addr* neighbours[MAX_NEIGHBOUR_NUMBER];
+    struct peer* value;
+    uint16_t length;
+
+    value = (struct peer*)arg;
+    if (peers_find_neighbours(node, neighbours, &length) == -1)
+    {
+        errExit("print_showneighbour fault [peers_find_neighbours]\n");
+    }
+    else
+    {
+        if (peers_find_neighbours(node, neighbours, &length) == -1)
+            errExit("print_showneighbour fault [peers_find_neighbours]\n");
+
+        if (ns_host_addr_as_string(currStr, sizeof(currStr), &value->ns_addr) == -1)
+            errExit("print_showneighbour fault [ns_host_addr_as_string]\n");
+
+        switch (length)
+        {
+        case 2:
+            if (ns_host_addr_as_string(nextStr, sizeof(nextStr), &neighbours[1]) == -1)
+                errExit("print_showneighbour fault [ns_host_addr_as_string]\n");
+
+        case 1:
+            if (ns_host_addr_as_string(nextStr, sizeof(nextStr), &neighbours[0]) == -1)
+                errExit("print_showneighbour fault [ns_host_addr_as_string]\n");
+        }
+
+        printf("\t%ld - %s: {%s%s%s}\n", node, currStr, (length>0 ? prevStr : ""),
+                (length>1 ? ", " : ""), (length>1 ? nextStr : ""));
+    }
+}
+
