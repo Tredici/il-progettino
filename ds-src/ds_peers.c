@@ -333,3 +333,40 @@ int peers_showneighbour(long int* peer)
 
     return 0;
 }
+
+static void sendShutdown(long int peerID, void* data, void* base)
+{
+    struct peer* p;
+    struct ns_host_addr* dest;
+    int sockfd;
+
+    sockfd = *(int*)base;
+    p = (struct peer*)data;
+    dest = &p->ns_addr;
+
+    if (messages_send_shutdown_req_ns(sockfd, dest, p->id) == -1)
+        errExit("*** peers_send_shutdown:sendShutdown:messages_send_shutdown_req_ns ***\n");
+}
+
+int peers_send_shutdown(int sockfd)
+{
+    if (pthread_mutex_lock(&guard) != 0)
+        return -1;
+
+    if (tree == NULL)
+    {
+        pthread_mutex_unlock(&guard);
+        return -1;
+    }
+
+    if (rb_tree_accumulate(tree, &sendShutdown, &sockfd) == -1)
+    {
+        pthread_mutex_unlock(&guard);
+        return -1;
+    }
+
+    if (pthread_mutex_unlock(&guard) != 0)
+        return -1;
+
+    return 0;
+}

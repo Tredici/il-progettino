@@ -63,4 +63,13 @@ int peers_showpeers(void);
  */
 int peers_showneighbour(long int*);
 
+/** Invia a tutti i peer un messaggio
+ * di shutdown utilizzando il socket
+ * fornito come argomento.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int peers_send_shutdown(int);
+
 #endif
