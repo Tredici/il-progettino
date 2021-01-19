@@ -155,4 +155,19 @@ int ns_host_addr_any(const struct ns_host_addr*);
  */
 int ns_host_addr_update_addr(struct ns_host_addr*, const struct sockaddr*);
 
+/** Simula il comportamento di sendto
+ * utilizzando per identificare la
+ * destinazione.
+ * Tutti gli argomenti corrispondono
+ * a quelli di sendto eccetto l'ultimo
+ * che sostituisce i due parametri per
+ * identificare la destinazione.
+ *
+ * Restituisce 0 in caso di successo
+ * (se riesce a inviare tanti byte
+ * quanti sono quelli richiesti)
+ * oppure -1 in caso di errore.
+ */
+int ns_host_addr_send(int, const void*, size_t, int, const struct ns_host_addr*);
+
 #endif

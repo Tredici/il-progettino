@@ -241,3 +241,20 @@ int ns_host_addr_update_addr(struct ns_host_addr* ns_addr, const struct sockaddr
 
     return 0;
 }
+
+int ns_host_addr_send(int socketfd, const void* buffer, size_t len, int flag, const struct ns_host_addr* ns_addr)
+{
+    struct sockaddr_storage ss;
+    socklen_t ssLen;
+
+    if (buffer == NULL || len == 0 || ns_addr == NULL)
+        return -1;
+
+    if (sockaddr_from_ns_host_addr(&ss, &ssLen, ns_addr) == -1)
+        return -1;
+
+    if (sendto(socketfd, buffer, len, flag, &ss, ssLen) != (ssize_t)len)
+        return -1;
+
+    return 0;
+}
