@@ -311,4 +311,12 @@ int messages_make_shutdown_req(struct shutdown_req**, size_t*, uint32_t);
  */
 int messages_check_shutdown_req(void*, size_t);
 
+/** Genera e invia un messaggio
+ * di tipo
+ * MESSAGES_SHUTDOWN_REQ
+ * all'indirozzo fornito tramite
+ * il socket fornito.
+ */
+int messages_send_shutdown_req(int, const struct sockaddr*, socklen_t, uint32_t);
+
 #endif

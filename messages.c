@@ -317,3 +317,24 @@ int messages_check_shutdown_req(void* buffer, size_t len)
 
     return 0;
 }
+
+int messages_send_shutdown_req(int sockfd, const struct sockaddr* dest, socklen_t destLen, uint32_t ID)
+{
+    struct shutdown_req* req;
+    size_t sz;
+
+    if (dest == NULL || destLen == 0)
+        return -1;
+
+    if (messages_make_shutdown_req(&req, &sz, ID) == -1)
+        return -1;
+
+    if (sendto(sockfd, (void*)req, sz, 0, dest, destLen) != (ssize_t)sz)
+    {
+        free((void*)req);
+        return -1;
+    }
+    free((void*)req);
+
+    return 0;
+}
