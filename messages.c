@@ -338,3 +338,12 @@ int messages_send_shutdown_req(int sockfd, const struct sockaddr* dest, socklen_
 
     return 0;
 }
+
+int messages_get_shutdown_req_body(const struct shutdown_req* req, uint32_t* ID)
+{
+    if (req == NULL || ID == NULL)
+        return -1;
+
+    *ID = ntohl(req->body.ID);
+    return 0;
+}

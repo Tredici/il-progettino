@@ -319,4 +319,13 @@ int messages_check_shutdown_req(void*, size_t);
  */
 int messages_send_shutdown_req(int, const struct sockaddr*, socklen_t, uint32_t);
 
+/** Ottiene l'ID inserito nel corpo
+ * di una richiest a di un messaggio
+ * di tipo MESSAGES_SHUTDOWN_REQ.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_get_shutdown_req_body(const struct shutdown_req*, uint32_t*);
+
 #endif
