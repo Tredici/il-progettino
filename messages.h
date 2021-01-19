@@ -61,6 +61,12 @@ enum messages_types
     MESSAGES_BOOT_REQ,
     MESSAGES_BOOT_ACK,
 
+    /* messaggi che il server usa
+     * per comandare lo spegnimento
+     * dei peer */
+    MESSAGES_SHUTDOWN_REQ,
+    MESSAGES_SHUTDOWN_ACK,
+
     /* tipi di messaggio
      * per interagire con
      * gli altri peer */
@@ -114,6 +120,28 @@ struct boot_ack
         /* numero di vicini, deve valere length<MAX_NEIGHBOUR_NUMBER */
         uint16_t length;
         struct ns_host_addr neighbours[MAX_NEIGHBOUR_NUMBER];
+    } body __attribute__ ((packed));
+} __attribute__ ((packed));
+
+/** Questa struttura definisce il
+ * formato dei messaggi inviati
+ * dal server ai peer al momento
+ * dello shutdown.
+ * MESSAGES_SHUTDOWN_REQ
+ */
+struct shutdown_req
+{
+    /* header */
+    struct messages_head head;
+    /* corpo */
+    struct shutdown_ack_body
+    {
+        /* id che permette di discernere
+         * se il messaggio era destinato
+         * a questo peer o a uno risalente
+         * a una istanza precedente sempre
+         * in ascolto sulla stessa porta */
+        uint32_t ID;
     } body __attribute__ ((packed));
 } __attribute__ ((packed));
 
@@ -265,5 +293,16 @@ int messages_cmp_boot_ack_pid(const struct boot_ack*, uint32_t);
  * e -1 in caso di errore.
  */
 int messages_get_pid(const void*, uint32_t*);
+
+/** Genera e invia un messaggio di
+ * richiesta di shutdown.
+ *
+ * I primi due argomenti forniscono
+ * le informazioni necessarie a inviare
+ * la richiesta di shutdown.
+ * Il terzo parametro è l'ID del peer
+ * che deve spegnersi.
+ */
+int messages_make_shutdown_req(struct shutdown_req**, size_t*, uint32_t);
 
 #endif

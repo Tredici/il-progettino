@@ -276,3 +276,27 @@ int messages_get_pid(const void* head, uint32_t* pid)
     *pid =  ((struct messages_head*)head)->pid;
     return 0;
 }
+
+int messages_make_shutdown_req(struct shutdown_req** req, size_t* sz, uint32_t ID)
+{
+    struct shutdown_req* ans;
+
+    if (req == NULL || sz == NULL)
+        return -1;
+
+    ans = malloc(sizeof(struct shutdown_req));
+    if (ans == NULL)
+        return -1;
+
+    memset(ans, 0, sizeof(struct shutdown_req));
+
+    /* non serve alcun pid perché non ha senso
+     * pensare a dei duplicati */
+    ans->head.type = htons(MESSAGES_SHUTDOWN_REQ);
+    /* il corpo è estremamente semplice */
+    ans->body.ID = htonl(ID);
+
+    *req = ans;
+    *sz = sizeof(struct shutdown_req);
+    return 0;
+}
