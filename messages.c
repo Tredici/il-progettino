@@ -306,7 +306,7 @@ int messages_check_shutdown_req(void* buffer, size_t len)
     struct shutdown_req* req;
 
     /* controllo parametri */
-    if (buffer == NULL || sizeof(len) != sizeof(struct shutdown_req))
+    if (buffer == NULL || len != sizeof(struct shutdown_req))
         return -1;
 
     req = (struct shutdown_req*)buffer;
