@@ -21,6 +21,25 @@ all: peer
 -include $(OBJS:%.o=%.d)
 
 # file esclusivi dei peer
+ds_showpeers.o: ds-src/ds_showpeers.c  ds-src/ds_showpeers.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+ds_peers.o: ds-src/ds_peers.c  ds-src/ds_peers.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+ds_udp.o: ds-src/ds_udp.c  ds-src/ds_udp.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+ds_esc.o: ds-src/ds_esc.c ds-src/ds_esc.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+ds_showneighbours.o: ds-src/ds_showneighbours.c ds-src/ds_showneighbours.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+DSDEPS = ds_esc.o ds_udp.o ds_peers.o ds_showpeers.o ds_showneighbours.o
+
+
+# file esclusivi dei peer
 peer_start.o: peer-src/peer_start.c  peer-src/peer_start.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
@@ -58,6 +77,12 @@ peer.o: peer.c
 
 peer: peer.o $(COMMONDEPS) $(PEERDEPS)
 	$(CC) $(CFLAGS) -o $@ peer.o $(COMMONDEPS) $(PEERDEPS)
+
+# main del discovery server
+ds.o: ds.c
+
+ds: ds.o $(COMMONDEPS) $(DSDEPS)
+	$(CC) $(CFLAGS) -o $@ ds.o $(COMMONDEPS) $(DSDEPS)
 
 clean:
 	rm *.o
