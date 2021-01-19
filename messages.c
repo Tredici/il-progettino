@@ -300,3 +300,20 @@ int messages_make_shutdown_req(struct shutdown_req** req, size_t* sz, uint32_t I
     *sz = sizeof(struct shutdown_req);
     return 0;
 }
+
+int messages_check_shutdown_req(void* buffer, size_t len)
+{
+    struct shutdown_req* req;
+
+    /* controllo parametri */
+    if (buffer == NULL || sizeof(len) != sizeof(struct shutdown_req))
+        return -1;
+
+    req = (struct shutdown_req*)buffer;
+
+    /* controllo dell'header */
+    if (req->head.sentinel != 0 || ntohs(req->head.type) != MESSAGES_SHUTDOWN_REQ)
+        return -1;
+
+    return 0;
+}

@@ -305,4 +305,10 @@ int messages_get_pid(const void*, uint32_t*);
  */
 int messages_make_shutdown_req(struct shutdown_req**, size_t*, uint32_t);
 
+/** Verifica l'integrità di un
+ * messaggio del tipo
+ * MESSAGES_SHUTDOWN_REQ
+ */
+int messages_check_shutdown_req(void*, size_t);
+
 #endif
