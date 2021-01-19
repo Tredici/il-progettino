@@ -319,6 +319,15 @@ int messages_check_shutdown_req(void*, size_t);
  */
 int messages_send_shutdown_req(int, const struct sockaddr*, socklen_t, uint32_t);
 
+/** Come messages_send_shutdown_req
+ * ma permette di specificare il
+ * destinatario tramite l'impiego
+ * di un oggetto di tipo
+ * struct ns_host_addr* anziché
+ * "alla vecchia maniera"
+ */
+int messages_send_shutdown_req_ns(int, const struct ns_host_addr*, uint32_t);
+
 /** Ottiene l'ID inserito nel corpo
  * di una richiest a di un messaggio
  * di tipo MESSAGES_SHUTDOWN_REQ.

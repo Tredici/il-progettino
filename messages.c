@@ -339,6 +339,20 @@ int messages_send_shutdown_req(int sockfd, const struct sockaddr* dest, socklen_
     return 0;
 }
 
+int messages_send_shutdown_req_ns(int sockfd, const struct ns_host_addr* dest, uint32_t ID)
+{
+    struct sockaddr_storage ss;
+    socklen_t ssLen;
+
+    if (dest == NULL)
+        return -1;
+
+    if (sockaddr_from_ns_host_addr((struct sockaddr*)&ss, &ssLen, dest) == -1)
+        return -1;
+
+    return messages_send_shutdown_req(sockfd, (struct sockaddr*)&ss, ssLen, ID);
+}
+
 int messages_get_shutdown_req_body(const struct shutdown_req* req, uint32_t* ID)
 {
     if (req == NULL || ID == NULL)
