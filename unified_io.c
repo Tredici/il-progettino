@@ -209,3 +209,37 @@ int unified_io_print(int flag)
 
     return 0;
 }
+
+int unified_io_flush(void)
+{
+    int status;
+
+    if (pthread_mutex_lock(&mutex) != 0)
+        return -1;
+
+    /* verifica che il sottosistema sia stato attivato */
+    if (message_queue == NULL || (status = unified_io_get_mode()) == -1)
+    {
+        pthread_mutex_unlock(&mutex);
+        return -1;
+    }
+
+    if (status == UNIFIED_IO_ASYNC_MODE)
+    {
+        if (unified_io_set_mode(UNIFIED_IO_SYNC_MODE) == -1)
+        {
+            pthread_mutex_unlock(&mutex);
+            return -1;
+        }
+        if (unified_io_set_mode(UNIFIED_IO_ASYNC_MODE) == -1)
+        {
+            pthread_mutex_unlock(&mutex);
+            return -1;
+        }
+    }
+
+    if (pthread_mutex_unlock(&mutex) != 0)
+        return -1;
+
+    return 0;
+}

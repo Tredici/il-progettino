@@ -102,4 +102,13 @@ int unified_io_push(enum unified_io_type, const char*, ...);
  */
 int unified_io_print(int);
 
+/** Mette in output tutti i messaggi accumulati
+ * nella coda e non ancora stampati.
+ *
+ * Restituisce 0 in caso di
+ * successo e -1 in caso di
+ * errore.
+ */
+int unified_io_flush(void);
+
 #endif
