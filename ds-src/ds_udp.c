@@ -11,6 +11,10 @@
 #include <signal.h>
 #include <sched.h>
 #include <setjmp.h> /* arte */
+#include <poll.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <errno.h>
 
 /* segnale utilizzato per terminare il
  * ciclo del server */
@@ -104,6 +108,117 @@ static int handle_MESSAGES_BOOT_REQ(void* buffer, size_t msgLen, struct sockaddr
     }
 
     return 0;
+}
+
+/** Prova a spegnere tutti al più
+ * 5 volte e si pone un tempo di
+ * attesa di al più due secondi
+ * tra un tentativo e l'altro
+ */
+#define SHUTDOWN_TIMEOUT 2000 /* ms */
+#define SHUTDOWN_ATTEMPT 5
+
+/** Si occupa di inviare a tutti i peer
+ * i messaggi che ne comandano lo
+ * spegnimento, ovvero messaggi di tipo:
+ * MESSAGES_SHUTDOWN_REQ
+ */
+static void handlerPeersShutdown(int socketfd)
+{
+    int i;
+    struct pollfd polled;
+    char buffer[64];
+    ssize_t dataLen;
+    struct sockaddr_storage ss;
+    socklen_t ssLen;
+    char sender[32];
+    struct shutdown_ack* ack;
+    uint32_t ID, ID2;
+    uint16_t port;
+
+    memset(&polled, 0, sizeof(struct pollfd));
+    polled.fd = socketfd;
+
+    for (i = 0; peers_number()>0 && i < SHUTDOWN_ATTEMPT; i++)
+    {
+        /* log di quello che sta facendo */
+        unified_io_push(UNIFIED_IO_NORMAL, "Sending shutdown message, attempt [%d] of %d", i+1, SHUTDOWN_ATTEMPT);
+
+        /* invia a tutti il segnale di spegnimento */
+        if (peers_send_shutdown(socketfd) == -1)
+            errExit("*** handlerPeersShutdown:peers_send_shutdown ***\n");
+
+        /* si mette a gestire */
+        switch (poll(&polled, 1, SHUTDOWN_TIMEOUT))
+        {
+        case -1:
+            /* DISASTRO */
+            errExit("*** handlerPeersShutdown:poll ***\n");
+            break;
+
+        case 0:
+            /* niente da fare */
+            unified_io_push(UNIFIED_IO_NORMAL, "No messages received");
+            break;
+
+        default:
+            errno = 0;
+            while ((dataLen = recvfrom(socketfd, (void*)buffer, sizeof(buffer),
+                MSG_DONTWAIT, (struct sockaddr*)&ss, &ssLen)) != -1)
+            {
+                /* nel dubbio ripristina errno
+                 * per il controllo dell'errore */
+                errno = 0;
+
+                /* verifica che il messaggio ricevuto sia di tipo
+                 * MESSAGES_SHUTDOWN_ACK */
+                if (recognise_messages_type((void*)buffer) != MESSAGES_SHUTDOWN_ACK)
+                    continue;
+                /* controlla l'integrità del messaggio */
+                if (messages_check_shutdown_ack((void*)buffer, (size_t)dataLen) == -1)
+                    continue;
+
+                ack = (struct shutdown_ack*)buffer;
+
+                if (sockaddr_as_string(sender, sizeof(sender),
+                    (struct sockaddr*)&ss, ssLen) == -1)
+                    errExit("*** handlerPeersShutdown:sockaddr_as_string ***\n");
+
+                /* estrae l'ID presente nel messaggio ricevuto */
+                if (messages_get_shutdown_ack_body(ack, &ID) == -1)
+                    errExit("*** handlerPeersShutdown:messages_get_shutdown_ack_body ***\n");
+
+                /* cosa ha ricevuto e da chi */
+                unified_io_push(UNIFIED_IO_NORMAL, "Received shutdown ack form %s, ID [%ld]", sender, (long)ID);
+
+                /* estrae la porta di origine, utilizzata
+                 * per identificare il mittente */
+                if (getSockAddrPort((struct sockaddr*)&ss, &port) == -1)
+                    errExit("*** handlerPeersShutdown:messages_get_shutdown_ack_body ***\n");
+
+                /* controlla se sia stato già rimosso
+                 * (pacchetto duplicato) e in caso
+                 * contrario rimuove il nuovo elemento */
+                /* cerca l'ID del peer a quella porta */
+                /* vede se coincide con quello atteso */
+                if (peers_get_id((long)port, &ID2) == -1 || ID != ID2)
+                {
+                    unified_io_push(UNIFIED_IO_NORMAL, "No peer with ID [%ld]", (long)ID);
+                    continue;
+                }
+                /* lo elimina */
+                if (peers_remove_peer((long)port) == -1)
+                    errExit("*** handlerPeersShutdown:peers_remove_peer ***\n");
+
+                unified_io_push(UNIFIED_IO_NORMAL, "Removed peer with ID [%ld]", (long)ID);
+            }
+            if (errno != EWOULDBLOCK && errno != EAGAIN)
+                errExit("*** handlerPeersShutdown:recvfrom ***\n");
+
+            /* ci sono dei messaggi da gestire */
+            break;
+        }
+    }
 }
 
 /** Corpo del thread che gestisce il
@@ -267,6 +382,11 @@ static void* UDP(void* args)
     }
     /* ora il segnale è di nuovo bloccato */
     /* mai raggiunto prima del termine */
+
+    /** svolge tutte le operazioni
+     * necessarie allo spegnimento
+     * dei peer */
+    handlerPeersShutdown(socket);
 
     if (close(socket) != 0)
         errExit("*** close ***\n");
