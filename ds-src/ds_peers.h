@@ -72,4 +72,13 @@ int peers_showneighbour(long int*);
  */
 int peers_send_shutdown(int);
 
+/** Restituisce semplicemente
+ * il numero di peer.
+ *
+ * Restituisce -1 in caso di
+ * errore e il numero di peer
+ * "connessi" altrimenti.
+ */
+int peers_number(void);
+
 #endif

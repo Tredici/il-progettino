@@ -370,3 +370,24 @@ int peers_send_shutdown(int sockfd)
 
     return 0;
 }
+
+int peers_number(void)
+{
+    int ans;
+
+    if (pthread_mutex_lock(&guard) != 0)
+        return -1;
+
+    if (tree == NULL)
+    {
+        pthread_mutex_unlock(&guard);
+        return -1;
+    }
+
+    ans = (int)rb_tree_size(tree);
+
+    if (pthread_mutex_unlock(&guard) != 0)
+        return -1;
+
+    return ans;
+}
