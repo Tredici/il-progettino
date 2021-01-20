@@ -5,6 +5,7 @@
 #include "../ns_host_addr.h"
 #include "../commons.h"
 #include "../messages.h"
+#include "../unified_io.h"
 #include <pthread.h>
 #include <stdio.h>
 
@@ -336,6 +337,7 @@ int peers_showneighbour(long int* peer)
 
 static void sendShutdown(long int peerID, void* data, void* base)
 {
+    char destAddr[32];
     struct peer* p;
     struct ns_host_addr* dest;
     int sockfd;
@@ -343,6 +345,11 @@ static void sendShutdown(long int peerID, void* data, void* base)
     sockfd = *(int*)base;
     p = (struct peer*)data;
     dest = &p->ns_addr;
+
+    if (ns_host_addr_as_string(destAddr, sizeof(destAddr), dest) == -1)
+        errExit("*** peers_send_shutdown:sendShutdown:ns_host_addr_as_string ***\n");
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Sending to %s message MESSAGES_SHUTDOWN_REQ", destAddr);
 
     if (messages_send_shutdown_req_ns(sockfd, dest, p->id) == -1)
         errExit("*** peers_send_shutdown:sendShutdown:messages_send_shutdown_req_ns ***\n");
