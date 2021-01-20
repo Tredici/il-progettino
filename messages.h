@@ -379,4 +379,10 @@ int messages_get_shutdown_req_body(const struct shutdown_req*, uint32_t*);
  */
 int messages_make_shutdown_ack(struct shutdown_ack**, size_t*, const struct shutdown_req*);
 
+/** Verifica l'integrità di un
+ * messaggio del tipo
+ * MESSAGES_SHUTDOWN_ACK
+ */
+int messages_check_shutdown_ack(void*, size_t);
+
 #endif

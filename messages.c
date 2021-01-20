@@ -384,3 +384,21 @@ int messages_make_shutdown_ack(struct shutdown_ack** ack, size_t* sz, const stru
     *ack = ans;
     return 0;
 }
+
+int messages_check_shutdown_ack(void* buffer, size_t len)
+{
+    struct shutdown_ack* req;
+
+    /* controllo parametri */
+    if (buffer == NULL || len != sizeof(struct shutdown_ack))
+        return -1;
+
+    req = (struct shutdown_ack*)buffer;
+
+    /* controllo dell'header */
+    if (req->head.sentinel != 0 || ntohs(req->head.type) != MESSAGES_SHUTDOWN_ACK)
+        return -1;
+
+    return 0;
+}
+
