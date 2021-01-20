@@ -141,3 +141,26 @@ int getSockAddr(struct sockaddr* sk_addr,
     /* non ha trovato nulla */
     return -1;
 }
+
+int getSockAddrPort(const struct sockaddr* sk_addr, uint16_t* port)
+{
+    /* controllo validità parametri */
+    if (sk_addr == NULL || port == NULL)
+        return -1;
+
+    switch (sk_addr->sa_family)
+    {
+    case AF_INET:
+        *port = ntohs(((struct sockaddr_in*) sk_addr)->sin_port);
+        break;
+
+    case AF_INET6:
+        *port = ntohs(((struct sockaddr_in6*) sk_addr)->sin6_port);
+        break;
+
+    default: /* tipo dell'indirizzo non riconosciuto */
+        return -1;
+    }
+
+    return 0;
+}

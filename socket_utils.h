@@ -33,4 +33,12 @@ int getSocketPort(int);
  */
 int getSockAddr(struct sockaddr*, socklen_t*, const char*, const char*, int, int);
 
+/** Estrae il numero di porta da un oggetto
+ * di tipo struct sockaddr.
+ *
+ * Restituisce 0 in caso di successo, -1
+ * in caso di errore.
+ */
+int getSockAddrPort(const struct sockaddr*, uint16_t*);
+
 #endif
