@@ -62,6 +62,9 @@ enum unified_io_mode unified_io_get_mode(void);
  * Va usato SOLO quando si è sicuri
  * che nessun thread proverà a scrivere.
  *
+ * Invoca automaticamente
+ * unified_io_flush.
+ *
  * Restituisce 0 in caso di successo
  * -1 in caso di errore.
  */

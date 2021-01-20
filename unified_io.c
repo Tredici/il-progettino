@@ -135,6 +135,9 @@ int unified_io_close()
     if (message_queue == NULL)
         return -1;
 
+    if (unified_io_flush() == -1)
+        return -1;
+
     queue_destroy(message_queue);
 
     return 0;
