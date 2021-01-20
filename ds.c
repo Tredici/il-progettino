@@ -59,8 +59,10 @@ int main(int argc, char* argv[])
 
     main_loop(serverID, commands, commandNumber);
 
+    unified_io_set_mode(UNIFIED_IO_SYNC_MODE);
     if (UDPstop() == -1)
         errExit("*** Errore terminazione sottosistema UDP ***\n");
+    unified_io_set_mode(UNIFIED_IO_ASYNC_MODE);
 
     if (unified_io_close() == -1)
         errExit("*** Errore terminazione sottosistema IO ***\n");
