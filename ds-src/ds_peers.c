@@ -391,3 +391,29 @@ int peers_number(void)
 
     return ans;
 }
+
+int peers_get_id(long int key, uint32_t* ID)
+{
+    struct peer* p;
+
+    if (ID == NULL)
+        return -1;
+
+    if (tree == NULL)
+        return -1;
+
+    if (pthread_mutex_lock(&guard) != 0)
+        return -1;
+
+    if (rb_tree_get(tree, key, (void**)&p) == -1 || p == NULL)
+    {
+        pthread_mutex_unlock(&guard);
+        return -1;
+    }
+    *ID = p->id;
+
+    if (pthread_mutex_unlock(&guard) != 0)
+        return -1;
+
+    return 0;
+}

@@ -81,4 +81,17 @@ int peers_send_shutdown(int);
  */
 int peers_number(void);
 
+/** Ottiene l'ID del peer (se esiste)
+ * identificato dalla chiave data
+ * (che in questa semplice implementa
+ * zione coincide con il numero di porta
+ * utilizzato dal socket UDP).
+ *
+ * Restituisce 0 in caso di successo
+ * oppure -1 in caso di errore (ad
+ * esempio se non esiste alcun peer
+ * identificato da tale numero di porta)
+ */
+int peers_get_id(long int, uint32_t*);
+
 #endif
