@@ -385,4 +385,13 @@ int messages_make_shutdown_ack(struct shutdown_ack**, size_t*, const struct shut
  */
 int messages_check_shutdown_ack(void*, size_t);
 
+/** Ottiene l'ID inserito nel corpo
+ * di una richiest a di un messaggio
+ * di tipo MESSAGES_SHUTDOWN_ACK.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_get_shutdown_ack_body(const struct shutdown_ack*, uint32_t*);
+
 #endif

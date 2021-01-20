@@ -402,3 +402,11 @@ int messages_check_shutdown_ack(void* buffer, size_t len)
     return 0;
 }
 
+int messages_get_shutdown_ack_body(const struct shutdown_ack* ack, uint32_t* ID)
+{
+    if (ack == NULL || ID == NULL)
+        return -1;
+
+    *ID = ntohl(ack->body.ID);
+    return 0;
+}
