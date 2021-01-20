@@ -424,3 +424,23 @@ int peers_get_id(long int key, uint32_t* ID)
 
     return 0;
 }
+
+int peers_remove_peer(long int key)
+{
+    if (tree == NULL)
+        return -1;
+
+    if (pthread_mutex_lock(&guard) != 0)
+        return -1;
+
+    if (rb_tree_remove(tree, key, NULL) == -1)
+    {
+        pthread_mutex_unlock(&guard);
+        return -1;
+    }
+
+    if (pthread_mutex_unlock(&guard) != 0)
+        return -1;
+
+    return 0;
+}

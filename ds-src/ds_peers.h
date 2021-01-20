@@ -94,4 +94,12 @@ int peers_number(void);
  */
 int peers_get_id(long int, uint32_t*);
 
+/** Rimuove il peer identificato dalla
+ * chiave fornita.
+ *
+ * Restituisce 0 in caso di successo
+ * oppure -1 in caso di errore.
+ */
+int peers_remove_peer(long int);
+
 #endif
