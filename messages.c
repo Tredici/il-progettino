@@ -361,3 +361,26 @@ int messages_get_shutdown_req_body(const struct shutdown_req* req, uint32_t* ID)
     *ID = ntohl(req->body.ID);
     return 0;
 }
+
+int messages_make_shutdown_ack(struct shutdown_ack** ack, size_t* sz, const struct shutdown_req* req)
+{
+    struct shutdown_req* ans;
+
+    /* controllo parametri */
+    if (ack == NULL || sz == NULL || req == NULL)
+        return -1;
+
+    ans = malloc(sizeof(struct shutdown_req));
+    if (ans == NULL)
+        return -1;
+
+    memset(ans, 0, sizeof(struct shutdown_req));
+
+    ans->head.type = htons(MESSAGES_BOOT_ACK);
+    ans->head.pid = req->head.pid;
+    ans->body.ID = req->body.ID;
+
+    *sz = sizeof(struct shutdown_req);
+    *ack = ans;
+    return 0;
+}

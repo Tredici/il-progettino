@@ -358,4 +358,25 @@ int messages_send_shutdown_req_ns(int, const struct ns_host_addr*, uint32_t);
  */
 int messages_get_shutdown_req_body(const struct shutdown_req*, uint32_t*);
 
+/** Genera un messaggio di tipo
+ * MESSAGES_BOOT_ACK a partire
+ * da un messaggio di tipo
+ * MESSAGES_BOOT_REQ.
+ *
+ * La memoria allocata può essere
+ * liberata in maniera sicura con
+ * una chiamata a free.
+ *
+ * Attenzione: assume che l'oggeto
+ * di tipo struct shutdown_req sia
+ * valido (in grado di superare un
+ * controllo di integrità) e non si
+ * preoccupa di eseguirci controlli
+ * sopra.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_make_shutdown_ack(struct shutdown_ack**, size_t*, const struct shutdown_req*);
+
 #endif
