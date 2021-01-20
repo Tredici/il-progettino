@@ -145,6 +145,27 @@ struct shutdown_req
     } body __attribute__ ((packed));
 } __attribute__ ((packed));
 
+/** Struttura utilizzata per definire
+ * il formato dei messaggi di tipo
+ * MESSAGES_SHUTDOWN_ACK
+ * da utilizzare in risposta ai messaggi
+ * di tipo MESSAGES_SHUTDOWN_REQ.
+ *
+ * Il formato è molto semplice e
+ * copia quello dei messaggi di REQ.
+ */
+struct shutdown_ack
+{
+    /* header */
+    struct messages_head head;
+    /* corpo */
+    struct shutdown_ack_body
+    {
+        /* per controllo da parte del
+         * server */
+        uint32_t ID;
+    } body __attribute__ ((packed));
+} __attribute__ ((packed));
 
 /** Dato il puntatore al buffer che ospita il
  * messaggio fornisce il tipo di questo.
