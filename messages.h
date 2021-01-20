@@ -134,7 +134,7 @@ struct shutdown_req
     /* header */
     struct messages_head head;
     /* corpo */
-    struct shutdown_ack_body
+    struct shutdown_req_body
     {
         /* id che permette di discernere
          * se il messaggio era destinato
