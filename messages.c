@@ -410,3 +410,29 @@ int messages_get_shutdown_ack_body(const struct shutdown_ack* ack, uint32_t* ID)
     *ID = ntohl(ack->body.ID);
     return 0;
 }
+
+int messages_send_shutdown_response(
+            int sockfd,
+            const struct sockaddr* sk_addr,
+            socklen_t skLen,
+            const struct shutdown_req* req)
+{
+    struct shutdown_ack* ack;
+    size_t ackLen;
+
+    /* controllo parametri */
+    if (sockfd < 0 || sk_addr == NULL || skLen == 0 || req == NULL)
+        return -1;
+
+    if (messages_make_shutdown_ack(&ack, &ackLen, req) == -1)
+        return -1;
+
+    if (sendto(sockfd, (void*)ack, ackLen, 0, sk_addr, skLen) != (ssize_t)ackLen)
+    {
+        free((void*)ack);
+        return -1;
+    }
+    free((void*)ack);
+
+    return 0;
+}

@@ -394,4 +394,31 @@ int messages_check_shutdown_ack(void*, size_t);
  */
 int messages_get_shutdown_ack_body(const struct shutdown_ack*, uint32_t*);
 
+/** Genera un messaggio di risposta
+ * a uno di tipo MESSAGES_BOOT_REQ
+ * e lo invia all'indirizzo fornito
+ * (che ragionevolmente dovrebbe
+ * essere quello da cui è stato
+ * ricevuto il messaggio iniziale).
+ *
+ * Il primo argomento è il descrittore
+ * di file che identifica il socket,
+ * il secondo e il terzo argomento
+ * permettono di identificare il
+ * destinatario della risposta/
+ * mittente della richiesta e il
+ * quarto argomento è il messaggio
+ * di richiesta.
+ *
+ * La funzione non garantisce alcun
+ * controllo sull'integrità del
+ * messaggio di richiesta e si assume
+ * sia invocata sempre e solo dopo
+ * gli opportuni controlli.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_send_shutdown_response(int, const struct sockaddr*, socklen_t, const struct shutdown_req*);
+
 #endif
