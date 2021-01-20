@@ -250,10 +250,10 @@ int ns_host_addr_send(int socketfd, const void* buffer, size_t len, int flag, co
     if (buffer == NULL || len == 0 || ns_addr == NULL)
         return -1;
 
-    if (sockaddr_from_ns_host_addr(&ss, &ssLen, ns_addr) == -1)
+    if (sockaddr_from_ns_host_addr((struct sockaddr*)&ss, &ssLen, ns_addr) == -1)
         return -1;
 
-    if (sendto(socketfd, buffer, len, flag, &ss, ssLen) != (ssize_t)len)
+    if (sendto(socketfd, buffer, len, flag, (struct sockaddr*)&ss, ssLen) != (ssize_t)len)
         return -1;
 
     return 0;
