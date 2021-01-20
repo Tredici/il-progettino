@@ -62,6 +62,9 @@ int main(int argc, char* argv[])
     if (UDPstop() == -1)
         errExit("*** Errore terminazione sottosistema UDP ***\n");
 
+    if (unified_io_close() == -1)
+        errExit("*** Errore terminazione sottosistema IO ***\n");
+
     printf("Server terminato correttamente.\n");
 
     return EXIT_SUCCESS;
