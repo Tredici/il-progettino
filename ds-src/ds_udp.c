@@ -139,6 +139,8 @@ static void handlerPeersShutdown(int socketfd)
     memset(&polled, 0, sizeof(struct pollfd));
     polled.fd = socketfd;
 
+    unified_io_push(UNIFIED_IO_NORMAL, "Connected peers [%d]", (int)peers_number());
+
     for (i = 0; peers_number()>0 && i < SHUTDOWN_ATTEMPT; i++)
     {
         /* log di quello che sta facendo */
