@@ -335,13 +335,14 @@ int peers_showneighbour(long int* peer)
     return 0;
 }
 
-static void sendShutdown(long int peerID, void* data, void* base)
+static void sendShutdown(long int peerPort, void* data, void* base)
 {
     char destAddr[32];
     struct peer* p;
     struct ns_host_addr* dest;
     int sockfd;
 
+    (void)peerPort;
     sockfd = *(int*)base;
     p = (struct peer*)data;
     dest = &p->ns_addr;
