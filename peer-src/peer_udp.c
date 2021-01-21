@@ -114,12 +114,6 @@ static void* UDP(void* args)
     int requestedPort;
     /* porta usata dal thread */
     int usedPort;
-    /* flag per evitare di sprecare
-     * troppi cicli di CPU cedendone
-     * il controllo al altri thread
-     * se per un ciclo non si trova
-     * a fare nulla */
-    int yield;
 
     /* per il segnale di terminazione */
     struct sigaction toStop;
@@ -205,7 +199,6 @@ static void* UDP(void* args)
     /* a questo punto il padre può riprendere */
     unified_io_push(UNIFIED_IO_NORMAL, "UDP thread running");
     /* qui va il loop di gestione delle richieste */
-    yield = 0; /* il primo ciclo di sicuro non si lascia la CPU */
     UDPloop = 1;
 
     /* CHECKPOINT */
