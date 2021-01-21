@@ -315,7 +315,7 @@ int UDPconnect(const char* hostname, const char* portname)
         /* se fallisce qui c'è proprio un problema
          * di invio */
         if (messages_send_boot_req(socketfd, (struct sockaddr*)&ss, sl, socketfd, pid, &ns_addr_send) != 0)
-            goto failedBoot;
+            goto endBoot;
 
         /* resoconto di cosa è stato inviato a chi */
         if (ns_host_addr_as_string(msgBody, sizeof(msgBody), ns_addr_send) == -1)
@@ -351,16 +351,16 @@ int UDPconnect(const char* hostname, const char* portname)
                 /* è andata bene */
                 ans = 0;
                 /* possiamo interrompere il ciclo */
-                goto failedBoot;
+                goto endBoot;
             }
             break;
 
         default: /* restituito -1 */
             /* errore polling */
-            goto failedBoot;
+            goto endBoot;
         }
     } while (++attempt < MAX_BOOT_ATTEMPT);
-failedBoot:
+endBoot:
 
     return ans;
 }
