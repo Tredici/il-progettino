@@ -88,6 +88,7 @@ volatile sig_atomic_t UDPloop = 1;
 
 /* serve a gestire la terminazione del
  * ciclo del thread UDP */
+sigset_t toBlock; /* per ignorare il segnale */
 sigjmp_buf sigSetJmp; /* bellissimo */
 static void sigHandler(int sigNum)
 {
@@ -122,7 +123,6 @@ static void* UDP(void* args)
 
     /* per il segnale di terminazione */
     struct sigaction toStop;
-    sigset_t toBlock; /* per ignorare il segnale */
 
     ts = thread_semaphore_form_args(args);
     if (ts == NULL)
