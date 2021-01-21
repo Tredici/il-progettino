@@ -175,6 +175,9 @@ static void* UDP(void* args)
 
     }
     /* mai raggiunto */
+    /* chiude il socket */
+    if (close(socketfd) != 0)
+        errExit("*** UDP:close ***\n");
 
     return NULL;
 }
