@@ -15,6 +15,11 @@
 #include <poll.h>
 #include <time.h>
 #include <errno.h>
+#include <setjmp.h>
+
+/* segnale utilizzato per terminare il
+ * ciclo del peer */
+#define INTERRUPT_SIGNAL SIGUSR1
 
 /* Una richiesta di boot viene
  * inviata al più 5 volte con un
@@ -81,6 +86,16 @@ pthread_t UDP_tid;
  */
 volatile sig_atomic_t UDPloop = 1;
 
+/* serve a gestire la terminazione del
+ * ciclo del thread UDP */
+sigjmp_buf sigSetJmp; /* bellissimo */
+static void sigHandler(int sigNum)
+{
+    (void)sigNum;
+    UDPloop = 0;
+    siglongjmp(sigSetJmp, 1); /* magia */
+}
+
 /* fd del socket
  * è globale poiché deve essere
  * potenzialmente condiviso da
@@ -105,6 +120,10 @@ static void* UDP(void* args)
      * a fare nulla */
     int yield;
 
+    /* per il segnale di terminazione */
+    struct sigaction toStop;
+    sigset_t toBlock; /* per ignorare il segnale */
+
     ts = thread_semaphore_form_args(args);
     if (ts == NULL)
         errExit("*** UDP ***\n");
@@ -112,6 +131,31 @@ static void* UDP(void* args)
     data = (int*)thread_semaphore_get_args(args);
     if (data == NULL)
         errExit("*** UDP ***\n");
+
+    /* INIZIO parte copiata dal ds */
+    /* prepara l'handler per la terminazione del peer */
+    memset(&toStop, 0, sizeof(struct sigaction));
+    toStop.sa_handler = &sigHandler;
+    if (sigfillset(&toStop.sa_mask) != 0)
+        if (thread_semaphore_signal(ts, -1, NULL) == -1)
+            errExit("*** sigaction ***\n");
+    /* si prepara per bloccare il segnale da usare poi */
+    if (sigemptyset(&toBlock) != 0)
+        if (thread_semaphore_signal(ts, -1, NULL) == -1)
+            errExit("*** sigemptyset ***\n");
+    /* inserisce il segnale nella maschera */
+    if (sigaddset(&toBlock, INTERRUPT_SIGNAL) != 0)
+        if (thread_semaphore_signal(ts, -1, NULL) == -1)
+            errExit("*** sigaddset ***\n");
+    /* lo blocca per tutto il tempo necessario */
+    if (pthread_sigmask(SIG_BLOCK, &toBlock, NULL) != 0)
+        if (thread_semaphore_signal(ts, -1, NULL) == -1)
+            errExit("*** pthread_sigmask ***\n");
+    /* ora imposta l'opportuno handler */
+    if (sigaction(INTERRUPT_SIGNAL, &toStop, NULL) != 0)
+        if (thread_semaphore_signal(ts, -1, NULL) == -1)
+            errExit("*** sigaction ***\n");
+    /* FINE della parte copiata dal ds */
 
     /* inizializza la pipe da usare con UDPstart */
     if (pipe(startPipe) != 0)
@@ -163,18 +207,28 @@ static void* UDP(void* args)
     /* qui va il loop di gestione delle richieste */
     yield = 0; /* il primo ciclo di sicuro non si lascia la CPU */
     UDPloop = 1;
-    while (UDPloop)
+
+    /* CHECKPOINT */
+    if (sigsetjmp(sigSetJmp, 1) == 0)
     {
-        if (yield)
-            sched_yield(); /* altruista */
-        else
-            yield = 1; /* forse la lascia al prossimo */
+        /* ora è tutto pronto e si può sbloccare il segnale */
+        if (pthread_sigmask(SIG_UNBLOCK, &toBlock, NULL) != 0)
+            errExit("*** pthread_sigmask ***\n");
 
-        /* esamina le singole richiesta 1 per 1
-         * e se ne trova imposta yield=0 */
+        while (UDPloop)
+        {
+            if (yield)
+                sched_yield(); /* altruista */
+            else
+                yield = 1; /* forse la lascia al prossimo */
 
+            /* esamina le singole richiesta 1 per 1
+            * e se ne trova imposta yield=0 */
+
+        }
     }
-    /* mai raggiunto */
+    /* mai raggiunto prima del termine */
+
     /* chiude il socket */
     if (close(socketfd) != 0)
         errExit("*** UDP:close ***\n");
@@ -320,12 +374,8 @@ int UDPstop(void)
     /* invia il segnale di terminazione */
     /* assumo che il thread non termini mai
      * prima del tempo */
-    /*if (pthread_kill(UDP_tid, SIGTERM) != 0)
-        return -1;*/
-    /* metodo semplice ma efficace per terminare
-     * il ciclo del thread */
-    UDPloop = 0;
-
+    if (pthread_kill(UDP_tid, INTERRUPT_SIGNAL) != 0)
+        return -1;
 
     if (pthread_join(UDP_tid, NULL) != 0)
         return -1;
