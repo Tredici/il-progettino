@@ -103,6 +103,73 @@ static void sigHandler(int sigNum)
  * più thread */
 int socketfd;
 
+/** Funzione ausiliaria che si
+ * occupa di tutta la parte
+ * relativa alla ricezione
+ * dei messaggi dal socket UDP
+ */
+static void UDPReadLoop()
+{
+    char buffer[1024];
+    struct sockaddr_storage ss;
+    socklen_t ssLen;
+    ssize_t msgLen;
+    char sendName[32];
+    void* msgCopy;
+
+    while (UDPloop)
+    {
+        msgLen = recvfrom(socketfd, (void*)buffer, sizeof(buffer), 0, (struct sockaddr*)&ss, &ssLen);
+        /* controllo per errore */
+        if (msgLen == -1)
+            errExit("*** UDP ***\n");
+
+        /* blocca il segnale e gestisce il messaggio */
+        if (pthread_sigmask(SIG_BLOCK, &toBlock, NULL) != 0)
+            errExit("*** pthread_sigmask ***\n");
+
+        /* stampa le informazioni sul dato ricevuto */
+        if (sockaddr_as_string(sendName, sizeof(sendName), (struct sockaddr*)&ss, &ssLen) == -1)
+            errExit("*** sockaddr_as_string ***\n");
+
+        unified_io_push(UNIFIED_IO_NORMAL, "Received message from %s", sendName);
+
+        /* cerca di ricavare il tipo di messaggio ricevuto */
+        switch (recognise_messages_type((void*)buffer))
+        {
+        case -1:
+            unified_io_push(UNIFIED_IO_NORMAL, "\tCannot recognise type of message!", sendName);
+            break;
+
+        /* È stato ricevuto un messaggio dalla sentinella compromessa */
+        case MESSAGES_MSG_UNKWN:
+            unified_io_push(UNIFIED_IO_NORMAL, "\tNonstandard message received!", sendName);
+            break;
+
+        case MESSAGES_BOOT_ACK:
+            unified_io_push(UNIFIED_IO_NORMAL, "\tMessage MESSAGES_BOOT_ACK!", sendName);
+            msgCopy = messages_clone((void*)buffer);
+            if (msgCopy == NULL)
+                errExit("*** UDP:messages_clone ***");
+
+            /* inserisce la copia del messaggio nella coda apposita */
+            if (write(startPipe[1], msgCopy, sizeof(struct boot_ack)) != (ssize_t)sizeof(struct boot_ack))
+                errExit("*** UDP:write ***");
+
+            /* ora sarà l'altro thread a gestire il dato */
+            break;
+
+        default:
+            unified_io_push(UNIFIED_IO_NORMAL, "\tBad message received!", sendName);
+            break;
+        }
+
+        /* sblocca il segnale e riprende il ciclo */
+        if (pthread_sigmask(SIG_UNBLOCK, &toBlock, NULL) != 0)
+            errExit("*** pthread_sigmask ***\n");
+    }
+}
+
 /** Funzione che rappresenta il corpo del
  * thread che gestira il socket
  */
