@@ -399,6 +399,7 @@ int UDPconnect(const char* hostname, const char* portname)
                 /* c'è un input */
                 /* lo legge - usa read */
                 ;
+                printf("Received response from ds\n");
                 /* vede quali sono i peer vicini */
                 /* li pinga */
                 /* a quel punto possiamo tonnare */
