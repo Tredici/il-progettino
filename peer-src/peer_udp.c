@@ -275,17 +275,11 @@ static void* UDP(void* args)
         if (pthread_sigmask(SIG_UNBLOCK, &toBlock, NULL) != 0)
             errExit("*** pthread_sigmask ***\n");
 
-        while (UDPloop)
-        {
-            if (yield)
-                sched_yield(); /* altruista */
-            else
-                yield = 1; /* forse la lascia al prossimo */
-
-            /* esamina le singole richiesta 1 per 1
-            * e se ne trova imposta yield=0 */
-
-        }
+        /* il ciclo è gestito altrove per ragioni
+         * di leggibilità */
+        UDPReadLoop();
+        /* mai raggiunto se non in caso di terminazione
+         * precoce */
     }
     /* mai raggiunto prima del termine */
 
