@@ -31,6 +31,50 @@ int recognise_messages_type(void* msg)
     return (int)ntohs(p->type);
 }
 
+void* messages_clone(const void* msg)
+{
+    void* ans;
+
+    switch (recognise_messages_type(msg))
+    {
+    case MESSAGES_BOOT_REQ:
+        ans = malloc(sizeof(struct boot_req));
+        if (ans == NULL)
+            return NULL;
+
+        *(struct boot_req*)ans = *(struct boot_req*)msg;
+        break;
+
+    case MESSAGES_BOOT_ACK:
+        ans = malloc(sizeof(struct boot_ack));
+        if (ans == NULL)
+            return NULL;
+
+        *(struct boot_ack*)ans = *(struct boot_ack*)msg;
+        break;
+
+    case MESSAGES_SHUTDOWN_REQ:
+        ans = malloc(sizeof(struct shutdown_req));
+        if (ans == NULL)
+            return NULL;
+
+        *(struct shutdown_req*)ans = *(struct shutdown_req*)msg;
+        break;
+
+    case MESSAGES_SHUTDOWN_ACK:
+        ans = malloc(sizeof(struct shutdown_ack));
+        if (ans == NULL)
+            return NULL;
+
+        *(struct shutdown_ack*)ans = *(struct shutdown_ack*)msg;
+        break;
+
+    default:
+        return NULL;
+    }
+
+    return ans;
+}
 
 int messages_make_boot_req(struct boot_req** buffer, size_t* sz, int socket, uint32_t pid)
 {

@@ -176,6 +176,18 @@ struct shutdown_ack
  */
 int recognise_messages_type(void*);
 
+/** Ottiene una copia del messaggio fornito
+ * ottenendo dinamicamente la memoria
+ * necessaria.
+ *
+ * Non effettua alcun controllo sull'integrità
+ * del messaggio che deve essere già stato
+ * eseguito dal chiamante.
+ *
+ * Restituisce NULL in caso di errore.
+ */
+void* messages_clone(const void*);
+
 /** Genera un messaggio di boot con i parametri
  * passati.
  *
