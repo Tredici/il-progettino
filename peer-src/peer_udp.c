@@ -132,7 +132,7 @@ static void UDPReadLoop()
 
         /* stampa le informazioni sul dato ricevuto */
         if (sockaddr_as_string(sendName, sizeof(sendName), (struct sockaddr*)&ss, ssLen) == -1)
-            errExit("*** sockaddr_as_string ***\n");
+            errExit("*** UDP:sockaddr_as_string ***\n");
 
         unified_io_push(UNIFIED_IO_NORMAL, "Received message from %s", sendName);
 
@@ -375,9 +375,9 @@ int UDPconnect(const char* hostname, const char* portname)
 
         /* resoconto di cosa è stato inviato a chi */
         if (ns_host_addr_as_string(msgBody, sizeof(msgBody), ns_addr_send) == -1)
-            errExit("*** ns_host_addr_as_string ***\n");
+            errExit("*** main:ns_host_addr_as_string ***\n");
         if (sockaddr_as_string(destStr, sizeof(destStr), (struct sockaddr*)&ss, sl) == -1)
-            errExit("*** ns_host_addr_as_string ***\n");
+            errExit("*** main:sockaddr_as_string ***\n");
 
         printf("Inviato messaggio di boot:\n\tdest: %s\n\tcont: %s\n", destStr, msgBody);
 
