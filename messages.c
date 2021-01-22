@@ -232,7 +232,7 @@ messages_make_boot_ack(struct boot_ack** buffer,
 
     /* prepara l'header */
     ans->head.sentinel = 0;
-    ans->head.type = MESSAGES_BOOT_ACK;
+    ans->head.type = htons(MESSAGES_BOOT_ACK);
     ans->head.pid = req->head.pid;
     /* prepara il corpo */
     ans->body.ID = ID;
