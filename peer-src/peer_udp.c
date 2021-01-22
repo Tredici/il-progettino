@@ -129,7 +129,7 @@ static void UDPReadLoop()
             errExit("*** pthread_sigmask ***\n");
 
         /* stampa le informazioni sul dato ricevuto */
-        if (sockaddr_as_string(sendName, sizeof(sendName), (struct sockaddr*)&ss, &ssLen) == -1)
+        if (sockaddr_as_string(sendName, sizeof(sendName), (struct sockaddr*)&ss, ssLen) == -1)
             errExit("*** sockaddr_as_string ***\n");
 
         unified_io_push(UNIFIED_IO_NORMAL, "Received message from %s", sendName);
