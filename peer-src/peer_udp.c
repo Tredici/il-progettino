@@ -233,6 +233,19 @@ static void UDPReadLoop()
             /* ora sarà l'altro thread a gestire il dato */
             break;
 
+        case MESSAGES_SHUTDOWN_REQ:
+            unified_io_push(UNIFIED_IO_NORMAL, "\tMessage MESSAGES_SHUTDOWN_REQ!", sendName);
+            /* verifica se bisogna morire */
+            if (handle_MESSAGES_SHUTDOWN_REQ(socketfd, buffer, (size_t)msgLen, (struct sockaddr*)&ss, ssLen) == 0)
+            {
+                unified_io_push(UNIFIED_IO_NORMAL, "\tMessage MESSAGES_SHUTDOWN_REQ!", sendName);
+                errExit("*** TODO:shutdown ***\n");
+            }
+            else
+                unified_io_push(UNIFIED_IO_NORMAL, "\tInvalid shutdown request!", sendName);
+            /* normale, il messaggio era farlocco, si va avanti */
+            break;
+
         default:
             unified_io_push(UNIFIED_IO_NORMAL, "\tBad message received!", sendName);
             break;
