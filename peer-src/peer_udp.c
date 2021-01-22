@@ -504,7 +504,18 @@ int UDPconnect(const char* hostname, const char* portname)
                 if (messages_get_boot_ack_body(ack, &offeredID, peersAddrs, &peersNum) == -1)
                     errExit("*** main:messages_get_boot_ack_body ***\n");
 
-
+                /* imposta l'ID del peer */
+                if (pthread_mutex_lock(&IDguard) != 0)
+                    errExit("*** main:pthread_mutex_lock ***\n");
+                /* controlla che non sia già connesso */
+                if (ISPeerConnected)
+                    errExit("*** ALREADY CONNECTED! ***\n");
+                /* imposta l'ID del peer */
+                peerID = offeredID;
+                /* accende il flag */
+                ISPeerConnected = 1;
+                if (pthread_mutex_unlock(&IDguard) != 0)
+                    errExit("*** main:pthread_mutex_unlock ***\n");
 
                 printf("Peer connesso a una rete con ID [%ld]\n", (long)offeredID);
 
