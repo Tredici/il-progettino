@@ -119,6 +119,8 @@ static void UDPReadLoop()
 
     while (UDPloop)
     {
+        /* bisogna inizializzare questa variabile prima di invocare recvfrom */
+        ssLen = sizeof(struct sockaddr_storage);
         msgLen = recvfrom(socketfd, (void*)buffer, sizeof(buffer), 0, (struct sockaddr*)&ss, &ssLen);
         /* controllo per errore */
         if (msgLen == -1)
