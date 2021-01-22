@@ -227,7 +227,7 @@ static void UDPReadLoop()
                 errExit("*** UDP:messages_clone ***");
 
             /* inserisce la copia del messaggio nella coda apposita */
-            if (write(startPipe[1], msgCopy, sizeof(struct boot_ack)) != (ssize_t)sizeof(struct boot_ack))
+            if (write(startPipe[1], &msgCopy, sizeof(struct boot_ack)) != (ssize_t)sizeof(struct boot_ack))
                 errExit("*** UDP:write ***");
 
             /* ora sarà l'altro thread a gestire il dato */
