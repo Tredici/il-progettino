@@ -407,6 +407,10 @@ int UDPconnect(const char* hostname, const char* portname)
     /* per la gestione della risposta */
     struct boot_ack* ack; /* puntatore alla risposta */
     ssize_t err;
+    /* per la gestione della risposta */
+    uint32_t offeredID;
+    struct ns_host_addr* peersAddrs[MAX_NEIGHBOUR_NUMBER];
+    size_t peersNum;
 
     /* codice per assegnare il pseudo id ai messaggi
      * inviati */
@@ -487,6 +491,23 @@ int UDPconnect(const char* hostname, const char* portname)
                 /* lo legge - usa read */
                 ;
                 printf("Received response from ds\n");
+
+                /* per ora assume di avere un unico messaggio
+                 * da attendere in questa versione iniziale */
+                /* estrae i messaggi ricevuti e li testa */
+                if (read(startPipe[0], (void*)&ack, sizeof(ack)) !=  (ssize_t)sizeof(ack))
+                    errExit("*** main:read ***\n");
+
+                /* prende il messaggio e lo gestisce,
+                 * siamo già certi della sia consistenza */
+                peersNum = MAX_NEIGHBOUR_NUMBER; /* non necessario ma non si sa mai */
+                if (messages_get_boot_ack_body(ack, &offeredID, peersAddrs, &peersNum) == -1)
+                    errExit("*** main:messages_get_boot_ack_body ***\n");
+
+
+
+                printf("Peer connesso a una rete con ID [%ld]\n", (long)offeredID);
+
                 /* vede quali sono i peer vicini */
                 /* li pinga */
                 /* a quel punto possiamo tonnare */
