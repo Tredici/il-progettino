@@ -45,7 +45,7 @@ static void sigHandler(int sigNum)
  * Restituiscono 0 in caso di successo
  * e -1 in caso di errore.
  */
-static int handle_MESSAGES_BOOT_REQ(void* buffer, size_t msgLen, struct sockaddr* source, socklen_t sourceLen)
+static int handle_MESSAGES_BOOT_REQ(int socketfd, void* buffer, size_t msgLen, struct sockaddr* source, socklen_t sourceLen)
 {
     struct boot_req* req;
     struct ns_host_addr* ns_addr;
@@ -57,6 +57,8 @@ static int handle_MESSAGES_BOOT_REQ(void* buffer, size_t msgLen, struct sockaddr
     uint16_t length;
     struct ns_host_addr* neighbours[MAX_NEIGHBOUR_NUMBER];
     int i;
+    struct boot_ack* ack;
+    size_t ackLen;
 
     unified_io_push(UNIFIED_IO_NORMAL, "Received msg [MESSAGES_BOOT_REQ]");
     /* verifica l'integrità del messaggio */
@@ -98,6 +100,15 @@ static int handle_MESSAGES_BOOT_REQ(void* buffer, size_t msgLen, struct sockaddr
                 errExit("*** ns_host_addr_as_string ***\n");
             unified_io_push(UNIFIED_IO_NORMAL, "[ID:%d] neighbour (%d): %s", newID, i, svdStr);
         }
+
+        /* ora dovrebbe inviare un messaggio di risposta al peer MESSAGES_BOOT_ACK */
+        /* genera il messaggio */
+        if (messages_make_boot_ack(&ack, &ackLen, ack, newID, neighbours, (size_t)length) == -1)
+                errExit("*** messages_make_boot_ack ***\n");
+
+        /* lo invia a destinazione */
+        if (sendto(socketfd, (void*)ack, ackLen, 0, source, sourceLen) != (ssize_t)ackLen)
+                errExit("*** messages_make_boot_ack ***\n");
 
         /* infine libera la memoria */
         free((void*)ns_addr);
@@ -370,7 +381,7 @@ static void* UDP(void* args)
 
             case MESSAGES_BOOT_REQ:
                 /* ricevuta richiesta di boot da gestire */
-                handle_MESSAGES_BOOT_REQ(buffer, msgLen, (struct sockaddr*)&sender, senderLen);
+                handle_MESSAGES_BOOT_REQ(socket, buffer, msgLen, (struct sockaddr*)&sender, senderLen);
                 break;
 
             default:
