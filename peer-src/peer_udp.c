@@ -28,6 +28,15 @@
 #define MAX_BOOT_ATTEMPT 5
 #define BOOT_TIMEOUT 2000 /* in millisecondi */
 
+/** Insieme di variabili che permettono
+ * di ricordare se il peer è attualmente
+ * connesso a una rete e quale sia il suo
+ * ID nella rete.
+ */
+static volatile uint32_t peerID; /* ID del peer nella rete */
+static volatile int ISPeerConnected; /* flag che indica la validità dell'altro parametro */
+static pthread_mutex_t IDguard = PTHREAD_MUTEX_INITIALIZER;
+
 /** APPROCCIO SEGUITO:
  * un thread PASSIVO che si occupa
  * ESCLUSIVAMENTE di vagliare i messaggi
