@@ -103,6 +103,69 @@ static void sigHandler(int sigNum)
  * più thread */
 int socketfd;
 
+/** Funzione ausiliaria che si occupa
+ * di gestire la ricezione di un messaggio
+ * di tipo MESSAGES_SHUTDOWN_REQ.
+ *
+ * Restituisce 0 se bisogna avviare la
+ * procedura di spegnimento oppure -1
+ * se il messaggio ricevuto era malformato.
+ */
+static int
+handle_MESSAGES_SHUTDOWN_REQ(
+            int socketfd,
+            const void* buffer,
+            size_t bufferLen,
+            const struct sockaddr* sender,
+            socklen_t senderLen)
+{
+    /* ID contenuto nella risposta che deve essere
+     * uguale all'ID del peer affinché il messaggio
+     * sia ritenuto valido */
+    uint32_t msgPeerID;
+    struct shutdown_req* req;
+    /* flag che informa se gestire lo spegnimento */
+    int terminate = 0;
+
+    /* controlla l'integrità dei parametri */
+    if (socketfd < 0 || buffer == NULL || bufferLen == 0 || sender == NULL || senderLen == 0)
+        errExit("*** UDP:handle_MESSAGES_SHUTDOWN_REQ ***\n");
+
+    /* controlla l'integrità del messaggio */
+    if (messages_check_shutdown_req(buffer, bufferLen) == -1)
+        return -1;
+
+    req = (struct shutdown_req*)buffer;
+
+    /* estrae l'ID contenuto del messaggio */
+    if (messages_get_shutdown_req_body(req, &msgPeerID) == -1)
+        return -1;
+
+    /* ora deve controllare se l'ID coincide con quello del peer */
+    /* in maniera sicura */
+    if (pthread_mutex_lock(&IDguard) != 0)
+        errExit("*** UDP:pthread_mutex_lock ***\n");
+
+    /* se il peer è connesso al network e il
+     * messaggio è effettivamente per lui */
+    if (ISPeerConnected != 0 && peerID == msgPeerID)
+        terminate = 1;
+
+    /* rilascia il mutex */
+    if (pthread_mutex_unlock(&IDguard) != 0)
+        errExit("*** UDP:pthread_mutex_unlock ***\n");
+
+    if (terminate == 0)
+        return -1;
+
+    /* inva la risposta */
+    if (messages_send_shutdown_response(socketfd, sender, senderLen, req) == -1)
+        errExit("*** UDP:messages_send_shutdown_response ***\n");
+
+    /* verso lo spegnimento */
+    return 0;
+}
+
 /** Funzione ausiliaria che si
  * occupa di tutta la parte
  * relativa alla ricezione
