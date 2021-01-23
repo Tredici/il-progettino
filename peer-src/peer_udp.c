@@ -16,6 +16,7 @@
 #include <time.h>
 #include <errno.h>
 #include <setjmp.h>
+#include <sys/time.h>
 
 /* segnale utilizzato per terminare il
  * ciclo del peer */
@@ -77,12 +78,18 @@ static pthread_mutex_t IDguard = PTHREAD_MUTEX_INITIALIZER;
  * uso di segnali, risulta quindi thread safe.
  */
 
-/* Segue la descrizione delle varie pipe utilizzate */
-/** Pipe utilizzata per i messaggi di boot.
- * Vi accede in lettura solo
+/** Per lo scambio e la gestione dei messaggi
+ * di boot da parte del server sarà utilizzato
+ * un protocollo produttore consumatore
+ * usando le seguenti strutture dati per
+ * lavorare in mutua esclusione.
  */
-int startPipe[2];
-
+static pthread_mutex_t BOOTguard = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t BOOTcond = PTHREAD_COND_INITIALIZER;
+static volatile int BOOTflag; /* se a uno il pid è valido */
+static volatile uint32_t BOOTpid;
+static volatile struct boot_ack* BOOTack;
+//int startPipe[2];
 
 /** Id del thead che gestisce il socket
  * UDP
@@ -175,6 +182,75 @@ handle_MESSAGES_SHUTDOWN_REQ(
     return 0;
 }
 
+/** Funzione ausiliaria per la
+ * .
+ */
+static int
+handle_MESSAGES_BOOT_ACK(
+            int socketfd,
+            const void* buffer,
+            size_t bufferLen)
+{
+    int ans;
+    uint32_t pid; /* message pid */
+    struct boot_ack* ack;
+    struct boot_ack* copy;
+
+    /* silenzia il warning */
+    (void)socketfd;
+
+    /* verifica gli argomenti */
+    if (socketfd < 0 || buffer == NULL || bufferLen == 0)
+        errExit("*** UDP:handle_MESSAGES_SHUTDOWN_REQ ***\n");
+
+    /* controlla l'integrità del messaggio */
+    if (messages_check_boot_ack((void*)buffer, bufferLen) == -1)
+    {
+        unified_io_push(UNIFIED_IO_NORMAL, "\tMalformed message!");
+        return -1;
+    }
+
+    ack = (struct boot_ack*)buffer;
+
+    /* sezione critica */
+    if (pthread_mutex_lock(&BOOTguard) != 0)
+        errExit("*** UDP:pthread_mutex_lock ***\n");
+
+    /* se c'è una richiesta in coda */
+    ans = -1; /* di default si fallisce */
+    if (BOOTflag)
+    {
+        if (messages_get_pid(ack, &pid) == -1)
+            errExit("*** UDP:messages_get_pid ***\n");
+
+        /* controlla che la richiesta coincida
+         * con il messaggio inviato */
+        if (pid == BOOTpid)
+        {
+            /* clona il messaggio */
+            copy = (struct boot_ack*)messages_clone((void*)buffer);
+            if (copy == NULL)
+                errExit("*** UDP:messages_clone ***");
+            /* mette la copia dove il main thread
+             * lo leggerà */
+            BOOTack = (volatile struct boot_ack*)copy;
+            ans = 0;
+            /* segnala il main thread */
+            if (pthread_cond_signal(&BOOTcond) != 0)
+                errExit("*** UDP:pthread_cond_signal ***");
+            unified_io_push(UNIFIED_IO_NORMAL, "\tReceived requested response!");
+        }
+        else
+            unified_io_push(UNIFIED_IO_NORMAL, "\tWrong response pid!");
+    }
+
+    /* termine della sezione critica */
+    if (pthread_mutex_unlock(&BOOTguard) != 0)
+        errExit("*** UDP:pthread_mutex_unlock ***\n");
+
+    return ans;
+}
+
 /** Funzione ausiliaria che si
  * occupa di tutta la parte
  * relativa alla ricezione
@@ -187,7 +263,6 @@ static void UDPReadLoop()
     socklen_t ssLen;
     ssize_t msgLen;
     char sendName[32];
-    void* msgCopy;
 
     while (UDPloop)
     {
@@ -221,14 +296,9 @@ static void UDPReadLoop()
             break;
 
         case MESSAGES_BOOT_ACK:
-            unified_io_push(UNIFIED_IO_NORMAL, "\tMessage MESSAGES_BOOT_ACK!", sendName);
-            msgCopy = messages_clone((void*)buffer);
-            if (msgCopy == NULL)
-                errExit("*** UDP:messages_clone ***");
-
-            /* inserisce la copia del messaggio nella coda apposita */
-            if (write(startPipe[1], &msgCopy, sizeof(struct boot_ack)) != (ssize_t)sizeof(struct boot_ack))
-                errExit("*** UDP:write ***");
+            unified_io_push(UNIFIED_IO_NORMAL, "\tMessage MESSAGES_BOOT_ACK!");
+            /* messaggi */
+            (void)handle_MESSAGES_BOOT_ACK(socketfd, buffer, (size_t)msgLen);
 
             /* ora sarà l'altro thread a gestire il dato */
             break;
@@ -305,27 +375,12 @@ static void* UDP(void* args)
             errExit("*** sigaction ***\n");
     /* FINE della parte copiata dal ds */
 
-    /* inizializza la pipe da usare con UDPstart */
-    if (pipe(startPipe) != 0)
-        if (thread_semaphore_signal(ts, -1, NULL) == -1)
-            errExit("*** pipe2 ***\n");
-    /* imposta la parte in lettura come nonblocking */
-    if (fcntl(startPipe[0], F_SETFL, O_NONBLOCK) == -1)
-    {
-        /* chiude la pipe */
-        close(startPipe[0]); close(startPipe[1]);
-        if (thread_semaphore_signal(ts, -1, NULL) == -1)
-            errExit("*** UDP ***\n");
-    }
-
     /* codice per gestire l'apertura del socket */
     requestedPort = *data;
     /* crea il socket UDP */
     socketfd = initUDPSocket(requestedPort);
     if (socketfd == -1)
     {
-        /* chiude la pipe */
-        close(startPipe[0]); close(startPipe[1]);
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
             errExit("*** UDP ***\n");
     }
@@ -333,8 +388,6 @@ static void* UDP(void* args)
     usedPort = getSocketPort(socketfd);
     if (usedPort == -1 || (requestedPort != 0 && requestedPort != usedPort))
     {
-        /* chiude la pipe */
-        close(startPipe[0]); close(startPipe[1]);
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
             errExit("*** UDP ***\n");
     }
@@ -345,8 +398,6 @@ static void* UDP(void* args)
     /* socket creato, porta nota, si può iniziare */
     if (thread_semaphore_signal(ts, 0, NULL) == -1)
     {
-        /* chiude la pipe */
-        close(startPipe[0]); close(startPipe[1]);
         errExit("*** UDP ***\n");
     }
 
@@ -395,9 +446,6 @@ int UDPconnect(const char* hostname, const char* portname)
     /* per inviare la richiesta tramite socket */
     struct sockaddr_storage ss;
     socklen_t sl;
-    /* per cercare una risposta, il timeout viene
-     * gestito tramite poll */
-    struct pollfd ps;
     int ans; /* per tenere il risultato */
     int attempt; /* quanti tentativi ha fatto fin ora */
     /* variabili usate per mostrare quanto inviato */
@@ -406,11 +454,14 @@ int UDPconnect(const char* hostname, const char* portname)
     char destStr[32]; /* per stampare a chi viene inviato. */
     /* per la gestione della risposta */
     struct boot_ack* ack; /* puntatore alla risposta */
-    ssize_t err;
+    int err;
     /* per la gestione della risposta */
     uint32_t offeredID;
     struct ns_host_addr* peersAddrs[MAX_NEIGHBOUR_NUMBER];
     size_t peersNum;
+    /* per il timeout di attesa della risposta */
+    struct timeval now;
+    struct timespec waitTime;
 
     /* codice per assegnare il pseudo id ai messaggi
      * inviati */
@@ -435,27 +486,24 @@ int UDPconnect(const char* hostname, const char* portname)
     if (getSockAddr((struct sockaddr*)&ss, &sl, hostname, portname, 0, 0) == -1)
         return -1;
 
-    /* svuota la pipe in lettura */
-    errno = 0;
-    while ((err = read(startPipe[0], (void*)&ack, sizeof(ack))) ==  sizeof(ack))
-        ;
-    switch (err)
-    {
-    case -1:
-        if (errno != EWOULDBLOCK)
-            errExit("*** UDPstart ***\n");
-        /* pipe correttamente svuotata */
-        break;
-
-    default:
-        /* errore irrecuperabile */
-        errExit("*** UDPstart ***\n");
-        break;
-    }
-
     attempt = 0;
     /* ripete fino a che non connette */
     do {
+        /* in questa nuova versione del progetto si usa un
+         * protocollo produttore consumatore per comunicare
+         * tra i thread */
+        /* inizio sezione critica */
+        if (pthread_mutex_lock(&BOOTguard) != 0)
+            errExit("*** main:pthread_mutex_lock ***\n");
+        /* accende il flag - richiesta pendente */
+        BOOTflag = 1;
+        /* imposta il pid della richiesta che ci si aspetta */
+        BOOTpid = pid;
+
+        /* controllo di consistenza */
+        if (BOOTack != NULL)
+            errExit("*** main:inconsistenza-BOOTack ***\n");
+
         /* prova a inviare il messaggio */
         /* se fallisce qui c'è proprio un problema
          * di invio */
@@ -470,69 +518,83 @@ int UDPconnect(const char* hostname, const char* portname)
 
         printf("Inviato messaggio di boot:\n\tdest: %s\n\tcont: %s\n", destStr, msgBody);
 
-        /* si mette in attesa di un risultato o del timeout */
-        memset(&ps, 0, sizeof(ps)); /* azzera per sicurezza */
-        /* per attendere una notifica dal thread secondario */
-        ps.fd = startPipe[0];
-        ps.events = POLLIN;
-        /* poll */
-        switch (poll(&ps, 1, BOOT_TIMEOUT))
+        /*si mette in attesa della risposta*/
+        /* sarà il thread secondario a controllare
+         * l'integrità del messaggio di risposta */
+        /* imposta l'attesa massima sulla variabile di condizione */
+        /* copiato dalla sezione EXAMPLE di pthread_cond_timedwait */
+        gettimeofday(&now, NULL);
+        waitTime.tv_nsec = now.tv_usec*1000;
+        waitTime.tv_sec =  now.tv_sec + BOOT_TIMEOUT/1000;
+        /* per ora ignoro wake up improvvisi */
+        /* pthread_cond_timedwait non usa errno */
+        if ((err = pthread_cond_timedwait(&BOOTcond, &BOOTguard, &waitTime)) != 0 && BOOTack == NULL)
         {
-        case 0:
-            /* nulla, continua */
+            if (err != ETIMEDOUT)
+                errExit("*** main:pthread_cond_timedwait ***\n");
+
+            /* spegne il flag, non aspettiamo più nulla */
+            BOOTflag = 0;
+
+            if (pthread_mutex_unlock(&BOOTguard) != 0)
+                errExit("*** main:pthread_cond_timedwait ***\n");
+            /* niente in questo ciclo, andiamo oltre */
             continue;
-        case 1:
+        }
+
+        /* se arriva qui il messaggio è arrivato entro il
+         * timeout */
+        ack = (struct boot_ack*)BOOTack;
+        BOOTack = NULL;
+        BOOTflag = 0; /* spegne il flag */
+
+        /* fine sezione critica, così da evitare che
+         * il secondo thread si impunti */
+        if (pthread_mutex_unlock(&BOOTguard) != 0)
+            errExit("*** main:pthread_cond_timedwait ***\n");
+
+        /* si mette in attesa di un risultato o del timeout */
+        /* per attendere una notifica dal thread secondario */
             /* verifica che la risposta si valida */
             /* ATTENZIONE: l'integrità è già verificata
              * da thread secondario */
-            if (ps.revents & POLLIN)
-            {
-                /* c'è un input */
-                /* lo legge - usa read */
-                ;
-                printf("Received response from ds\n");
 
-                /* per ora assume di avere un unico messaggio
-                 * da attendere in questa versione iniziale */
-                /* estrae i messaggi ricevuti e li testa */
-                if (read(startPipe[0], (void*)&ack, sizeof(ack)) !=  (ssize_t)sizeof(ack))
-                    errExit("*** main:read ***\n");
+        /* c'è un input */
+        /* lo legge - usa read */
+        ;
+        printf("Received response from ds\n");
 
-                /* prende il messaggio e lo gestisce,
-                 * siamo già certi della sia consistenza */
-                peersNum = MAX_NEIGHBOUR_NUMBER; /* non necessario ma non si sa mai */
-                if (messages_get_boot_ack_body(ack, &offeredID, peersAddrs, &peersNum) == -1)
-                    errExit("*** main:messages_get_boot_ack_body ***\n");
+        /* prende il messaggio e lo gestisce,
+            * siamo già certi della sia consistenza */
+        peersNum = MAX_NEIGHBOUR_NUMBER; /* non necessario ma non si sa mai */
+        if (messages_get_boot_ack_body(ack, &offeredID, peersAddrs, &peersNum) == -1)
+            errExit("*** main:messages_get_boot_ack_body ***\n");
 
-                /* imposta l'ID del peer */
-                if (pthread_mutex_lock(&IDguard) != 0)
-                    errExit("*** main:pthread_mutex_lock ***\n");
-                /* controlla che non sia già connesso */
-                if (ISPeerConnected)
-                    errExit("*** ALREADY CONNECTED! ***\n");
-                /* imposta l'ID del peer */
-                peerID = offeredID;
-                /* accende il flag */
-                ISPeerConnected = 1;
-                if (pthread_mutex_unlock(&IDguard) != 0)
-                    errExit("*** main:pthread_mutex_unlock ***\n");
+        /* imposta l'ID del peer */
+        if (pthread_mutex_lock(&IDguard) != 0)
+            errExit("*** main:pthread_mutex_lock ***\n");
+        /* controlla che non sia già connesso */
+        if (ISPeerConnected)
+            errExit("*** ALREADY CONNECTED! ***\n");
+        /* imposta l'ID del peer */
+        peerID = offeredID;
+        /* accende il flag */
+        ISPeerConnected = 1;
+        if (pthread_mutex_unlock(&IDguard) != 0)
+            errExit("*** main:pthread_mutex_unlock ***\n");
 
-                printf("Peer connesso a una rete con ID [%ld]\n", (long)offeredID);
+        printf("Peer connesso a una rete con ID [%ld]\n", (long)offeredID);
 
-                /* vede quali sono i peer vicini */
-                /* li pinga */
-                /* a quel punto possiamo tonnare */
-                /* è andata bene */
-                ans = 0;
-                /* possiamo interrompere il ciclo */
-                goto endBoot;
-            }
-            break;
+        /* libera la memoria del messaggio */
+        free((void*)ack);
+        /* vede quali sono i peer vicini */
+        /* li pinga */
+        /* a quel punto possiamo tonnare */
+        /* è andata bene */
+        ans = 0;
+        /* possiamo interrompere il ciclo */
+        break;
 
-        default: /* restituito -1 */
-            /* errore polling */
-            goto endBoot;
-        }
     } while (++attempt < MAX_BOOT_ATTEMPT);
 endBoot:
 
