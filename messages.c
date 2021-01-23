@@ -309,7 +309,7 @@ int messages_cmp_boot_ack_pid(const struct boot_ack* ack, uint32_t pid)
     if (ack == NULL)
         return -1;
 
-    return ack->head.pid == pid;
+    return ntohl(ack->head.pid) == pid;
 }
 
 int messages_get_pid(const void* head, uint32_t* pid)
