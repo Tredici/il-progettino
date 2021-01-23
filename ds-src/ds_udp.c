@@ -59,6 +59,10 @@ static int handle_MESSAGES_BOOT_REQ(int socketfd, void* buffer, size_t msgLen, s
     int i;
     struct boot_ack* ack;
     size_t ackLen;
+    /** Pid associato alla richiesta di boot,
+     * per intercettare i duplicati
+     */
+    uint32_t messagePID;
 
     unified_io_push(UNIFIED_IO_NORMAL, "Received msg [MESSAGES_BOOT_REQ]");
     /* verifica l'integrità del messaggio */
@@ -89,7 +93,16 @@ static int handle_MESSAGES_BOOT_REQ(int socketfd, void* buffer, size_t msgLen, s
         unified_io_push(UNIFIED_IO_NORMAL,
             "\tmsg:\t%s\n\tsource:\t%s\n\tsaved:\t%s", msgStr, srcStr, svdStr);
 
-        if (peers_add_and_find_neighbours(ns_addr, &newID, neighbours, &length) == -1)
+        /** Serve il pid del messaggio per intercettare
+         * i duplicati
+         */
+        if (messages_get_pid((void*)req, &messagePID) == -1)
+            errExit("*** messages_get_pid ***\n");
+
+        /** Il controllo dei messaggi duplicati viene eseguito
+         * in maniera silente dalla funzione seguente
+         */
+        if (peers_add_and_find_neighbours(messagePID, ns_addr, &newID, neighbours, &length) == -1)
             errExit("*** ns_host_addr_as_string ***\n");
 
         /* stampa i vicini */
