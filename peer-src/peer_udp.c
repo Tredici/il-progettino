@@ -287,12 +287,12 @@ static void UDPReadLoop()
         switch (recognise_messages_type((void*)buffer))
         {
         case -1:
-            unified_io_push(UNIFIED_IO_NORMAL, "\tCannot recognise type of message!", sendName);
+            unified_io_push(UNIFIED_IO_NORMAL, "\tCannot recognise type of message!");
             break;
 
         /* È stato ricevuto un messaggio dalla sentinella compromessa */
         case MESSAGES_MSG_UNKWN:
-            unified_io_push(UNIFIED_IO_NORMAL, "\tNonstandard message received!", sendName);
+            unified_io_push(UNIFIED_IO_NORMAL, "\tNonstandard message received!");
             break;
 
         case MESSAGES_BOOT_ACK:
