@@ -15,6 +15,7 @@
  */
 struct peer
 {
+    uint32_t requestPid; /* pid della richiesta di login */
     uint32_t id; /* id progressivo associato ai peer */
     struct ns_host_addr ns_addr; /* dati per raggiungerlo */
 };
@@ -158,6 +159,7 @@ peers_find_neighbours(
 
 int
 peers_add_and_find_neighbours(
+            uint32_t loginPid,
             const struct ns_host_addr* ns_addr,
             uint32_t* newID,
             struct ns_host_addr** neighbours,
@@ -176,11 +178,6 @@ peers_add_and_find_neighbours(
         return -1;
 
     key = (long int)port;
-    value = (struct peer*)malloc(sizeof(struct peer));
-    if (value == NULL)
-        return -1;
-
-    value->ns_addr = *ns_addr;
 
     if (pthread_mutex_lock(&guard) != 0)
     {
@@ -188,9 +185,30 @@ peers_add_and_find_neighbours(
         return -1;
     }
 
-    /* nuovo ID */
-    *newID = ++counterID;
-    value->id = counterID;
+    /* controlla di non aver già ricevuto il messaggio */
+    if (rb_tree_get(tree, key, (void**)&value) == 0 && value->requestPid == loginPid)
+    {
+        /* richiesta duplicata, mantiene il vecchio l'ID */
+        *newID = value->id;
+    }
+    else
+    {
+        /* Questa richiesta non era ancora stata gestita */
+        value = (struct peer*)malloc(sizeof(struct peer));
+        if (value == NULL)
+        {
+            if (pthread_mutex_unlock(&guard) != 0)
+                errExit("*** peers_add_and_find_neighbours double fault[rb_tree_set:pthread_mutex_unlock] ***\n");
+
+            return -1;
+        }
+        /* salva l'ID della richiesta */
+        value->requestPid = loginPid;
+        value->ns_addr = *ns_addr;
+        /* nuovo ID */
+        *newID = ++counterID;
+        value->id = counterID;
+    }
 
     /* inserisce un nuovo valore */
     if (rb_tree_set(tree, key, (void*)value) == -1)
@@ -201,6 +219,8 @@ peers_add_and_find_neighbours(
 
         return -1;
     }
+
+
     /* ora cerca i vicini */
     if (peers_find_neighbours(key, neighbours, length) == -1)
     {

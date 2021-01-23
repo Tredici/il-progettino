@@ -29,8 +29,11 @@ int peers_clear(void);
 /** Aggiunge un peer all'insieme di quelli
  * "tracciati" e ne restituisce i vicini.
  *
- * Il primo argomento identifica il nuovo
- * peer, il secondo permette di ottenere
+ * Il primo argomento serve a intercettare
+ * le richieste ricevute come duplicate.
+ *
+ * Il secondo argomento identifica il nuovo
+ * peer, il terzo permette di ottenere
  * l'ID fornito dal sistema al nuovo peer
  * e gli ultimi due argomenti permetto
  * di ottenere  rispettivamente un elenco
@@ -40,7 +43,7 @@ int peers_clear(void);
  * allocato dal chiamante, e la lunghezza
  * di questo.
  */
-int peers_add_and_find_neighbours(const struct ns_host_addr*, uint32_t*, struct ns_host_addr**, uint16_t*);
+int peers_add_and_find_neighbours(uint32_t, const struct ns_host_addr*, uint32_t*, struct ns_host_addr**, uint16_t*);
 
 /** Trova i vicini di un peer dato il suo
  * identificativo (coincidente con il suo
