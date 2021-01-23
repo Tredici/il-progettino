@@ -103,7 +103,7 @@ static int handle_MESSAGES_BOOT_REQ(int socketfd, void* buffer, size_t msgLen, s
 
         /* ora dovrebbe inviare un messaggio di risposta al peer MESSAGES_BOOT_ACK */
         /* genera il messaggio */
-        if (messages_make_boot_ack(&ack, &ackLen, ack, newID, neighbours, (size_t)length) == -1)
+        if (messages_make_boot_ack(&ack, &ackLen, req, newID, neighbours, (size_t)length) == -1)
                 errExit("*** messages_make_boot_ack ***\n");
 
         /* lo invia a destinazione */
