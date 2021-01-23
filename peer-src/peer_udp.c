@@ -29,6 +29,12 @@
 #define MAX_BOOT_ATTEMPT 5
 #define BOOT_TIMEOUT 2000 /* in millisecondi */
 
+/** Tentativi e timeouto per
+ * la disconnessione, per semplicità
+ */
+#define MAX_STOP_ATTEMPT MAX_BOOT_ATTEMPT
+#define STOP_TIMEOUT BOOT_TIMEOUT
+
 /** Insieme di variabili che permettono
  * di ricordare se il peer è attualmente
  * connesso a una rete e quale sia il suo
@@ -37,6 +43,14 @@
 static volatile uint32_t peerID; /* ID del peer nella rete */
 static volatile int ISPeerConnected; /* flag che indica la validità dell'altro parametro */
 static pthread_mutex_t IDguard = PTHREAD_MUTEX_INITIALIZER;
+
+/** Variabili globali che tengono
+ * le informazioni per raggiungere
+ * il discovery server per le
+ * operazioni di shutdown
+ */
+static struct sockaddr_storage DSaddr;
+static socklen_t DSaddrLen;
 
 /** APPROCCIO SEGUITO:
  * un thread PASSIVO che si occupa
@@ -298,7 +312,13 @@ static void UDPReadLoop()
         case MESSAGES_BOOT_ACK:
             unified_io_push(UNIFIED_IO_NORMAL, "\tMessage MESSAGES_BOOT_ACK!");
             /* messaggi */
-            (void)handle_MESSAGES_BOOT_ACK(socketfd, buffer, (size_t)msgLen);
+            if (handle_MESSAGES_BOOT_ACK(socketfd, buffer, (size_t)msgLen) == 0)
+            {
+                /* ricevuta la risposta attesa */
+                /* memorizza globalmente l'indirizzo del server */
+                DSaddr = ss;
+                DSaddrLen = ssLen;
+            }
 
             /* ora sarà l'altro thread a gestire il dato */
             break;
@@ -326,6 +346,127 @@ static void UDPReadLoop()
             errExit("*** pthread_sigmask ***\n");
     }
 }
+
+/** Funzione ausiliaria che si occupa di staccare
+ * il peer corrente dal network.
+ */
+static void
+handle_peer_close(int sockfd)
+{
+    uint32_t msgID;
+    int i;
+    /* per il polling */
+    struct pollfd fd;
+    int timeout;
+    /* messaggio */
+    char buffer[256];
+    ssize_t msgLen;
+
+    /* se connesso invia al server un messaggio di shutdown e si
+     * mette in attesa di una risposta */
+    /* usa messaggi di tipo MESSAGES_SHUTDOWN_REQ */
+    /* e aspetta una risposta di tipo MESSAGES_SHUTDOWN_ACK */
+    /* sezione critica */
+    if (pthread_mutex_lock(&IDguard) != 0)
+        errExit("*** UDP:pthread_mutex_lock ***\n");
+
+    /* deve essere connesso per disconnettersi */
+    if (ISPeerConnected)
+    {
+        /* al più MAX_STOP_ATTEMPT tentativi */
+        for (i = 0;  i < MAX_STOP_ATTEMPT; ++i)
+        {
+            unified_io_push(UNIFIED_IO_NORMAL,
+                "Try peer disconnection: attempt [%d] of [%d]",
+                i+1, MAX_STOP_ATTEMPT);
+
+            /* invia il messaggio di risposta */
+            if (messages_send_shutdown_req(sockfd, (struct sockaddr*)&DSaddr, DSaddrLen, peerID) == -1)
+                errExit("*** UDP:messages_send_shutdown_req ***\n");
+
+            unified_io_push(UNIFIED_IO_NORMAL, "\tSent messages [MESSAGES_SHUTDOWN_REQ]");
+            /* si mette in attesa del messaggio */
+            /* assunzione semplicistica di non ricevere messaggi farlocchi spuri */
+            timeout = STOP_TIMEOUT; /* imposta il timeout */
+            /* prepara la struttura per il polling */
+            memset(&fd, 0, sizeof(fd));
+            fd.fd = sockfd;
+            fd.events = POLLIN;
+            errno = 0;
+            switch (poll(&fd, 1, timeout))
+            {
+            case -1:
+                errExit("*** UDP:poll ***\n");
+                break;
+            case 0:
+                /* no data avaible */
+                unified_io_push(UNIFIED_IO_NORMAL, "\tNo message received");
+                break;
+            default:
+                /* risultati disponibili */
+                /* legge fino a che non esaurisce i messaggi */
+
+                /* do while */
+                do
+                {
+                    /* non serve ottenere informazioni su chi invia */
+                    msgLen = recv(sockfd, (void*)buffer, sizeof(buffer), MSG_DONTWAIT);
+                    if (msgLen == -1) /* fine, esci */
+                        break;
+
+
+                    /* check del messaggio per vedere se è quello giusto */
+                    if (recognise_messages_type((void*)buffer) != MESSAGES_SHUTDOWN_ACK)
+                    {
+                        unified_io_push(UNIFIED_IO_NORMAL, "\tWrong message type");
+                        continue; /* cerca un altro messaggio */
+                    }
+                    unified_io_push(UNIFIED_IO_NORMAL, "\tReceived message [MESSAGES_SHUTDOWN_ACK]");
+
+                    /* integro? */
+                    if (messages_check_shutdown_ack((void*)buffer, msgLen) != 0)
+                    {
+                        unified_io_push(UNIFIED_IO_NORMAL, "\tMalformed message");
+                        continue; /* malformato, ne aspetta un altro */
+                    }
+
+                    /* non dovrebbe mai fallire */
+                    if (messages_get_shutdown_ack_body((struct shutdown_ack*)buffer, &msgID) != 0)
+                        errExit("*** UDP:messages_get_shutdown_ack_body ***\n");
+
+                    /* il messaggio era per questo peer */
+                    if (msgID != peerID)
+                    {
+                        unified_io_push(UNIFIED_IO_NORMAL,
+                            "\tWrong ID in msg Body: [%ld] instead of [%ld]",
+                            msgID, peerID);
+                        continue; /* passa al prossimo */
+                    }
+
+                    unified_io_push(UNIFIED_IO_NORMAL, "\tValid message [MESSAGES_SHUTDOWN_ACK] received!");
+
+                    /* messaggio valido, possiamo ottenere una risposta */
+                    break;
+                } while (msgLen != -1);
+                if (msgLen == -1)
+                {
+                    if (errno != EWOULDBLOCK || errno != EAGAIN)
+                        errExit("*** UDP:poll ***\n");
+                    /* next loop */
+                }
+
+                break;
+            }
+            /* se è vero significa che abbiamo ricevuto una risposta dal DS */
+            if (msgLen != -1)
+                break;
+        }
+    }
+
+    if (pthread_mutex_unlock(&IDguard) != 0)
+        errExit("*** UDP:pthread_mutex_unlock ***\n");
+}
+
 
 /** Funzione che rappresenta il corpo del
  * thread che gestira il socket
@@ -420,6 +561,10 @@ static void* UDP(void* args)
          * precoce */
     }
     /* mai raggiunto prima del termine */
+
+    /* gestisce il distacco del
+     * peer dal network */
+    handle_peer_close(socketfd);
 
     /* chiude il socket */
     if (close(socketfd) != 0)
