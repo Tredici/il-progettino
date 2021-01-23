@@ -420,7 +420,7 @@ int messages_make_shutdown_ack(struct shutdown_ack** ack, size_t* sz, const stru
 
     memset(ans, 0, sizeof(struct shutdown_ack));
 
-    ans->head.type = htons(MESSAGES_BOOT_ACK);
+    ans->head.type = htons(MESSAGES_SHUTDOWN_ACK);
     ans->head.pid = req->head.pid;
     ans->body.ID = req->body.ID;
 
