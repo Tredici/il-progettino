@@ -247,6 +247,73 @@ static void handlerPeersShutdown(int socketfd)
     }
 }
 
+/** Funzione ausiliaria che si occupa di gestire
+ * il caso in cui un peer si vuole staccare dal
+ * gruppo.
+ *
+ * Si occupa anche di gestire il caso in cui
+ * arriva un messaggio duplicato
+ */
+static void
+handle_peer_DETATCH(
+            int sockfd,
+            const void* buffer,
+            size_t bufferLen,
+            struct sockaddr* sender,
+            socklen_t senderLen)
+{
+    uint16_t senderPort; /* porta che ha inviato il messaggio */
+    uint32_t senderID; /* ID nel messaggio ricevuto */
+    uint32_t foundID; /* ID associato a tale porta nel registro */
+
+    /* parametri validi */
+    if (sockfd < 0 || buffer == NULL || bufferLen == 0 || sender == NULL || senderLen == 0)
+        errExit("*** UDP:handle_peer_DETATCH ***\n");
+
+    /* integrità dei messaggi */
+    if (messages_check_shutdown_req((void*)buffer, bufferLen) != 0)
+        return; /* messaggio malformato */
+
+    /* estrae l'ID presente nel messaggio */
+    if (messages_get_shutdown_req_body((struct shutdown_req*)buffer, &senderID) != 0)
+        errExit("*** UDP:handle_peer_DETATCH ***\n");
+
+    /* se poi il peer effettivamente esisteva elimina il peer dal registro */
+    /* estrae la porta da cui è stato inviato il messaggio */
+    if (getSockAddrPort(sender, &senderPort) != 0)
+        errExit("*** UDP:getSockAddrPort ***\n");
+
+    unified_io_push(UNIFIED_IO_NORMAL, "\tPeer [ID:%ld] on port [%ld] requires disconnection", (long)senderID, (long)senderPort);
+
+    /* vada come vada, risponde al messaggio */
+    if (messages_send_shutdown_response(sockfd, sender, senderLen, (struct shutdown_req*)buffer) == -1)
+        errExit("*** UDP:messages_send_shutdown_response ***\n");
+
+    /* esiste tale peer? */
+    if (peers_get_id((long)senderPort, &foundID) == 0)
+    {
+        if (foundID != senderID)
+        {
+            /* elimina quello atteso */
+            unified_io_push(UNIFIED_IO_NORMAL, "\tPeer on port [%ld] has ID [%ld] that's NOT [%ld]", (long)senderPort, (long)senderID, (long)foundID);
+        }
+        else
+        {
+            /* elimina il dimenticato */
+            unified_io_push(UNIFIED_IO_NORMAL, "\tFound peer [ID:%ld] on port [%ld]", (long)senderID, (long)senderPort);
+        }
+        /* la porta è comunque stata occupata perciò si elimina il mittente lo stesso */
+        if (peers_remove_peer((long)senderPort) == -1)
+            errExit("*** UDP:peers_remove_peer ***\n");
+
+        unified_io_push(UNIFIED_IO_NORMAL, "\tRemoved peer [ID:%ld] on port [%ld]", (long)foundID, (long)senderPort);
+    }
+    else
+    {
+        unified_io_push(UNIFIED_IO_NORMAL, "\tNo peer [ID:%ld] on port [%ld]", (long)senderID, (long)senderPort);
+    }
+}
+
 /** Corpo del thread che gestisce il
  * socket UDP.
  */
@@ -395,6 +462,12 @@ static void* UDP(void* args)
             case MESSAGES_BOOT_REQ:
                 /* ricevuta richiesta di boot da gestire */
                 handle_MESSAGES_BOOT_REQ(socket, buffer, msgLen, (struct sockaddr*)&sender, senderLen);
+                break;
+
+            case MESSAGES_SHUTDOWN_REQ:
+                unified_io_push(UNIFIED_IO_NORMAL, "Received msg [MESSAGES_SHUTDOWN_REQ]");
+                /* un peer si vuole staccare, gestisce il caso */
+                handle_peer_DETATCH(socket, (void*)buffer, msgLen, (struct sockaddr*)&sender, senderLen);
                 break;
 
             default:
