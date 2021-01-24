@@ -14,6 +14,7 @@ int add(const char* args)
     char ctype;
     enum entry_type type;
     struct entry* E;
+    char enStr[32];
     
     if (sscanf(args, "%c %d", &ctype, &quantity) != 2)
     {
@@ -43,6 +44,8 @@ int add(const char* args)
     E = register_new_entry(NULL, type, quantity);
     if (E == NULL)
         return ERR_FAIL;
+
+    printf("Tentativo di registrare l'entry %s\n", register_serialize_entry(E, enStr, sizeof(enStr)));
 
     /* Qui andrà il codice per aggiungere 
      * la nuova entry al registro del peer */
