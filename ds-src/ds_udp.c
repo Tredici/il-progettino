@@ -162,6 +162,7 @@ static void handlerPeersShutdown(int socketfd)
 
     memset(&polled, 0, sizeof(struct pollfd));
     polled.fd = socketfd;
+    polled.events = POLLIN;
 
     unified_io_push(UNIFIED_IO_NORMAL, "Connected peers [%d]", (int)peers_number());
 
@@ -188,9 +189,15 @@ static void handlerPeersShutdown(int socketfd)
             break;
 
         default:
+            if (!(polled.revents & POLLIN))
+            {
+                errExit("*** poll: strange response ***\n");
+            }
+
             errno = 0;
+            /* per la prima volta uso l'operatore "," */
             while ((dataLen = recvfrom(socketfd, (void*)buffer, sizeof(buffer),
-                MSG_DONTWAIT, (struct sockaddr*)&ss, &ssLen)) != -1)
+                MSG_DONTWAIT, (struct sockaddr*)&ss, (ssLen = sizeof(ss), &ssLen))) != -1)
             {
                 /* nel dubbio ripristina errno
                  * per il controllo dell'errore */
