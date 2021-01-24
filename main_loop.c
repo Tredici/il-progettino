@@ -60,7 +60,6 @@ static void repeat(void)
 {
     struct termios tp, save;
     int err;
-    int yield;
 
     /* disabilità l'echo per evitare
      * brutti effetti estetici */
@@ -76,40 +75,20 @@ static void repeat(void)
         errExit("***  void repeat(void) ***\n");
     }
 
-    yield = 0;
-    do {
-        if (yield)
-        {
-            /* per evitare di sprecare cicli CPU */
-            yield = 0;
-            sched_yield();
-        }
-        errno = 0;
-        err = unified_io_print(1);
-        if (err == -1)
-        {
-            if (errno == EWOULDBLOCK)
-            {
-                /* una lettura è andata a vuoto:
-                 * se il ciclo proseguirà rilascerà
-                 * la CPU per cederla a processi che
-                 * ne hanno più bisogno */
-                errno = 0;
-                yield = 1;
-            }
-            else
-            {
-                tcsetattr(STDIN_FILENO, TCSAFLUSH, &save);
-                errExit("***  void repeat(void) ***\n");
-            }
-        }
-        err = waitForInput(1);
-    } while (err == -1 && errno == EWOULDBLOCK);
-    if (err == -1 && errno != EWOULDBLOCK)
+    /* stampa tutti i messaggi accumulati
+     * e pone il sottosistema di IO in uno
+     * stato di funzionamento sincrono */
+    unified_io_set_mode(UNIFIED_IO_SYNC_MODE);
+
+    if (waitForInput(0) == -1)
     {
         tcsetattr(STDIN_FILENO, TCSAFLUSH, &save);
         errExit("***  void repeat(void) ***\n");
     }
+
+    /* ripristina lo stato di funzionamento
+     * del sottosistema di IO */
+    unified_io_set_mode(UNIFIED_IO_ASYNC_MODE);
 
     /* ripristina l'echo */
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &save) == -1)
