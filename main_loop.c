@@ -75,9 +75,10 @@ static void cmd404(const char* cmd)
  * processo palesando uno stato di
  * errore!
  */
-static void repeat(void)
+static int repeat(void)
 {
     struct termios tp, save;
+    int ans = 0; /* prosegui con la prossima iterazione */
 
     /* disabilità l'echo per evitare
      * brutti effetti estetici */
@@ -116,7 +117,8 @@ static void repeat(void)
     }
     else
     {
-        errExit("IL MAIN LOOP FUNZIONA!\n");
+        /* termina il main loop */
+        ans = 1;
     }
 
     /* ripristina lo stato di funzionamento
@@ -128,6 +130,8 @@ static void repeat(void)
     {
         errExit("***  void repeat(void) ***\n");
     }
+
+    return ans;
 }
 
 /** Genera l'array di struct repl_cmd_todo
@@ -173,7 +177,7 @@ int main_loop(const char* msg, const struct main_loop_command* commands, int len
     /* specifica la funzione da invocare
      * prima di ogni iterazione del ciclo
      * REPL */
-    extern void (*repl_repeat)(void);
+    extern int (*repl_repeat)(void);
 
     /* controlla la validità dei parametri */
     if (commands == NULL || len <= 0)
