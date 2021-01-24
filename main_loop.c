@@ -78,7 +78,6 @@ static void cmd404(const char* cmd)
 static void repeat(void)
 {
     struct termios tp, save;
-    int err;
 
     /* disabilità l'echo per evitare
      * brutti effetti estetici */
