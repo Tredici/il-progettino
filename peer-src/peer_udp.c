@@ -188,6 +188,7 @@ handle_MESSAGES_SHUTDOWN_REQ(
     if (terminate == 0)
         return -1;
 
+    unified_io_push(UNIFIED_IO_NORMAL, "\tSent MESSAGES_SHUTDOWN_ACK!");
     /* inva la risposta */
     if (messages_send_shutdown_response(socketfd, sender, senderLen, req) == -1)
         errExit("*** UDP:messages_send_shutdown_response ***\n");
