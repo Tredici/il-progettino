@@ -4,6 +4,7 @@
  * definitivo
  */
 #include "peer-src/peer_stop.h"
+#include "peer-src/peer_add.h"
 #include "peer-src/peer_udp.h"
 #include "peer-src/peer_start.h"
 #include "commons.h"
@@ -29,6 +30,7 @@ int main(int argc, char* argv[])
 
     struct main_loop_command commands[] = {
         { "start", &start, "<DS_addr DS_port> termina il peer" },
+        { "add", &add, "{" ADD_SWAB "|" ADD_NEW_CASE "} <quantity> crea e inserisce una nuova entry nel registo di oggi" },
         { "stop", &stop, "termina il peer" }
     };
 
