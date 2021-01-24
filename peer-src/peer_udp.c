@@ -662,7 +662,7 @@ int UDPconnect(const char* hostname, const char* portname)
         if (sockaddr_as_string(destStr, sizeof(destStr), (struct sockaddr*)&ss, sl) == -1)
             errExit("*** main:sockaddr_as_string ***\n");
 
-        printf("Inviato messaggio di boot:\n\tdest: %s\n\tcont: %s\n", destStr, msgBody);
+        unified_io_push(UNIFIED_IO_NORMAL, "Inviato messaggio di boot:\n\tdest: %s\n\tcont: %s\n", destStr, msgBody);
 
         /*si mette in attesa della risposta*/
         /* sarà il thread secondario a controllare
@@ -708,7 +708,7 @@ int UDPconnect(const char* hostname, const char* portname)
         /* c'è un input */
         /* lo legge - usa read */
         ;
-        printf("Received response from ds\n");
+        unified_io_push(UNIFIED_IO_NORMAL, "Received response from ds\n");
 
         /* prende il messaggio e lo gestisce,
             * siamo già certi della sia consistenza */
@@ -729,7 +729,7 @@ int UDPconnect(const char* hostname, const char* portname)
         if (pthread_mutex_unlock(&IDguard) != 0)
             errExit("*** main:pthread_mutex_unlock ***\n");
 
-        printf("Peer connesso a una rete con ID [%ld]\n", (long)offeredID);
+        unified_io_push(UNIFIED_IO_NORMAL, "Peer connesso a una rete con ID [%ld]\n", (long)offeredID);
 
         /* libera la memoria del messaggio */
         free((void*)ack);
