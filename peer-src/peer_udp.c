@@ -8,6 +8,7 @@
 #include "../commons.h"
 #include "../unified_io.h"
 #include "../messages.h"
+#include "../main_loop.h"
 #include <signal.h>
 #include <sched.h>
 #include <fcntl.h>
@@ -34,6 +35,37 @@
  */
 #define MAX_STOP_ATTEMPT MAX_BOOT_ATTEMPT
 #define STOP_TIMEOUT BOOT_TIMEOUT
+
+/** ID del main thread, per gestire
+ * lo spegnimento del peer in modo
+ * "forzato ma non distruttivo"
+ */
+pthread_t mainThreadID;
+
+/** Questo mutex e questo flag servono
+ * per risolvere il problema che si
+ * ha quando sia il main thread sia
+ * il thread UDP si inviano a vicenda
+ * un segnale di terminazione in
+ * particolare si ottiene la seguente
+ * sequenza di operazioni:
+ *
+ * 1) thread UDP invia un segnale al
+ *      main thread e termina
+ * 2) il main thread inizia ad
+ *      eseguire il comando di stop
+ * 3) il main thread invia un segnale
+ *      al thread UDP per farlo
+ *      terminare ma fallisce
+ * 3) BUM!
+ *
+ * In particolare questo mutex
+ * serve a invocare la primitiva
+ * per scambiare messaggi tra i
+ * thread in maniera atomica.
+ */
+static pthread_mutex_t termUDPguard = PTHREAD_MUTEX_INITIALIZER;
+static int termUDPflag; /* messo a 1 da chi prende il mutex per primo */
 
 /** Insieme di variabili che permettono
  * di ricordare se il peer è attualmente
@@ -330,7 +362,26 @@ static void UDPReadLoop()
             if (handle_MESSAGES_SHUTDOWN_REQ(socketfd, buffer, (size_t)msgLen, (struct sockaddr*)&ss, ssLen) == 0)
             {
                 unified_io_push(UNIFIED_IO_NORMAL, "\tMessage MESSAGES_SHUTDOWN_REQ!", sendName);
-                errExit("*** TODO:shutdown ***\n");
+                /** gestione del problema descritto prima
+                 * della dichiarazione del mutex
+                 */
+                /* INIZIO SEZIONE CRITICA */
+                if (pthread_mutex_lock(&termUDPguard) != 0)
+                    errExit("*** UDP:pthread_mutex_lock ***\n");
+                if (termUDPflag == 0)
+                {
+                    termUDPflag = 1;
+                    if (pthread_kill(mainThreadID, MAIN_LOOP_TERMINATION_SIGNAL) != 0)
+                        errExit("*** UDP:pthread_kill ***\n"); /*scoppia*/
+                }
+                /* TERMINE SEZIONE CRITICA */
+                if (pthread_mutex_unlock(&termUDPguard) != 0)
+                    errExit("*** UDP:pthread_mutex_unlock ***\n");
+                if (close(socketfd) != 0)
+                    errExit("*** UDP:close ***\n");
+                pthread_exit(NULL); /* fine */
+                errExit("*** UDP:shutdown ***\n");
+                abort();/* mai raggiunto */
             }
             else
                 unified_io_push(UNIFIED_IO_NORMAL, "\tInvalid shutdown request!", sendName);
@@ -620,6 +671,9 @@ int UDPconnect(const char* hostname, const char* portname)
         srand(time(NULL));
         /* primo valore casuale */
         pid = (uint32_t)rand();
+
+        /* salva il thread ID del main thread */
+        mainThreadID = pthread_self();
     }
     else
     {
@@ -753,12 +807,27 @@ int UDPstop(void)
     if (UDP_tid == 0)
         return -1;
 
-    /* invia il segnale di terminazione */
-    /* assumo che il thread non termini mai
-     * prima del tempo */
-    if (pthread_kill(UDP_tid, INTERRUPT_SIGNAL) != 0)
-        return -1;
+    /** gestisco il problema evidenziato sopra
+     * la descrizione del mutex
+     */
+    /* INIZIO SEZIONE CRITICA */
+    if (pthread_mutex_lock(&termUDPguard) != 0)
+        errExit("*** UDP:pthread_mutex_lock ***\n");
 
+    if (termUDPflag == 0)
+    {
+        termUDPflag = 1;
+        /* invia il segnale di terminazione */
+        if (pthread_kill(UDP_tid, INTERRUPT_SIGNAL) != 0)
+            errExit("*** UDP:pthread_kill ***\n");
+    }
+
+    /* TERMINE SEZIONE CRITICA */
+    if (pthread_mutex_unlock(&termUDPguard) != 0)
+        errExit("*** main:pthread_mutex_unlock ***\n");
+
+    /* alla fine bisogna sempre rilasciare
+     * le risorse allocate per il thread */
     if (pthread_join(UDP_tid, NULL) != 0)
         return -1;
 
