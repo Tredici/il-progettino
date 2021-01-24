@@ -9,6 +9,12 @@
 
 #include "repl.h"
 
+/* Segnale da inviare al main thread
+ * che indica la necessità di terminare
+ * il main loop
+ */
+#define MAIN_LOOP_TERMINATION_SIGNAL SIGUSR2
+
 /** Struttura che contiene nome, gestore
  * e descrizione di un comando riconosciuto
  * dal main loop.

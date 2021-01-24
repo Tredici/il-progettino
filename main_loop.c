@@ -1,3 +1,6 @@
+#define _POSIX_C_SOURCE 199506L /* per sigjmp_buf */
+#define _XOPEN_SOURCE 500 /* per pthread_sigmask */
+
 #include "main_loop.h"
 #include "unified_io.h"
 #include "commons.h"
@@ -8,6 +11,22 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sched.h>
+#include <signal.h>
+#include <setjmp.h>
+
+/** Strutture dati ausiliarie per
+ * gestire il segnale e la terminazione
+ * del main thread tramite un segnale
+ */
+static sigjmp_buf sigSetJmp; /* per posizionare un checkpoint */
+static sigset_t toBlock; /* per bloccare il segnale */
+static struct sigaction toTerminate; /* per gestire il restart */
+
+static void handle_TERMINATION_SIGNAL(int sigNum)
+{
+    (void)sigNum;
+    siglongjmp(sigSetJmp, 1); /* riparte dal checkpoint */
+}
 
 /* variabili utili per l'help */
 static int commN;
@@ -80,10 +99,25 @@ static void repeat(void)
      * stato di funzionamento sincrono */
     unified_io_set_mode(UNIFIED_IO_SYNC_MODE);
 
-    if (waitForInput(0) == -1)
+    /* CHECKPOINT */
+    if (sigsetjmp(sigSetJmp, 1) == 0)
     {
-        tcsetattr(STDIN_FILENO, TCSAFLUSH, &save);
-        errExit("***  void repeat(void) ***\n");
+        /* sblocca il segnale */
+        if (pthread_sigmask(SIG_UNBLOCK, &toBlock, NULL) != 0)
+            errExit("*** main_loop:pthread_sigmask ***\n");
+
+        if (waitForInput(0) == -1)
+        {
+            tcsetattr(STDIN_FILENO, TCSAFLUSH, &save);
+            errExit("***  void repeat(void) ***\n");
+        }
+        /* blocca il segnale di nuovo */
+        if (pthread_sigmask(SIG_BLOCK, &toBlock, NULL) != 0)
+            errExit("*** main_loop:pthread_sigmask ***\n");
+    }
+    else
+    {
+        errExit("IL MAIN LOOP FUNZIONA!\n");
     }
 
     /* ripristina lo stato di funzionamento
@@ -173,6 +207,23 @@ int main_loop(const char* msg, const struct main_loop_command* commands, int len
      * secondari fino a che l'utente non
      * premerà un tasto qualsiasi */
     repl_repeat = &repeat;
+
+    /* prepara quanto serve per la gestione del segnale */
+    /* blocca il segnale */
+    if (sigemptyset(&toBlock) != 0) /* leva tutti messaggi */
+        errExit("*** main_loop:sigemptyset ***\n");
+    if (sigaddset(&toBlock, MAIN_LOOP_TERMINATION_SIGNAL) != 0)
+        errExit("*** main_loop:sigaddset ***\n");
+    if (pthread_sigmask(SIG_BLOCK, &toBlock, NULL) != 0)
+        errExit("*** main_loop:pthread_sigmask ***\n");
+    /* imposta l'handler */
+    toTerminate.sa_handler = &handle_TERMINATION_SIGNAL;
+    /* blocca tutto durante la gestione del segnale */
+    if (sigfillset(&toTerminate.sa_mask) != 0)
+        errExit("*** main_loop:sigfillset ***\n");
+    /* imposta gloablmente l'handler */
+    if (sigaction(MAIN_LOOP_TERMINATION_SIGNAL, &toTerminate, NULL) != 0)
+        errExit("*** main_loop:sigaction ***\n");
 
     /* avvia il ciclo REPL */
     ans = repl_start(msg, cmds, cmdsLen);
