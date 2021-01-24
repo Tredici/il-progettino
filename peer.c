@@ -55,7 +55,8 @@ int main(int argc, char* argv[])
 
     sprintf(peerID, "[%d]", port);
 
-    main_loop(peerID, commands, commandNumber);
+    if (main_loop(peerID, commands, commandNumber) == REPL_REPEAT_STOP)
+        printf("Peer terminated by server.\n");
 
     if (UDPstop() == -1)
     {
