@@ -152,7 +152,11 @@ enum repl_code
     ERR_FAIL,
     /* ATTENZIONE: comando inesistente,
         da non usare direttamente */
-    WRN_CMDNF
+    WRN_CMDNF,
+    /* SPECIALE: valore utilizzato per indicare che la terminazione
+        è dovuta alla restituzione da parte della funzione
+        "repl_repeat" di un valore non nullo */
+    REPL_REPEAT_STOP
 };
 
 /** Massimo numero di caratteri che si garantisce

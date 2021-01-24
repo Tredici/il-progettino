@@ -31,7 +31,7 @@ void (*repl_not_found_f)(const char*);
  * funzione da invocare prima di ogni
  * iterazione del ciclo REPL.
  */
-void (*repl_repeat)(void);
+int (*repl_repeat)(void);
 
 struct repl_cmd repl_recognise_cmd(const char* text,
     const struct repl_cmd_hint cmds[], int len)
@@ -192,7 +192,8 @@ int repl_start(const char* msg, struct repl_cmd_todo* cmds, int len)
     while (repeat)
     {
         if (repl_repeat != NULL)
-            repl_repeat();
+            if (repl_repeat() != 0)
+                return REPL_REPEAT_STOP;
 
         printf("%s%s", msg != NULL ? msg : "", repl_sign != NULL ? repl_sign : "");
         line = NULL;
