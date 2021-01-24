@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
     if (argc != 2 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)
         usageHelp(argv[0]);
 
-    /* parsing dellìargomento */
+    /* parsing dell'argomento */
     port = argParseIntRange(argv[1], ARGNAME, 0, (1<<16)-1);
 
 
