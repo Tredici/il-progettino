@@ -199,6 +199,7 @@ static void handlerPeersShutdown(int socketfd)
             while ((dataLen = recvfrom(socketfd, (void*)buffer, sizeof(buffer),
                 MSG_DONTWAIT, (struct sockaddr*)&ss, (ssLen = sizeof(ss), &ssLen))) != -1)
             {
+                unified_io_push(UNIFIED_IO_NORMAL, "\tReceived message");
                 /* nel dubbio ripristina errno
                  * per il controllo dell'errore */
                 errno = 0;
@@ -206,10 +207,17 @@ static void handlerPeersShutdown(int socketfd)
                 /* verifica che il messaggio ricevuto sia di tipo
                  * MESSAGES_SHUTDOWN_ACK */
                 if (recognise_messages_type((void*)buffer) != MESSAGES_SHUTDOWN_ACK)
+                {
+                    unified_io_push(UNIFIED_IO_NORMAL, "\tInvalid message type!");
                     continue;
+                }
+                unified_io_push(UNIFIED_IO_NORMAL, "\tReceived message [MESSAGES_SHUTDOWN_ACK]");
                 /* controlla l'integrità del messaggio */
                 if (messages_check_shutdown_ack((void*)buffer, (size_t)dataLen) == -1)
+                {
+                    unified_io_push(UNIFIED_IO_NORMAL, "\tMalformed message!");
                     continue;
+                }
 
                 ack = (struct shutdown_ack*)buffer;
 
@@ -222,7 +230,7 @@ static void handlerPeersShutdown(int socketfd)
                     errExit("*** handlerPeersShutdown:messages_get_shutdown_ack_body ***\n");
 
                 /* cosa ha ricevuto e da chi */
-                unified_io_push(UNIFIED_IO_NORMAL, "Received shutdown ack form %s, ID [%ld]", sender, (long)ID);
+                unified_io_push(UNIFIED_IO_NORMAL, "\tReceived shutdown ack form %s, ID [%ld]", sender, (long)ID);
 
                 /* estrae la porta di origine, utilizzata
                  * per identificare il mittente */
@@ -236,14 +244,14 @@ static void handlerPeersShutdown(int socketfd)
                 /* vede se coincide con quello atteso */
                 if (peers_get_id((long)port, &ID2) == -1 || ID != ID2)
                 {
-                    unified_io_push(UNIFIED_IO_NORMAL, "No peer with ID [%ld]", (long)ID);
+                    unified_io_push(UNIFIED_IO_NORMAL, "\tNo peer with ID [%ld]", (long)ID);
                     continue;
                 }
                 /* lo elimina */
                 if (peers_remove_peer((long)port) == -1)
                     errExit("*** handlerPeersShutdown:peers_remove_peer ***\n");
 
-                unified_io_push(UNIFIED_IO_NORMAL, "Removed peer with ID [%ld]", (long)ID);
+                unified_io_push(UNIFIED_IO_NORMAL, "\tRemoved peer with ID [%ld]", (long)ID);
             }
             if (errno != EWOULDBLOCK && errno != EAGAIN)
                 errExit("*** handlerPeersShutdown:recvfrom ***\n");
