@@ -1,6 +1,7 @@
 #include "peer_start.h"
 #include "peer_udp.h"
 #include "../repl.h"
+#include "../unified_io.h"
 #include <stdio.h>
 
 
@@ -16,12 +17,15 @@ int start(const char* args)
     }
     printf("start: <%s> <%s>\n", hostname, portname);
 
+    unified_io_set_mode(UNIFIED_IO_SYNC_MODE);
     if (UDPconnect(hostname, portname) == -1)
     {
+        unified_io_set_mode(UNIFIED_IO_ASYNC_MODE);
         printf("Impossibile raggiungere [%s:%s]\n", hostname, portname);
         return ERR_FAIL;
     }
 
+    unified_io_set_mode(UNIFIED_IO_ASYNC_MODE);
     printf("Connessione al network riuscita!\n");
 
     return OK_CONTINUE;
