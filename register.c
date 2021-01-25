@@ -484,7 +484,11 @@ int register_add_entry(struct e_register* R, const struct entry* E)
         return -1;
 
     if (list_prepend(R->l, E2) != 0)
+    {
+        free((void*)E2);
         return -1;
+    }
+
     /* segna l'aggiunta */
     R->modified = 1;
 
