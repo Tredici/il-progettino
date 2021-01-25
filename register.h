@@ -56,8 +56,12 @@ enum ENTRY_SERIALIZE_RULE
 
 /** Crea un entry associata al giorno corrente
  * del tipo e con la quantità specificata.
+ *
+ * Il quarto parametro permette di specificare
+ * la firma da associare al nuovo elemento, o
+ * 0 se non se ne vuole specificare alcuna.
  */
-struct entry* register_new_entry(struct entry*, enum entry_type, int);
+struct entry* register_new_entry(struct entry*, enum entry_type, int, int);
 
 /** Copia una entry in un'altra, eventualmente allocando lo spazio
  * necessario in memoria dinamica.

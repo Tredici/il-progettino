@@ -78,12 +78,13 @@ struct e_register
 struct entry*
 register_new_entry(struct entry* E,
                 enum entry_type type,
-                int counter)
+                int counter,
+                int signature)
 {
     struct entry* ans;
     time_t today;
 
-    if (counter <= 0)
+    if (counter <= 0 || signature < 0)
         return NULL;
 
     switch (type)
@@ -113,6 +114,7 @@ register_new_entry(struct entry* E,
 
     ans->type = type;
     ans->counter = counter;
+    ans->signature = signature;
 
     return ans;
 }
