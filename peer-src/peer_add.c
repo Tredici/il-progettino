@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "../register.h"
 #include <ctype.h>
+#include "peer_entries_manager.h"
 
 #define C_SWAP 'T'
 #define C_CASE '+'
@@ -49,7 +50,11 @@ int add(const char* args)
 
     /* Qui andrà il codice per aggiungere 
      * la nuova entry al registro del peer */
-
+    if (addEntryToCurrent(E) != 0)
+    {
+        register_free_entry(E);
+        return ERR_FAIL;
+    }
 
     register_free_entry(E);
 
