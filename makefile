@@ -1,4 +1,4 @@
-CFLAGS=-Wall -g -pthread -D_RB_TREE_DEBUG -D_LIST_DEBUG -Wextra
+CFLAGS=-Wall -g -pthread -D_RB_TREE_DEBUG -D_LIST_DEBUG -Wextra -lrt
 CC=gcc
 
 
@@ -52,7 +52,10 @@ peer_add.o: peer-src/peer_add.c  peer-src/peer_add.h
 peer_stop.o: peer-src/peer_stop.c peer-src/peer_stop.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-PEERDEPS = peer_stop.o peer_add.o peer_udp.o peer_start.o
+peer_entries_manager.o: peer-src/peer_entries_manager.c peer-src/peer_entries_manager.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+PEERDEPS = peer_stop.o peer_add.o peer_udp.o peer_start.o peer_entries_manager.o
 
 # file per tutti
 list.o: 			list.h list.c
