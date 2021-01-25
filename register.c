@@ -68,6 +68,11 @@ struct e_register
      * (non 0) oppure non è necessario (vale 0).
      * Di default  */
     int modified;
+    /** Firma da considerare come di default per
+     * le nuove entry che non ne posseggono una
+     * valida.
+     */
+    int defaultSignature;
 };
 
 struct entry*
@@ -383,13 +388,10 @@ char* register_serialize_entry(const struct entry* E, char* buf, size_t len, enu
     return ans;
 }
 
-struct e_register* register_create(struct e_register* r, int flag)
+struct e_register* register_create(struct e_register* r, int defaultSignature)
 {
     struct e_register* ans;
     time_t t;
-
-    /* sopprime il warning */
-    (void)flag;
 
     if (r == NULL)
     {
@@ -402,6 +404,7 @@ struct e_register* register_create(struct e_register* r, int flag)
         ans = r;
     }
     memset(ans, 0, sizeof(struct e_register));
+    ans->defaultSignature = defaultSignature;
     t = time(NULL);
     if (localtime_r(&t, &ans->e_time) == NULL)
     {
@@ -482,6 +485,10 @@ int register_add_entry(struct e_register* R, const struct entry* E)
     E2 = register_clone_entry(E, NULL);
     if (E2 == NULL)
         return -1;
+
+    /* imposta la firma se necessario */
+    if (E2->signature == 0 && R->defaultSignature != 0)
+        E2->signature = R->defaultSignature;
 
     if (list_prepend(R->l, E2) != 0)
     {

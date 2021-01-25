@@ -124,7 +124,12 @@ void register_free_entry(struct entry*);
 char* register_serialize_entry(const struct entry*, char*, size_t, enum ENTRY_SERIALIZE_RULE);
 
 /** Crea un nuovo registro in memoria, eventualmente
- * allocando lo spazio necessario in memoria dinamica
+ * allocando lo spazio necessario in memoria dinamica.
+ *
+ * Il secondo parametro permette di speficare la signature
+ * da assegnare di default alle entry che non ne posseggono
+ * una loro di default.
+ * 0 se non si vuole associare nessuna firma di default.
  */
 struct e_register* register_create(struct e_register*, int);
 
