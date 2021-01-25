@@ -435,6 +435,11 @@ struct e_register* register_create(struct e_register* r, int flag)
     return ans;
 }
 
+const struct tm* register_date(const struct e_register* r)
+{
+    return r == NULL ? NULL : &r->date;
+}
+
 void register_destroy(struct e_register* r)
 {
     if (r == NULL)
