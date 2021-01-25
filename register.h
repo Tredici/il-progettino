@@ -128,6 +128,18 @@ char* register_serialize_entry(const struct entry*, char*, size_t, enum ENTRY_SE
  */
 struct e_register* register_create(struct e_register*, int);
 
+/** Fornisce il puntatore alla struttura
+ * date dell'oggetto struct e_register fornito.
+ * L'oggetto date indica il giorno cui è associato
+ * il registro (che potrebbe essere il giorno
+ * corrente oppure il successivo).
+ *
+ * Restituisce NULL in caso di errore e
+ * il puntatore alla struttura date del
+ * register.
+ */
+const struct tm* register_date(const struct e_register*);
+
 /** Libera tutta la memoria associata a un registro
  * senza preoccuparsi di eseguire alcuna operazione
  * per garantire la persistenza dei dati o altro.
