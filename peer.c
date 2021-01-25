@@ -7,6 +7,7 @@
 #include "peer-src/peer_add.h"
 #include "peer-src/peer_udp.h"
 #include "peer-src/peer_start.h"
+#include "peer-src/peer_entries_manager.h"
 #include "commons.h"
 #include "repl.h"
 #include "main_loop.h"
@@ -55,6 +56,10 @@ int main(int argc, char* argv[])
 
     printf("Attivato sottosistema UDP con porta (%d)\n", port);
 
+    /* avvia il sottosistema a gestione dei peer */
+    if (startEntriesSubsystem(port) != 0)
+        errExit("*** Errore attivazione sottosistema ENTRIES ***\n");
+
     sprintf(peerID, "[%d]", port);
 
     if (main_loop(peerID, commands, commandNumber) == REPL_REPEAT_STOP)
@@ -64,6 +69,9 @@ int main(int argc, char* argv[])
     {
         errExit("*** Errore terminazione sottosistema UDP ***\n");
     }
+
+    if (closeEntriesSubsystem() == -1)
+        errExit("*** Errore terminazione sottosistema ENTRIES ***\n");
 
     if (unified_io_close() == -1)
         errExit("*** Errore terminazione sottosistema IO ***\n");
