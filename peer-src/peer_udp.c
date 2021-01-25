@@ -625,6 +625,11 @@ static void* UDP(void* args)
     return NULL;
 }
 
+/** Serve a memorizzare la porta sulla
+ * quale ascolta il thread UDP
+ */
+static int UDP_port;
+
 int UDPstart(int port)
 {
     int listeningOn;
@@ -633,6 +638,8 @@ int UDPstart(int port)
     /* si mette in attesa dell'avvio del thread UDP */
     if (start_long_life_thread(&UDP_tid, &UDP, (void*)&listeningOn, NULL) == -1)
         return -1;
+
+    UDP_port = listeningOn;
 
     return listeningOn;
 }
@@ -831,5 +838,12 @@ int UDPstop(void)
     if (pthread_join(UDP_tid, NULL) != 0)
         return -1;
 
+    UDP_port = 0;
+
     return 0;
+}
+
+int UDPport(void)
+{
+    return UDP_port;
 }

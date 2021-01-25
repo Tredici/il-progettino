@@ -34,5 +34,10 @@ int UDPconnect(const char*, const char*);
  */
 int UDPstop(void);
 
+/** Fornisce la porta attualmente utilizzata
+ * dal sottosistema UDP, oppure 0 se questo
+ * non è attivo.
+ */
+int UDPport(void);
 
 #endif
