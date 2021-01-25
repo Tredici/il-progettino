@@ -41,7 +41,7 @@ int add(const char* args)
     }
 
     /* qui andrà il codice per generare */
-    E = register_new_entry(NULL, type, quantity);
+    E = register_new_entry(NULL, type, quantity, 0);
     if (E == NULL)
         return ERR_FAIL;
 
