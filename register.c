@@ -36,6 +36,12 @@ struct entry
     struct tm e_time;
     enum entry_type type;
     int counter;
+    /* intero che funge da "firma" del
+     * peer che creò questa entry, se 0
+     * significa che è stato creato dal
+     * peer corrente, è necessariamente
+     * un valore non negativo */
+    int signature;
 };
 
 struct e_register
@@ -111,6 +117,14 @@ struct entry* register_clone_entry(const struct entry* E, struct entry* E2)
 }
 
 struct entry* register_parse_entry(const char* s, struct entry* e)
+int register_retrieve_entry_signature(const struct entry* E)
+{
+    if (E == NULL || E->signature < 0)
+        return -1;
+
+    return E->signature;
+}
+
 {
     struct entry* ans;
     char type;

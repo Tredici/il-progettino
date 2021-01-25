@@ -29,14 +29,17 @@ struct entry;
 
 /** La struttura testuale di un entry
  * sarà:
- *  \d{4}-\d{2}-\d{2}|[NT]|\d+
+ *  \d{4}-\d{2}-\d{2}|[NT]|\d+(\[\d+\])?
  *
  * Una pipe '|' farà da separatore
  * e i tre campi saranno rispettivamente:
  *  +data
  *  +tipologia
  *  +numero di persone coinvolte
- *
+ * opzionale:
+ *  +tra parentesi quadre un numero che
+ *      identifica il peer che ha generato
+ *      la entry
  */
 
 
@@ -51,6 +54,14 @@ struct entry* register_new_entry(struct entry*, enum entry_type, int);
  * Restituisce NULL in caso di errore
  */
 struct entry* register_clone_entry(const struct entry*, struct entry*);
+
+/** Fornisce l'identificativo (firma) del peer che ha prodotto
+ * l'entry o 0 nel caso questo non sia stato specificato.
+ *
+ * Restituisce un valore non negtivo in caso di successo
+ * e -1 in caso di errore.
+ */
+int register_retrieve_entry_signature(const struct entry*);
 
 /** Esegue il parsing di una entry convertendola
  *  da formato testuale a struttura di riferimento
