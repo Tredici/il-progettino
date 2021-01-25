@@ -380,6 +380,9 @@ struct e_register* register_create(struct e_register* r, int flag)
     struct e_register* ans;
     time_t t;
 
+    /* sopprime il warning */
+    (void)flag;
+
     if (r == NULL)
     {
         ans = malloc(sizeof(struct e_register));
