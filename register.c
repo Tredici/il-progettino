@@ -116,7 +116,6 @@ struct entry* register_clone_entry(const struct entry* E, struct entry* E2)
     return ans;
 }
 
-struct entry* register_parse_entry(const char* s, struct entry* e)
 int register_retrieve_entry_signature(const struct entry* E)
 {
     if (E == NULL || E->signature < 0)
@@ -125,9 +124,22 @@ int register_retrieve_entry_signature(const struct entry* E)
     return E->signature;
 }
 
+struct entry* register_parse_entry(const char* s, struct entry* e, enum ENTRY_SERIALIZE_RULE flag)
 {
+    int lastPos; /* per trovare la firma */
     struct entry* ans;
     char type;
+
+    /* controllo del flag */
+    switch (flag)
+    {
+    case ENTRY_SIGNATURE_OMITTED:
+    case ENTRY_SIGNATURE_REQUIRED:
+    case ENTRY_SIGNATURE_OPTIONAL:
+        break;
+    default:    /* parametro invalido */
+        return NULL;
+    }
 
     if (e == NULL)
     {
@@ -144,7 +156,7 @@ int register_retrieve_entry_signature(const struct entry* E)
     memset(ans, 0, sizeof(struct entry));
     /**
      * Struttura di una entry
-     * \d{4}-\d{2}-\d{2}|[NT]|\d+
+     * \d{4}-\d{2}-\d{2}|[NT]|\d+(\[\d+\])?
      */
     if (strptime(s, "%Y-%m-%d" SEPARATOR, &ans->e_time) == NULL)
     {
@@ -198,6 +210,55 @@ int register_retrieve_entry_signature(const struct entry* E)
         return NULL;
     }
 
+    /* bisogna omettere la firma? */
+    if (flag != ENTRY_SIGNATURE_OMITTED)
+    {
+        /* ENTRY_SIGNATURE_REQUIRED | ENTRY_SIGNATURE_OPTIONAL */
+
+        /* scorre per trovare la firma */
+        for (lastPos = DATE_LENGHT+1+TYPE_LENGHT+1; isdigit(s[lastPos]); ++lastPos)
+            ;
+
+        /* o la va o errore */
+        if (s[lastPos] == '[')
+        {
+            lastPos = lastPos+1;
+            /* la firma è azzerata all'inizio da memset */
+            if (sscanf(&s[lastPos], "%d", &ans->signature) == EOF)
+            {
+                if (e == NULL)
+                {
+                    free(ans);
+                }
+
+                return NULL;
+            }
+            /* cerca se alla fine c'è ciò che vogliamo */
+            for (; isdigit(s[lastPos]); ++lastPos)
+                ;
+            /* check finale */
+            if (s[lastPos] != ']')
+            {
+                if (e == NULL)
+                {
+                    free(ans);
+                }
+
+                return NULL;
+            }
+        }
+        else if (flag == ENTRY_SIGNATURE_REQUIRED)
+        {
+            /* se la firma era richiesta si ha un errore */
+            if (e == NULL)
+            {
+                free(ans);
+            }
+
+            return NULL;
+        }
+    }
+
     return ans;
 }
 
@@ -216,11 +277,11 @@ void register_free_entry(struct entry* E)
 }
 
 
-char* register_serialize_entry(const struct entry* E, char* buf, size_t len)
+char* register_serialize_entry(const struct entry* E, char* buf, size_t len, enum ENTRY_SERIALIZE_RULE flag)
 {
     char str[ENTRY_TEXT_MAXLEN] = {};
     char* ans;
-    int strLen;
+    int strLen, appoggio;
     char symbol;
 
     if (E == NULL)
@@ -263,12 +324,31 @@ char* register_serialize_entry(const struct entry* E, char* buf, size_t len)
     strLen = sprintf(&str[DATE_LENGHT+2+TYPE_LENGHT], "%d", E->counter);
     if (strLen < 0)
     {
-        return 0;
+        return NULL;
+    }
+
+    /* controllo del flag */
+    switch (flag)
+    {
+    case ENTRY_SIGNATURE_OMITTED:
+        break;
+    case ENTRY_SIGNATURE_OPTIONAL:
+        /* vede se saltare */
+        if (E->signature == 0)
+            break;
+    case ENTRY_SIGNATURE_REQUIRED:
+        appoggio =  DATE_LENGHT+2+TYPE_LENGHT+strLen;
+        strLen = sprintf(&str[appoggio], "[%d]", E->signature);
+        if (strLen == EOF)
+            return NULL;
+        break;
+    default:    /* parametro invalido */
+        return NULL;
     }
 
     if (buf != NULL)
     {
-        if ((int)len < DATE_LENGHT+2+TYPE_LENGHT+strLen+1)
+        if ((int)len < (int)strlen(str)+1)
         {
             /** Se non basta lo spazio per contenere
              * il risultato genera un errore

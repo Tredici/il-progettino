@@ -42,6 +42,17 @@ struct entry;
  *      la entry
  */
 
+/** Enumerazione che permette di specificare quali
+ * criteri seguire nella serializzazione e nel parsing
+ * delle entry per quanto riguarda la firma associata
+ * a ciascuna entry.
+ */
+enum ENTRY_SERIALIZE_RULE
+{
+    ENTRY_SIGNATURE_OMITTED,
+    ENTRY_SIGNATURE_REQUIRED,
+    ENTRY_SIGNATURE_OPTIONAL
+};
 
 /** Crea un entry associata al giorno corrente
  * del tipo e con la quantità specificata.
@@ -67,13 +78,23 @@ int register_retrieve_entry_signature(const struct entry*);
  *  da formato testuale a struttura di riferimento
  *
  * Se il secondo parametro è NULL alloca la entry
- * in memoria dinamica
+ * in memoria dinamica.
+ *
+ * Il terzo parametro specifica la politica da
+ * applicare nei confronti della signature presente
+ * nella stringa da analizzare.
+ *  +ENTRY_SIGNATURE_OMITTED  -> salta per intero il
+ *                          controllo della signature
+ *  +ENTRY_SIGNATURE_REQUIRED -> fallisce se non trova
+ *                          la firma tra parentesi [].
+ *  +ENTRY_SIGNATURE_OPTIONAL -> se la tova bene altrimenti
+ *                          pazienza.
  *
  * In caso di successo ritorna un puntatore alla
  * entry data (che può coincidere con l'argomento),
  * altrimenti NULL
  */
-struct entry* register_parse_entry(const char*, struct entry*);
+struct entry* register_parse_entry(const char*, struct entry*, enum ENTRY_SERIALIZE_RULE);
 
 /** Distrugge correttamente un'entry allocata
  * in memoria dinamica, ad esempio tramine
@@ -89,10 +110,18 @@ void register_free_entry(struct entry*);
  * in memoria dinamica e può essere tranquillamente
  * riservato in memoria dinamica
  *
+ * L'ultimo argomento è un flag che se non nullo
+ * permette di specificare se si vuole serializzare
+ * anche la firma associata all'entry.
+ * In particolare se:
+ *  ENTRY_SIGNATURE_OMITTED  -> questa viene esclusa
+ *  ENTRY_SIGNATURE_REQUIRED ->  questa viene inserita sempre
+ *  ENTRY_SIGNATURE_OPTIONAL -> questa viene inserita solo se non 0
+ *
  * Se il vettore allocato ha una dimensione di
  * almeno
  */
-char* register_serialize_entry(const struct entry*, char*, size_t);
+char* register_serialize_entry(const struct entry*, char*, size_t, enum ENTRY_SERIALIZE_RULE);
 
 /** Crea un nuovo registro in memoria, eventualmente
  * allocando lo spazio necessario in memoria dinamica
