@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include "list.h"   /* per usare delle list per gestire i registri */
+#include "set.h"    /* per tenere facilmente traccia delle firme delle entry presenti */
 
 /* 4 ANNO 2 MESE 2 GIORNI 2 SEPARATORI (-) */
 #define DATE_LENGHT 10
@@ -73,6 +74,10 @@ struct e_register
      * valida.
      */
     int defaultSignature;
+    /** Insieme di tutte le firme delle entry
+     * presenti nel register.
+     */
+    struct set* allSignature;
 };
 
 struct entry*
@@ -434,10 +439,24 @@ struct e_register* register_create(struct e_register* r, int defaultSignature)
         /* mktime normalizza le date se necessario */
         (void)mktime(&ans->date);
     }
+    /* inizializza l'insieme di firme */
+    ans->allSignature = set_init(NULL);
+    if (ans->allSignature == NULL)
+    {
+        if (r == NULL)
+            free(ans);
 
+        return NULL;
+    }
+    /* un elemento già ci deve finire */
+    if (defaultSignature)
+        set_add(ans->allSignature, (long)defaultSignature);
+
+    /* inizializza la lista di entri */
     ans->l = list_init(NULL);
     if (ans->l == NULL)
     {
+        set_destroy(ans->allSignature);
         if (r == NULL)
             free(ans);
 
@@ -497,6 +516,10 @@ int register_add_entry(struct e_register* R, const struct entry* E)
         free((void*)E2);
         return -1;
     }
+
+    /* bisogna inserire un nuova entry? */
+    if (E2->signature != 0)
+        set_add(R->allSignature, (long)E2->signature);
 
     /* segna l'aggiunta */
     R->modified = 1;
