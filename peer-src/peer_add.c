@@ -45,7 +45,7 @@ int add(const char* args)
     if (E == NULL)
         return ERR_FAIL;
 
-    printf("Tentativo di registrare l'entry %s\n", register_serialize_entry(E, enStr, sizeof(enStr)));
+    printf("Tentativo di registrare l'entry %s\n", register_serialize_entry(E, enStr, sizeof(enStr), ENTRY_SIGNATURE_OPTIONAL));
 
     /* Qui andrà il codice per aggiungere 
      * la nuova entry al registro del peer */
