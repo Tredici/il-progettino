@@ -134,6 +134,26 @@ struct e_register* register_create(struct e_register*, int);
  */
 void register_destroy(struct e_register*);
 
+/** Restituisce un va valore non nullo se il
+ * register è stato modificato dalla sua
+ * inizializzazione o dall'ultima chiamata a
+ * register_clear_dirty_flag.
+ *
+ * Coerentemente restituisce 0 nel caso l'argomento
+ * non sia valido.
+ */
+int register_is_changed(const struct e_register*);
+
+/** Azzera il flag che indica che il registro è
+ * stato modificato dalla sua inizializzazione o
+ * dall'ultima chiamata a questa funzione
+ * register_clear_dirty_flag.
+ *
+ * Restituisce 0 in caso di successo e
+ * -1 in caso di errore.
+ */
+int register_clear_dirty_flag(struct e_register*);
+
 /** Aggiunge una entry a un registro.
  * L'aggiunta è fatta in maniera "safe", viene inserita
  * una copia cosicché non ci siano rischi se l'entry

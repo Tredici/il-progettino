@@ -60,6 +60,14 @@ struct e_register
      */
     struct tm date;
     struct list* l;
+    /* indica se il contenuto del
+     * register è stato modificato
+     * da quando è stato inizializzato,
+     * ovvero se al termine del programma
+     * il suo contenuto va riportato su file
+     * (non 0) oppure non è necessario (vale 0).
+     * Di default  */
+    int modified;
 };
 
 struct entry*
@@ -450,6 +458,20 @@ void register_destroy(struct e_register* r)
     free(r);
 }
 
+int register_is_changed(const struct e_register* r)
+{
+    return (r != NULL && r->modified != 0);
+}
+
+int register_clear_dirty_flag(struct e_register* r)
+{
+    if (r == NULL)
+        return -1;
+
+    r->modified = 0;
+    return 0;
+}
+
 int register_add_entry(struct e_register* R, const struct entry* E)
 {
     struct entry* E2;
@@ -463,6 +485,8 @@ int register_add_entry(struct e_register* R, const struct entry* E)
 
     if (list_prepend(R->l, E2) != 0)
         return -1;
+    /* segna l'aggiunta */
+    R->modified = 1;
 
     return 0;
 }
