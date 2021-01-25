@@ -49,6 +49,16 @@ struct e_register
     /* memorizza data di crezione
      * di un register */
     struct tm e_time;
+    /** indica il giorno cui
+     * corrisponde il register,
+     * è la data corrente per i
+     * register creati entro le
+     * 18 e la data del giorno
+     * successivo per quelli
+     * creati tra le 18:00 e
+     * mezzanotte
+     */
+    struct tm date;
     struct list* l;
 };
 
@@ -389,6 +399,26 @@ struct e_register* register_create(struct e_register* r, int flag)
 
         return NULL;
     }
+    /* dopo aver impostato la data di creazione
+     * deve assegnare anche la data cui il
+     * registro è associato */
+    if (ans->e_time.tm_hour < 18) /* creato prima delle 18:00 */
+    {
+        /* anno,mese,giorno di creazione */
+        ans->date.tm_mday = ans->e_time.tm_mday;
+        ans->date.tm_mon = ans->e_time.tm_mon;
+        ans->date.tm_year = ans->e_time.tm_year;
+    }
+    else /* creato dopo le 18:00 */
+    {
+        /* il giorno è domani */
+        ans->date.tm_mday = ans->e_time.tm_mday+1;
+        ans->date.tm_mon = ans->e_time.tm_mon;
+        ans->date.tm_year = ans->e_time.tm_year;
+        /* mktime normalizza le date se necessario */
+        (void)mktime(&ans->date);
+    }
+
     ans->l = list_init(NULL);
     if (ans->l == NULL)
     {
