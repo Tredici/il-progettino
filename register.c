@@ -1,5 +1,5 @@
 #define _XOPEN_SOURCE 500  /* per strptime */
-#define _POSIX_C_SOURCE /* per localtime_r */
+#define _POSIX_C_SOURCE 1 /* per localtime_r */
 
 #include "register.h"
 #include <time.h>
