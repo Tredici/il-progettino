@@ -891,6 +891,35 @@ elem* clone_HELPER(
     return ans;
 }
 
+struct rb_tree* rb_tree_clone(const struct rb_tree* tree, void*(*fun)(void*))
+{
+    struct rb_tree* ans;
+    elem* root;
+
+    if (tree == NULL || fun == NULL)
+        return NULL;
+
+    ans = rb_tree_init(NULL);
+    if (ans == NULL)
+        return NULL;
+
+    ans->cleanup_f = tree->cleanup_f; /* stesso cleanup */
+
+    if (tree->len != 0)
+    {
+        root = clone_HELPER(ans, tree, tree->root, fun);
+        if (root == NULL)
+        {
+            free(ans);
+            return NULL;
+        }
+        ans->root = root;
+        ans->len = tree->len; /* dimensione totale */
+    }
+
+    return ans;
+}
+
 /** Funzione ausiliaria che applica su tutti
  * i nodi dell'albero la funzione fun in ordine
  */

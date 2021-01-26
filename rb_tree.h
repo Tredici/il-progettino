@@ -61,6 +61,17 @@ int rb_tree_prev(struct rb_tree*, long int, long int*, void**);
  */
 int rb_tree_foreach(struct rb_tree*, void(*)(long int, void*));
 
+/** Permette di ottenere una copia dell'albero
+ * fornito. La funzione argomento deve servire
+ * unicamente a generare copie dei valori,
+ * indipendentemente da quale siano le
+ * corrispondenti chiavi.
+ *
+ * Restituisce il nuovo albero in caso di
+ * successo e NULL in caso di errore.
+ */
+struct rb_tree* rb_tree_clone(const struct rb_tree*, void*(*)(void*));
+
 /** L'idea alla fine è sempre quella.
  * Il terzo argomento della funzione e della
  * funzione argomento coincidono e possono
