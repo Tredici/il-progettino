@@ -5,6 +5,15 @@
 #include <string.h>
 #include <math.h>
 
+struct tm time_date_now(void)
+{
+    struct tm ans;
+    time_t t;
+
+    t = time(NULL);
+    (void)gmtime_r(&t, &ans);
+    return ans;}
+
 struct tm time_date_today(void)
 {
     struct tm ans, tmp;

@@ -8,6 +8,11 @@
 #include <time.h>
 
 /** Inizalizza e fornisce una struct tm
+ * con data e orario correnti.
+ */
+struct tm time_date_now(void);
+
+/** Inizalizza e fornisce una struct tm
  * con la data di oggi.
  */
 struct tm time_date_today(void);
