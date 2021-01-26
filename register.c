@@ -829,7 +829,7 @@ static int getLimitedLine(FILE* fin, char* buff, size_t bufLen, int strict)
         /* nelle entry possono esserci anche caratteri
          * non alfanumerici ma "[]-|", testa quindi che
          * il carattere sia stampabile */
-        if (!isspace(c))
+        if (!isgraph(c))
         {
             ungetc(c, fin);
             break;
