@@ -264,7 +264,7 @@ int register_serialize_fd(int, const struct e_register*, enum ENTRY_SERIALIZE_RU
  * Restituisce 0 in caso di successo e
  * -1 in caso di errore.
  */
-int register_flush(const struct e_register*, int);
+int register_flush(struct e_register*, int);
 
 /** Svolge un lavoro complementare a quello
  * di register_serialize_fd leggendo al più

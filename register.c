@@ -713,7 +713,7 @@ int register_serialize_fd(
     return ans;
 }
 
-int register_flush(const struct e_register* R, int force)
+int register_flush(struct e_register* R, int force)
 {
     int signature, year, month, day;
     char filename[32];
