@@ -64,4 +64,14 @@ int time_date_cmp(const struct tm*, const struct tm*);
  */
 int time_date_diff(const struct tm*, const struct tm*);
 
+/** Svolge un ruolo complementare a quello di
+ * time_date_diff sommando (in senso algebrico, +-)
+ * tanti giorni quanti quelli specificati all'oggetto
+ * struct tm fornito.
+ *
+ * In caso di errore (argomento NULL) fornisce una
+ * struttura tutti i cui campi sono stati azzerati.
+ */
+struct tm time_date_add(const struct tm*, int);
+
 #endif

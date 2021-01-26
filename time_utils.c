@@ -101,3 +101,19 @@ int time_date_diff(const struct tm* time1, const struct tm* time2)
      * leap second e simili */
     return (int)round((double)(t_a-t_b)/(24*60*60));
 }
+
+struct tm time_date_add(const struct tm* date, int days)
+{
+    struct tm ans;
+
+    if (date == NULL)
+    {
+        memset(&ans, 0, sizeof(struct tm));
+        return ans;
+    }
+
+    time_copy_date(&ans, date);
+    ans.tm_mday += days;
+    (void)mktime(&ans);
+    return ans;
+}
