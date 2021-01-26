@@ -660,5 +660,8 @@ int register_serialize(
     /* iteratori, iteratori ovunque */
     list_accumulate(&R->l, &register_serialize_HELPER, (void*)&base);
 
+    /* forza l'output */
+    fflush(fp);
+
     return 0;
 }
