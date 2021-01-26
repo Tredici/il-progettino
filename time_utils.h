@@ -30,5 +30,13 @@ int time_copy_date(struct tm*, const struct tm*);
  */
 int time_date_cmp(const struct tm*, const struct tm*);
 
+/** Restituisce il numero di giorni di differenza
+ * tra la prima data e la seconda data - guarda
+ * solo i campi giorno-mese-anno.
+ *
+ * Restituisce 0 in caso di errore
+ * e imposta errno a EINVAL
+ */
+int time_date_diff(const struct tm*, const struct tm*);
 
 #endif
