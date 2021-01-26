@@ -145,6 +145,13 @@ struct e_register* register_create(struct e_register*, int);
  */
 struct e_register* register_create_date(struct e_register*, int, const struct tm*);
 
+/** Restituisce il numero di entry contenute
+ * nel registro.
+ *
+ * Restituisce -1 in caso di errore.
+ */
+ssize_t register_size(const struct e_register*);
+
 /** Fornisce il puntatore alla struttura
  * date dell'oggetto struct e_register fornito.
  * L'oggetto date indica il giorno cui è associato

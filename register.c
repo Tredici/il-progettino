@@ -487,6 +487,14 @@ struct e_register* register_create_date(
     return ans;
 }
 
+ssize_t register_size(const struct e_register* R)
+{
+    if (R == NULL)
+        return -1;
+
+    return list_size(R->l);
+}
+
 const struct tm* register_date(const struct e_register* r)
 {
     return r == NULL ? NULL : &r->date;
