@@ -1,6 +1,8 @@
-CFLAGS=-Wall -g -pthread -D_RB_TREE_DEBUG -D_LIST_DEBUG -Wextra -lrt -lm
+CFLAGS=-Wall -g -pthread -D_RB_TREE_DEBUG -D_LIST_DEBUG -Wextra -lrt
 CC=gcc
-
+# librerie che il linker dovrà richiamare
+# vedi: http://retis.santannapisa.it/luca/makefiles.pdf
+LDLIBS=-lm
 
 default:
 	echo "Speficificare una regola"
@@ -80,7 +82,7 @@ COMMONDEPS = list.o register.o repl.o socket_utils.o queue.o main_loop.o rb_tree
 peer.o: peer.c
 
 peer: peer.o $(COMMONDEPS) $(PEERDEPS)
-	$(CC) $(CFLAGS) -o $@ peer.o $(COMMONDEPS) $(PEERDEPS)
+	$(CC) $(CFLAGS) -o $@ peer.o $(COMMONDEPS) $(PEERDEPS) $(LDLIBS)
 
 # main del discovery server
 ds.o: ds.c
