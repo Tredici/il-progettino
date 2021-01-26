@@ -756,7 +756,7 @@ int register_flush(struct e_register* R, int force)
     /* azzera il flag */
     register_clear_dirty_flag(R);
 
-    return ans;
+    return ans == 0 ? 1 : ans;
 }
 
 /** Funzione ausiliaria che prova a prendere

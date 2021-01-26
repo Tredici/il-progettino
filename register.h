@@ -261,7 +261,8 @@ int register_serialize_fd(int, const struct e_register*, enum ENTRY_SERIALIZE_RU
  *      del registro.
  *  +azzera il "dirty flag"
  *
- * Restituisce 0 in caso di successo e
+ * Restituisce 0 se non stampa nulla, 1 se scrive su
+ * file il contenuto del registro e
  * -1 in caso di errore.
  */
 int register_flush(struct e_register*, int);
