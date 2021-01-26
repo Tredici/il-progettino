@@ -74,4 +74,16 @@ int time_date_diff(const struct tm*, const struct tm*);
  */
 struct tm time_date_add(const struct tm*, int);
 
+/** Incrementa, dopo aver isolato solo i
+ * campi relativi a una data, la data
+ * fornita di tanti giorni quanti sono
+ * quelli specificati.
+ *
+ * In caso di successo fornisce il
+ * puntatore all'oggetto struct tm
+ * fornito, in caso di errore restituisce
+ * NULL.
+ */
+struct tm* time_date_inc(struct tm*, int);
+
 #endif

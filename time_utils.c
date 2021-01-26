@@ -117,3 +117,16 @@ struct tm time_date_add(const struct tm* date, int days)
     (void)mktime(&ans);
     return ans;
 }
+
+struct tm* time_date_inc(struct tm* date, int days)
+{
+    struct tm tmp;
+
+    if (date == NULL)
+        return NULL;
+
+    (void)time_copy_date(&tmp, date);
+    *date = time_date_add(&tmp, days);
+
+    return date;
+}
