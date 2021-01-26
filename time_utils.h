@@ -7,6 +7,17 @@
 
 #include <time.h>
 
+/** Inizializza e restituisce un oggetto
+ * di tipo struct tm con l'anno il mese
+ * e il giorno forniti.
+ *
+ * Per il mese 1 indica gennaio e 12
+ * indica dicembre.
+ * Valori "sballati" saranno normalizzati
+ * in automatico.
+ */
+struct tm time_date_init(int, int, int);
+
 /** Copia solo la data dalla prima
  * struttura alla seconda.
  *

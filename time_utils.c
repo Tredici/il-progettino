@@ -3,6 +3,22 @@
 #include <string.h>
 #include <math.h>
 
+struct tm time_date_init(int year, int month, int day)
+{
+    struct tm ans;
+
+    memset(&ans, 0, sizeof(ans));
+    /* inizializza i campi */
+    ans.tm_year = year - 1900; /* man mktime */
+    /* la convenzione seguita dalla libreria pone
+     * gennaio come mese 0 */
+    ans.tm_mon = month-1;
+    ans.tm_mday = day; /* i giorni sono normali */
+    /* normalizza il tutto */
+    mktime(&ans);
+    return ans;
+}
+
 int time_copy_date(struct tm* dst, const struct tm* src)
 {
     if (dst == NULL || src == NULL)
