@@ -226,3 +226,19 @@ struct set* set_clone(const struct set* S)
 
     return ans;
 }
+
+static void help_merge(long int key, void* base)
+{
+    struct set* S;
+
+    S = (struct set*)base;
+    set_add(S, key);
+}
+
+int set_merge(struct set* S1, const struct set* S2)
+{
+    if (S1 == NULL || S2 == NULL)
+        return -1;
+
+    return set_accumulate(S2, &help_merge, (void*)S1);
+}

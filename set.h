@@ -46,4 +46,8 @@ int set_accumulate(struct set*, void(*)(long int, void*), void*);
 /* crea una copia del set */
 struct set* set_clone(const struct set*);
 
+/* aggiunge tutti gli elementi del secondo insieme
+ * al primo */
+int set_merge(struct set*, const struct set*);
+
 #endif
