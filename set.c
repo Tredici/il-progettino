@@ -166,3 +166,31 @@ int set_foreach(struct set* S, void(*fun)(long int))
 
     return rb_tree_accumulate(S->T, &help_foreach, (void*)&f);
 }
+
+static void* NULL_fun(void* x)
+{
+    (void)x;
+    return NULL;
+}
+
+struct set* set_clone(const struct set* S)
+{
+    struct set* ans;
+
+    if (S == NULL)
+        return NULL;
+
+    ans = malloc(sizeof(struct set));
+    if (ans == NULL)
+        return NULL;
+
+    memset(ans, 0, sizeof(struct set));
+    ans->T = rb_tree_clone(S->T, NULL_fun);
+    if (ans->T == NULL)
+    {
+        free(ans);
+        return NULL;
+    }
+
+    return ans;
+}

@@ -40,4 +40,7 @@ int set_next(struct set*, long int, long int*);
 /* foreach */
 int set_foreach(struct set*, void(*)(long int));
 
+/* crea una copia del set */
+struct set* set_clone(const struct set*);
+
 #endif
