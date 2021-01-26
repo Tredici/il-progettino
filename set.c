@@ -278,3 +278,23 @@ int set_purge(struct set* S1, const struct set* S2)
 
     return set_accumulate(S2, &help_purge, (void*)S1);
 }
+
+struct set* set_diff(const struct set* S1, const struct set* S2)
+{
+    struct set* ans;
+
+    if (S1 == NULL || S2 == NULL)
+        return NULL;
+
+    ans = set_clone(S1);
+    if (ans == NULL)
+        return NULL;
+
+    if (set_purge(ans, S2) != 0)
+    {
+        set_destroy(ans);
+        return NULL;
+    }
+
+    return ans;
+}

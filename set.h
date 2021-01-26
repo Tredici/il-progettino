@@ -57,4 +57,10 @@ struct set* set_union(const struct set*, const struct set*);
  * anche nel secondo insieme */
 int set_purge(struct set*, const struct set*);
 
+/** Fornisce un nuovo insieme contenente tutti
+ * gli elementi del primo insieme non presenti
+ * anche nel secondo.
+ */
+struct set* set_diff(const struct set*, const struct set*);
+
 #endif
