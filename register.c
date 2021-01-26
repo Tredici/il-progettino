@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <ctype.h>
 #include "list.h"   /* per usare delle list per gestire i registri */
 #include "set.h"    /* per tenere facilmente traccia delle firme delle entry presenti */
 #include "time_utils.h" /* per facilitare il lavoro con le date */
@@ -757,3 +758,113 @@ int register_flush(const struct e_register* R, int force)
 
     return ans;
 }
+
+/** Funzione ausiliaria che prova a prendere
+ * una riga di input dal file descriptor fornito.
+ * Serve come funzione ausiliaria per
+ * register_parse e può lavorare in modo "normale"
+ * (flag strict == 0) o strict (flag strict != 0).
+ *
+ * NOTA: "\w" va a includere anche altri segni grafici
+ * come "[]-|" perché non mi ricordo altrimenti come
+ * andrebbero indicati (forse come "\S"?).
+ *
+ * In modalità strict si aspetta un input di questo tipo:
+ * \w+\n.
+ * È un errore se non viene trovato il carattere di newline.
+ * La sequenza di caratteri alfanumerici deve essere di al
+ * più bufLen-1 caratteri, l'ultimo carattere è sempre posto
+ * a '\0' per sicurezza.
+ *
+ * In modalità non strict possono essere presenti, e sono
+ * scartati, un numero arbitrario di caratteri blank
+ * (newline INCLUSO) prima e dopo l'inizio di ogni
+ * sequenza \w+.
+ *
+ * Restituisce il numero di caratteri letti e messi dentro
+ * buff se ha successo oppure -1 in caso di errore.
+ * In caso di EOF precoce restituisce 0 se non sta lavorando
+ * in "strict mode".
+ */
+static int getLimitedLine(FILE* fin, char* buff, size_t bufLen, int strict)
+{
+    int i, c, limit;
+
+    /* check */
+    if (fin == NULL || buff == NULL || bufLen < ENTRY_TEXT_MAXLEN)
+        return -1;
+
+    c = fgetc(fin);
+    /* strict mode? */
+    if (strict)
+    {
+        /* una entry inizia con un carattere alfanumerico */
+        if (!isalnum(c))
+            return -1;
+    }
+    else
+    {
+        if (c == EOF)
+            return 0;
+        /* scarta tutti i blank */
+        if (!isalnum(c))
+        {
+            while (isspace(c))
+                c = fgetc(fin);
+            /* fine file? */
+            if (c == EOF)
+                return 0;
+        }
+    }
+    /* ripristina lo status quo */
+    ungetc(c, fin);
+    /* prova a leggere caratteri e a metterli
+     * nel buffer */
+    limit = (int)bufLen-1; /* operazioni più efficienti */
+    buff[limit] = '\0'; /* sicurezza */
+    for (i = 0; i < limit; ++i)
+    {
+        /* prende un carattere, lo testa */
+        c = fgetc(fin);
+        /* nelle entry possono esserci anche caratteri
+         * non alfanumerici ma "[]-|", testa quindi che
+         * il carattere sia stampabile */
+        if (!isspace(c))
+        {
+            ungetc(c, fin);
+            break;
+        }
+        /* controlla che sia un carattere ascii */
+        if (!isascii(c))
+        {
+            /* check EOF */
+            if (!strict && c == EOF)
+            {
+                buff[i] = '\0';
+                return i;
+            }
+            return -1;
+        }
+        /* inserisce nel buffer */
+        buff[i] = (char)c;
+    }
+    /* può ignorare altri blank? */
+    if (!strict)
+    {
+        do
+        {
+            c = fgetc(fin);
+        }
+        while (isblank(c) && c != '\n');
+    }
+    else
+        c = fgetc(fin);
+
+    /* siamo alla fine? - controlla anche EOF */
+    if (c != '\n' && !(!strict && c == EOF))
+        return -1;
+
+    buff[i] = '\0';
+    return i;
+}
+
