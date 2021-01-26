@@ -53,4 +53,8 @@ int set_merge(struct set*, const struct set*);
 /* crea un nuovo insieme formato dall'unione dei due set dati */
 struct set* set_union(const struct set*, const struct set*);
 
+/* Rimuove dal primo inseme tutti gli elementi presenti
+ * anche nel secondo insieme */
+int set_purge(struct set*, const struct set*);
+
 #endif

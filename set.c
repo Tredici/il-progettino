@@ -262,3 +262,19 @@ struct set* set_union(const struct set* S1, const struct set* S2)
 
     return ans;
 }
+
+static void help_purge(long int key, void* base)
+{
+    struct set* S;
+
+    S = (struct set*)base;
+    set_remove(S, key);
+}
+
+int set_purge(struct set* S1, const struct set* S2)
+{
+    if (S1 == NULL || S2 == NULL)
+        return -1;
+
+    return set_accumulate(S2, &help_purge, (void*)S1);
+}
