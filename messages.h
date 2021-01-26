@@ -342,7 +342,7 @@ int messages_make_shutdown_req(struct shutdown_req**, size_t*, uint32_t);
  * messaggio del tipo
  * MESSAGES_SHUTDOWN_REQ
  */
-int messages_check_shutdown_req(void*, size_t);
+int messages_check_shutdown_req(const void*, size_t);
 
 /** Genera e invia un messaggio
  * di tipo

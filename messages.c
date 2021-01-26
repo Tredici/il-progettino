@@ -345,7 +345,7 @@ int messages_make_shutdown_req(struct shutdown_req** req, size_t* sz, uint32_t I
     return 0;
 }
 
-int messages_check_shutdown_req(void* buffer, size_t len)
+int messages_check_shutdown_req(const void* buffer, size_t len)
 {
     struct shutdown_req* req;
 
