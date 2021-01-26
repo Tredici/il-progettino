@@ -267,6 +267,22 @@ int register_serialize_fd(int, const struct e_register*, enum ENTRY_SERIALIZE_RU
  */
 int register_flush(struct e_register*, int);
 
+/** Permette di ottenere il nome del file
+ * associato a un dato register (se ne esiste uno).
+ * Se l'utente fornisce un buffer il risultato è
+ * salvato in esso, altrimenti è allocato in memoria
+ * dinamica e lo spazio usato può essere liberato
+ * con free.
+ *
+ * Se il secondo parametro è NULL il terzo argomento
+ * è ignorato, altrimenti specifica la dimensione
+ * del buffer.
+ *
+ * Restituisce NULL in caso di errore e l'indirizzo
+ * del buffer utilizzato in caso di successo.
+ */
+char* register_filename(const struct e_register*, char*, size_t);
+
 /** Svolge un lavoro complementare a quello
  * di register_serialize_fd leggendo al più
  * tante entry quante ne sono specificate

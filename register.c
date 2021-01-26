@@ -759,6 +759,44 @@ int register_flush(struct e_register* R, int force)
     return ans == 0 ? 1 : ans;
 }
 
+char* register_filename(
+            const struct e_register* R,
+            char* buffer,
+            size_t bufLen)
+{
+    int signature, year, month, day;
+    char filename[32];
+    int len;
+    char* ans;
+
+    if (R == NULL || R->allSignature == 0)
+        return NULL;
+
+    signature = R->allSignature;
+    time_date_read(&R->date, &year, &month, &day);
+
+    len = sprintf(filename, "%d.%d-%d-%d.txt",
+        signature, year, month, day);
+    if (len == -1)
+        return NULL;
+
+    if (buffer != NULL)
+    {
+        if (bufLen < (size_t)(1+len))
+        {
+            /* non abbstanza spazio */
+            return NULL;
+        }
+        ans = strcpy(buffer, filename);
+    }
+    else
+    {
+        ans = strdup(filename);
+    }
+
+    return ans;
+}
+
 /** Funzione ausiliaria che prova a prendere
  * una riga di input dal file descriptor fornito.
  * Serve come funzione ausiliaria per
