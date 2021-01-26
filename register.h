@@ -137,6 +137,13 @@ char* register_serialize_entry(const struct entry*, char*, size_t, enum ENTRY_SE
  */
 struct e_register* register_create(struct e_register*, int);
 
+/** Crea un nuovo registro associato alla data specificata.
+ * È del tutto equivalente a register_create se l'argomento
+ * struct tm* è NULL, altrimenti usa l'argomento per
+ * impostare il giorno a cui il fa riferimento.
+ */
+struct e_register* register_create_date(struct e_register*, int, const struct tm*);
+
 /** Fornisce il puntatore alla struttura
  * date dell'oggetto struct e_register fornito.
  * L'oggetto date indica il giorno cui è associato

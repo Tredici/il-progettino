@@ -467,6 +467,24 @@ struct e_register* register_create(struct e_register* r, int defaultSignature)
     return ans;
 }
 
+struct e_register* register_create_date(
+            struct e_register* r,
+            int defaultSignature,
+            const struct tm* date)
+{
+    struct e_register* ans;
+
+    ans = register_create(r, defaultSignature);
+    if (ans == NULL)
+        return NULL;
+
+    /* imposta la data se specificata */
+    if (date != NULL)
+        ans->date = *date;
+
+    return ans;
+}
+
 const struct tm* register_date(const struct e_register* r)
 {
     return r == NULL ? NULL : &r->date;
