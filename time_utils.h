@@ -7,6 +7,11 @@
 
 #include <time.h>
 
+/** Inizalizza e fornisce una struct tm
+ * con la data di oggi.
+ */
+struct tm time_date_today(void);
+
 /** Inizializza e restituisce un oggetto
  * di tipo struct tm con l'anno il mese
  * e il giorno forniti.

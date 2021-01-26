@@ -1,7 +1,19 @@
+#define _POSIX_C_SOURCE 1
+
 #include "time_utils.h"
 #include <errno.h>
 #include <string.h>
 #include <math.h>
+
+struct tm time_date_today(void)
+{
+    struct tm ans, tmp;
+    time_t t;
+
+    t = time(NULL);
+    (void)time_copy_date(&ans, gmtime_r(&t, &tmp));
+    return ans;
+}
 
 struct tm time_date_init(int year, int month, int day)
 {
