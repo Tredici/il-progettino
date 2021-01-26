@@ -216,7 +216,7 @@ int messages_make_boot_req(struct boot_req**, size_t*, int, uint32_t);
  * Restituisce 0 in caso di successo
  * e -1 in caso di errore.
  */
-int messages_check_boot_req(void*, size_t);
+int messages_check_boot_req(const void*, size_t);
 
 /** Invia un messaggio di boot usando il socket
  * specificato come primo argomento, la destinazione

@@ -118,7 +118,7 @@ int messages_make_boot_req(struct boot_req** buffer, size_t* sz, int socket, uin
 }
 
 
-int messages_check_boot_req(void* buffer, size_t len)
+int messages_check_boot_req(const void* buffer, size_t len)
 {
     struct boot_req* req;
     uint16_t port;
