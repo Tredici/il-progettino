@@ -19,6 +19,20 @@ struct tm time_date_init(int year, int month, int day)
     return ans;
 }
 
+int time_date_read(const struct tm* date, int* year, int* month, int* day)
+{
+    if (date == NULL)
+        return -1;
+    if (year != NULL)
+        *year = 1900 + date->tm_year;
+    if (month != NULL)
+        *month = 1 + date->tm_mon;
+    if (day != NULL)
+        *day = date->tm_mday;
+
+    return 0;
+}
+
 int time_copy_date(struct tm* dst, const struct tm* src)
 {
     if (dst == NULL || src == NULL)

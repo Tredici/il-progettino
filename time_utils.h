@@ -18,6 +18,15 @@
  */
 struct tm time_date_init(int, int, int);
 
+/** Preleva rispettivamente anno, mese e giorno
+ * dalla struttura fornita se i puntatori
+ * dati non sono NULL.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int time_date_read(const struct tm*, int*, int*, int*);
+
 /** Copia solo la data dalla prima
  * struttura alla seconda.
  *
