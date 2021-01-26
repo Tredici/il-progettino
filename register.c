@@ -8,6 +8,7 @@
 #include <ctype.h>
 #include "list.h"   /* per usare delle list per gestire i registri */
 #include "set.h"    /* per tenere facilmente traccia delle firme delle entry presenti */
+#include "commons.h" /* per gli errori irrecuperabili */
 
 /* 4 ANNO 2 MESE 2 GIORNI 2 SEPARATORI (-) */
 #define DATE_LENGHT 10
@@ -578,4 +579,86 @@ int register_calc_type(const struct e_register* R, enum entry_type type)
     list_accumulate(R->l, &sumType, &ans);
 
     return ans[0];
+}
+
+/** Struttura dati ausiliaria per passare i
+ * dati in maniera sicura alla callback
+ */
+struct RS_data
+{
+    FILE* fp; /* puntatore per l'output */
+    int defaultSignature; /* signature di default */
+    enum ENTRY_SERIALIZE_RULE rule; /* politica da seguire */
+};
+/** Funzione ausiliaria per serializzare ogni
+ * elemento.
+ */
+void register_serialize_HELPER(void* elem, void* data)
+{
+    struct entry* E;
+    struct RS_data* D;
+    char buffer[32];
+
+    /* se va male qui è un disastro */
+    if (elem == NULL || data == NULL)
+        errExit("*** fatal [register_serialize] ***\n");
+
+    /* cast di qualità */
+    E = (struct entry*)elem;
+    D = (struct RS_data*)data;
+
+    /* se è richiesta una firma di default */
+    if (D->rule == ENTRY_SIGNATURE_REQUIRED)
+    {
+        if (E->signature == 0) /* imposta una firma di default */
+            E->signature = D->defaultSignature;
+        else /* INCONSISTENZA! */
+            errExit("*** fatal [signature] ***\n");
+    }
+    /* gestisce l'omissione - ENTRY_SIGNATURE_OPTIONAL */
+    if (D->rule == ENTRY_SIGNATURE_OPTIONAL && D->defaultSignature == E->signature)
+        E->signature = 0;
+    /* stringhizza */
+    if (register_serialize_entry(E, buffer, sizeof(buffer), D->rule) == NULL)
+        errExit("*** fatal [signature] ***\n");
+    /* ripristina lo status quo */
+    if (D->rule == ENTRY_SIGNATURE_OPTIONAL && 0 == E->signature)
+        E->signature = D->defaultSignature;
+
+    /* ora mette il tutto in output */
+    fprintf(D->fp, "%s\n", buffer);
+}
+
+int register_serialize(
+            FILE* fp,
+            const struct e_register* R,
+            enum ENTRY_SERIALIZE_RULE flag)
+{
+    struct RS_data base;
+
+    if (fp == NULL || R == NULL)
+        return -1;
+    /* controllo del flag */
+    switch (flag)
+    {
+    case ENTRY_SIGNATURE_REQUIRED:
+        /* controllo: signature di default */
+        if (R->defaultSignature == 0)
+            return -1;
+        break;
+    case ENTRY_SIGNATURE_OMITTED:
+    case ENTRY_SIGNATURE_OPTIONAL:
+        break;
+    default:
+        return -1;
+    }
+
+    /* inizializza la base */
+    base.fp = fp; /* output */
+    base.defaultSignature = R->defaultSignature; /* firma di default */
+    base.rule = flag; /* politica sulla firma */
+    /* iteratori, iteratori ovunque */
+    list_accumulate(&R->l, &register_serialize_HELPER, (void*)&base);
+
+    return 0;
 }

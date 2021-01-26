@@ -7,6 +7,7 @@
 #define REGISTER
 
 #include <stdlib.h>
+#include <stdio.h>
 
 /** Spazio massimo necessario per
  * serializzare un'entry
@@ -196,5 +197,26 @@ int register_add_entry(struct e_register*, const struct entry*);
  * -1 in caso di errore.
  */
 int register_calc_type(const struct e_register*, enum entry_type);
+
+/** Stampa tutti le entry contenute nel registro,
+ * una per riga.
+ *
+ * Il primo elemento è il file pointer da utilizzare
+ * per stampare le entry, il secondo il registro
+ * di riferimento, il terzo è un flag che indica la
+ * politica da seguire per quanto riguarda le
+ * signature delle entry:
+ *  +ENTRY_SIGNATURE_OMITTED  -> omette tutte le signature
+ *  +ENTRY_SIGNATURE_REQUIRED -> stampa tutte le signature
+ *      (fallisce se il register non ha una signature
+ *      specificata come di default)
+ *  +ENTRY_SIGNATURE_OPTIONAL -> stampa solo le signature
+ *      diverse da quella come di default, funziona anche
+ *      se il registro non ne ha alcuna specificata.
+ *
+ * Restituisce 0 in caso di successo e
+ * -1 in caso di errore.
+ */
+int register_serialize(FILE*, const struct e_register*, enum ENTRY_SERIALIZE_RULE);
 
 #endif
