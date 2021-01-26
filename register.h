@@ -288,4 +288,27 @@ int register_flush(const struct e_register*, int);
  */
 struct e_register* register_parse(FILE*, enum ENTRY_SERIALIZE_RULE, int);
 
+/** Svolge un lavoro complementare a quello
+ * register_flush.
+ *
+ * Cerca di aprire un file il cui nome è nella forma
+ *  "defaultSignature"."year"-"month"-"day".txt
+ * (dove year,month,day indicano la data cui il
+ * registro corrisponde) dove defaultSignature
+ * (che corrisponde al primo parametro fornito)
+ * deve essere un intero positivo e gli altri
+ * tre sono ricavati dal puntatore all'oggetto struct
+ * tm fornito, a meno che questo non sia NULL, nel qual
+ * caso vengono utilizzati i dati del giorno corrente.
+ *
+ * Il terzo parametro è un flag che se non nullo
+ * specifica che la funzione deve fallire se il
+ * file riusulta inesistente.
+ *
+ * Restituisce un puntatore al nuovo
+ * registro in caso di successo o NULL
+ * in caso di errore.
+ */
+struct e_register* register_read(int, const struct tm*, int);
+
 #endif

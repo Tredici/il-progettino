@@ -953,3 +953,62 @@ struct e_register* register_parse(
 
     return R;
 }
+
+struct e_register* register_read(
+            int defaultSignature,
+            const struct tm* date,
+            int strict)
+{
+    int year, month, day;
+    char filename[32];
+    FILE* fin;
+    struct tm tmpDate;
+    struct e_register* ans;
+
+    if (defaultSignature <= 0)
+        return NULL;
+
+    if (date == NULL)
+    {
+        tmpDate = time_date_now();
+        if (tmpDate.tm_hour >= 18)
+            time_date_inc(&tmpDate, 1);
+    }
+    else
+        time_copy_date(&tmpDate, date);
+    /* estrae la data */
+    if (time_date_read(&tmpDate, &year, &month, &day) == -1)
+        return NULL;
+
+    /* genera il nome del file da cercare */
+    if (sprintf(filename, "%d.%d-%d-%d.txt",
+        defaultSignature, year, month, day) < 0)
+        return NULL;
+
+    fin = fopen(filename, "r");
+    if (fin == NULL)
+    {
+        /* non è riuscito ad aprire */
+        if (strict) /* strict mode */
+            return NULL;
+
+        ans = register_create_date(NULL, defaultSignature, &tmpDate);
+    }
+    else
+    {
+        ans = register_parse(fin, ENTRY_SIGNATURE_OPTIONAL, -1);
+        /* chiude il FILE* */
+        if (fclose(fin) != 0)
+        {
+            register_destroy(ans);
+            return NULL;
+        }
+        if (ans != NULL) /* imposta la firma di default */
+        {
+            ans->modified = 0; /* è pari al suo file */
+            ans->defaultSignature = defaultSignature;
+        }
+    }
+
+    return ans;
+}
