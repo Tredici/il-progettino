@@ -167,6 +167,38 @@ int set_foreach(struct set* S, void(*fun)(long int))
     return rb_tree_accumulate(S->T, &help_foreach, (void*)&f);
 }
 
+/** Struttura dati ausiliaria per permettere
+ * di semplificare l'implementazione
+ * di set_accumulate.
+ */
+struct setAccumulateData
+{
+    void(*f)(long int, void*);
+    void* base;
+};
+
+static void help_accumulate(long int key, void* value, void* base)
+{
+    struct setAccumulateData* D;
+
+    (void)value;
+    D = (struct setAccumulateData*)base;
+    D->f(key, D->base);
+}
+
+int set_accumulate(struct set* S, void(*f)(long int, void*), void* base)
+{
+    struct setAccumulateData data;
+
+    if (S == NULL || f == NULL)
+        return -1;
+
+    data.f = f;
+    data.base = base;
+
+    return rb_tree_accumulate(S->T, &help_accumulate, (void*)&data);
+}
+
 static void* NULL_fun(void* x)
 {
     (void)x;
