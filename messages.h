@@ -288,7 +288,7 @@ int messages_make_boot_ack(struct boot_ack**, size_t*, const struct boot_req*, u
  * Restituisce 0 in caso di successo
  * e -1 in caso di errore.
  */
-int messages_check_boot_ack(void*, size_t);
+int messages_check_boot_ack(const void*, size_t);
 
 /** Permette di estrarre in maniera sicura
  * il contenuto di un messaggio di tipo

@@ -245,7 +245,7 @@ messages_make_boot_ack(struct boot_ack** buffer,
     return 0;
 }
 
-int messages_check_boot_ack(void* buffer, size_t len)
+int messages_check_boot_ack(const void* buffer, size_t len)
 {
     struct boot_ack *ack;
 
