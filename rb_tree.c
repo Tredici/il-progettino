@@ -836,6 +836,61 @@ int rb_tree_prev(struct rb_tree* tree, long int base, long int* key, void** valu
     return 0;
 }
 
+/* il valore restituito va nel nuovo albero; per ora ignora possibili disastri */
+elem* clone_HELPER(
+            struct rb_tree* NEW,
+            const struct rb_tree* OLD,
+            const elem* curr,
+            void*(*copy_fun)(void*))
+{
+    elem* ans;
+    elem* l_son;
+    elem* r_son;
+
+    /* se si è arrivati a una sentinella ne restituisce un'altra */
+    if (IS_NIL(OLD, curr))
+        return NEW->nil;
+
+    ans = elem_init(NEW, curr->key, copy_fun(curr->value));
+    if (ans == NULL)
+        return NULL;
+    /* stesso colore */
+    ans->col = curr->col;
+    /* figlio sinistro */
+    l_son = clone_HELPER(NEW, OLD, curr->left, copy_fun);
+    if (l_son == NULL)
+    {
+        if (NEW->cleanup_f != NULL)
+            NEW->cleanup_f(ans->value);
+        free((void*)ans);
+        return NULL;
+    }
+    else
+    {
+        ans->left = l_son;
+        l_son->parent = ans;
+    }
+    /* ora tocca al figlio destro */
+    r_son = clone_HELPER(NEW, OLD, curr->right, copy_fun);
+    if (r_son == NULL)
+    {
+        /* distrugge il sottoalbero sinistro già creato */
+        elem_destroy(NEW, l_son, NEW->cleanup_f);
+        /* come sopra */
+        if (NEW->cleanup_f != NULL)
+            NEW->cleanup_f(ans->value);
+        free((void*)ans);
+        return NULL;
+    }
+    else
+    {
+        ans->right = r_son;
+        r_son->parent = ans;
+    }
+
+    return ans;
+}
+
 /** Funzione ausiliaria che applica su tutti
  * i nodi dell'albero la funzione fun in ordine
  */
