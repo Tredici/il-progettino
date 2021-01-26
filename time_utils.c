@@ -51,7 +51,7 @@ int time_copy_date(struct tm* dst, const struct tm* src)
         return -1;
 
     memset(dst, 0, sizeof(struct tm));
-    dst->tm_yday = src->tm_yday;
+    dst->tm_year = src->tm_year;
     dst->tm_mon = src->tm_mon;
     dst->tm_mday = src->tm_mday;
 
