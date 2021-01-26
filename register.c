@@ -659,7 +659,7 @@ int register_serialize(
     base.defaultSignature = R->defaultSignature; /* firma di default */
     base.rule = flag; /* politica sulla firma */
     /* iteratori, iteratori ovunque */
-    list_accumulate(&R->l, &register_serialize_HELPER, (void*)&base);
+    list_accumulate(R->l, &register_serialize_HELPER, (void*)&base);
 
     /* forza l'output */
     fflush(fp);
