@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 /** Spazio massimo necessario per
  * serializzare un'entry
