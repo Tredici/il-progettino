@@ -276,7 +276,11 @@ int register_flush(const struct e_register*, int);
  * si aspetta che ci sia una entry da
  * riconoscere per riga.
  *
- * Se l'ultimo argomento è NULL prosegue
+ * Il secondo parametro si applica solo se
+ * l'ultimo è -1 ed è pensato specificatamente
+ * per la lettura da file.
+ *
+ * Se l'ultimo argomento è -1 prosegue
  * fino a quando non incontra un EOF.
  *
  * Le entry duplicate sono seplicemente

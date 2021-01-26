@@ -903,7 +903,7 @@ struct e_register* register_parse(
             /* qualcosa ha letto */
             default:
                 /* tenta il parsing della entry */
-                if (register_parse_entry(line, &E, ENTRY_SIGNATURE_OPTIONAL) == NULL)
+                if (register_parse_entry(line, &E, flag) == NULL)
                 {
                     register_destroy(R);
                     return NULL;
