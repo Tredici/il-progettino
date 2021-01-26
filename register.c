@@ -954,6 +954,30 @@ struct e_register* register_parse(
     return R;
 }
 
+struct e_register* register_parse_fd(
+            int fd,
+            enum ENTRY_SERIALIZE_RULE flag,
+            int limit)
+{
+    struct e_register* ans;
+    FILE* fin;
+
+    /* demanda gli altri controlli alla */
+    fin = fdopen(dup(fin), "r");
+    if (fin == NULL)
+        return NULL;
+
+    ans = register_parse(fin, flag, limit);
+
+    if (fclose(fin) != 0)
+    {
+        register_destroy(ans);
+        return NULL;
+    }
+
+    return ans;
+}
+
 struct e_register* register_read(
             int defaultSignature,
             const struct tm* date,

@@ -292,6 +292,11 @@ int register_flush(const struct e_register*, int);
  */
 struct e_register* register_parse(FILE*, enum ENTRY_SERIALIZE_RULE, int);
 
+/** Come register_parse ma utilizza un fd
+ * invece di un file pointer.
+ */
+struct e_register* register_parse_fd(int, enum ENTRY_SERIALIZE_RULE, int);
+
 /** Svolge un lavoro complementare a quello
  * register_flush.
  *
