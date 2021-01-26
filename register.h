@@ -120,7 +120,7 @@ void register_free_entry(struct entry*);
  * anche la firma associata all'entry.
  * In particolare se:
  *  ENTRY_SIGNATURE_OMITTED  -> questa viene esclusa
- *  ENTRY_SIGNATURE_REQUIRED ->  questa viene inserita sempre
+ *  ENTRY_SIGNATURE_REQUIRED -> questa viene inserita sempre
  *  ENTRY_SIGNATURE_OPTIONAL -> questa viene inserita solo se non 0
  *
  * Se il vettore allocato ha una dimensione di
