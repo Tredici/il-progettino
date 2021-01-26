@@ -242,3 +242,23 @@ int set_merge(struct set* S1, const struct set* S2)
 
     return set_accumulate(S2, &help_merge, (void*)S1);
 }
+
+struct set* set_union(const struct set* S1, const struct set* S2)
+{
+    struct set* ans;
+
+    if (S1 == NULL || S2 == NULL)
+        return NULL;
+
+    ans = set_clone(S1);
+    if (ans == NULL)
+        return NULL;
+
+    if (set_merge(ans, S2) == -1)
+    {
+        set_destroy(ans);
+        return NULL;
+    }
+
+    return ans;
+}
