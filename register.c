@@ -963,7 +963,7 @@ struct e_register* register_parse_fd(
     FILE* fin;
 
     /* demanda gli altri controlli alla */
-    fin = fdopen(dup(fin), "r");
+    fin = fdopen(dup(fd), "r");
     if (fin == NULL)
         return NULL;
 
