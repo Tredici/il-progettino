@@ -1,4 +1,4 @@
-CFLAGS=-Wall -g -pthread -D_RB_TREE_DEBUG -D_LIST_DEBUG -Wextra -lrt
+CFLAGS=-Wall -g -pthread -D_RB_TREE_DEBUG -D_LIST_DEBUG -Wextra -lrt -lm
 CC=gcc
 
 
@@ -71,9 +71,10 @@ thread_semaphore.o:	thread_semaphore.h thread_semaphore.c
 unified_io.o:		unified_io.h unified_io.c
 ns_host_addr.o:		ns_host_addr.h ns_host_addr.c
 messages.o:			messages.h messages.c
+time_utils.o:		time_utils.h time_utils.c
 
 # dipendenze del peer
-COMMONDEPS = list.o register.o repl.o socket_utils.o queue.o main_loop.o rb_tree.o set.o commons.o thread_semaphore.o unified_io.o ns_host_addr.o messages.o
+COMMONDEPS = list.o register.o repl.o socket_utils.o queue.o main_loop.o rb_tree.o set.o commons.o thread_semaphore.o unified_io.o ns_host_addr.o messages.o time_utils.o
 
 # main dei peer
 peer.o: peer.c
