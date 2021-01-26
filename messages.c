@@ -17,7 +17,7 @@
  */
 
 
-int recognise_messages_type(void* msg)
+int recognise_messages_type(const void* msg)
 {
     struct messages_head* p;
 

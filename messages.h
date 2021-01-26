@@ -174,7 +174,7 @@ struct shutdown_ack
  * l'argomento è null), altrimenti un valore
  * in enum messages_types.
  */
-int recognise_messages_type(void*);
+int recognise_messages_type(const void*);
 
 /** Ottiene una copia del messaggio fornito
  * ottenendo dinamicamente la memoria
