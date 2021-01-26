@@ -159,7 +159,7 @@ int set_foreach(struct set* S, void(*fun)(long int))
 {
     void(*f)(long int);
 
-    if (S == NULL)
+    if (S == NULL || fun == NULL)
         return -1;
 
     f = fun;
