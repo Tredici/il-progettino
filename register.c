@@ -876,7 +876,6 @@ struct e_register* register_parse(
     char line[ENTRY_TEXT_MAXLEN]; /* per prendere una riga alla volta */
     struct e_register* R;
     int i; /* per stare entro il limite */
-    int fail;
     struct entry E; /* si lavora per valore stavolta */
 
     /* controllo dei parametri */
