@@ -28,7 +28,7 @@ int time_copy_date(struct tm*, const struct tm*);
  * In caso di errore restituisce 0
  * e imposta errno a EINVAL
  */
-int time_cmp(const struct tm*, const struct tm*);
+int time_date_cmp(const struct tm*, const struct tm*);
 
 
 #endif

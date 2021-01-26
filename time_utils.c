@@ -15,7 +15,7 @@ int time_copy_date(struct tm* dst, const struct tm* src)
     return 0;
 }
 
-int time_cmp(const struct tm* time1, const struct tm* time2)
+int time_date_cmp(const struct tm* time1, const struct tm* time2)
 {
     struct tm a, b;
     time_t t_a, t_b;
