@@ -620,10 +620,13 @@ void register_serialize_HELPER(void* elem, void* data)
     /* se è richiesta una firma di default */
     if (D->rule == ENTRY_SIGNATURE_REQUIRED)
     {
-        if (E->signature == 0) /* imposta una firma di default */
-            E->signature = D->defaultSignature;
-        else /* INCONSISTENZA! */
+        if (D->defaultSignature == 0 && E->signature == 0)
+        {
+            /* INCONSISTENZA! */
             errExit("*** fatal [signature] ***\n");
+        }
+        else if (E->signature == 0) /* imposta una firma di default */
+            E->signature = D->defaultSignature;
     }
     /* gestisce l'omissione - ENTRY_SIGNATURE_OPTIONAL */
     if (D->rule == ENTRY_SIGNATURE_OPTIONAL && D->defaultSignature == E->signature)
