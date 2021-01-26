@@ -234,4 +234,35 @@ int register_serialize(FILE*, const struct e_register*, enum ENTRY_SERIALIZE_RUL
  */
 int register_serialize_fd(int, const struct e_register*, enum ENTRY_SERIALIZE_RULE);
 
+/** Scrive tutto il contenuto del registro su file,
+ * il comportamento varia a seconda sel valore del
+ * secondo argomento.
+ *
+ * Il registro deve avere specificato un valore
+ * non nullo come signature di default.
+ *
+ * Il nome del file è così generato:
+ *  "defaultSignature"."year"-"month"-"day".txt
+ * Dove year,month,day indicano la data cui il
+ * registro corrisponde.
+ *
+ * Se il secondo argomento è 0:
+ *  +se il registro è vuoto ritorna immediatamente;
+ *  +se il "dirty flag" è 0 ritorna immediatamente;
+ *  +apre il file in scrittura troncandone tutto
+ *      il contenuto e inizia a scriverci il contenuto
+ *      del registro.
+ *  +azzera il "dirty flag"
+ *
+ * Se il secondo argomento NON è 0:
+ *  +apre il file in scrittura troncandone tutto
+ *      il contenuto e inizia a scriverci il contenuto
+ *      del registro.
+ *  +azzera il "dirty flag"
+ *
+ * Restituisce 0 in caso di successo e
+ * -1 in caso di errore.
+ */
+int register_flush(const struct e_register*, int);
+
 #endif

@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include "list.h"   /* per usare delle list per gestire i registri */
 #include "set.h"    /* per tenere facilmente traccia delle firme delle entry presenti */
+#include "time_utils.h" /* per facilitare il lavoro con le date */
 #include "commons.h" /* per gli errori irrecuperabili */
 
 /* 4 ANNO 2 MESE 2 GIORNI 2 SEPARATORI (-) */
@@ -704,6 +705,52 @@ int register_serialize_fd(
     /* chiude il puntatore e il f.d. sotto (fdCp) */
     if (fclose(fp) != 0)
         return -1;
+
+    return ans;
+}
+
+int register_flush(const struct e_register* R, int force)
+{
+    int signature, year, month, day;
+    char filename[32];
+    FILE* fout;
+    int ans;
+
+    if (R == NULL || R->defaultSignature == 0)
+        return -1;
+
+    /* funzionamento normale */
+    if (!force)
+    {
+        /* controlla che non sia vuoto */
+        if (register_size(R) == 0)
+            return 0;
+        /* controlla il dirty flag */
+        if (!register_is_changed(R))
+            return 0;
+    }
+
+    signature = R->defaultSignature;
+    if (time_date_read(&R->date, &year, &month, &day) == -1)
+        return -1;
+
+    /* genera il nome del file */
+    if (sprintf(filename, "%d.%d-%d-%d.txt",
+            signature, year, month, day) < 0)
+        return -1;
+
+    /* cerca di aprire il file */
+    fout = fopen(filename, "w");
+
+    /* si appoggia a un'altra funzione */
+    ans = register_serialize(fout, R, ENTRY_SIGNATURE_OPTIONAL);
+
+    /* lo chiude */
+    if (fclose(fout) != 0)
+        return -1;
+
+    /* azzera il flag */
+    register_clear_dirty_flag(R);
 
     return ans;
 }
