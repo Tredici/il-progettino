@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <unistd.h>
 #include "list.h"   /* per usare delle list per gestire i registri */
 #include "set.h"    /* per tenere facilmente traccia delle firme delle entry presenti */
 #include "commons.h" /* per gli errori irrecuperabili */
@@ -664,4 +665,37 @@ int register_serialize(
     fflush(fp);
 
     return 0;
+}
+
+int register_serialize_fd(
+            int fd,
+            const struct e_register* R,
+            enum ENTRY_SERIALIZE_RULE flag)
+{
+    int fdCp; /* copia */
+    FILE* fp; /* puntatore alla copia */
+    int ans;
+
+    /* controlla solo il primo parametro,
+     * rimanda il controllo degli altri */
+    if (fd < 0)
+        return -1;
+
+    fdCp = dup(fd);
+    if (fdCp == -1)
+        return -1;
+
+    /* apre in scrittura in modalità append */
+    fp = fdopen(fdCp, "a");
+    if (fp == NULL)
+        return -1;
+
+    /* invoca la funzione ausiliaria */
+    ans = register_serialize(fp, R, flag);
+
+    /* chiude il puntatore e il f.d. sotto (fdCp) */
+    if (fclose(fp) != 0)
+        return -1;
+
+    return ans;
 }

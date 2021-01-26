@@ -219,4 +219,12 @@ int register_calc_type(const struct e_register*, enum entry_type);
  */
 int register_serialize(FILE*, const struct e_register*, enum ENTRY_SERIALIZE_RULE);
 
+/** Come register_serialize ma utilizza un file descriptor
+ * invece di un file pointer.
+ *
+ * Restituisce 0 in caso di successo e
+ * -1 in caso di errore.
+ */
+int register_serialize_fd(int, const struct e_register*, enum ENTRY_SERIALIZE_RULE);
+
 #endif
