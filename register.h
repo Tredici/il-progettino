@@ -266,4 +266,26 @@ int register_serialize_fd(int, const struct e_register*, enum ENTRY_SERIALIZE_RU
  */
 int register_flush(const struct e_register*, int);
 
+/** Svolge un lavoro complementare a quello
+ * di register_serialize_fd leggendo al più
+ * tante entry quante ne sono specificate
+ * dall'ultimo parametro in un inserendole
+ * nuovo registro.
+ *
+ * Affinché il tutto funzioni bene si
+ * si aspetta che ci sia una entry da
+ * riconoscere per riga.
+ *
+ * Se l'ultimo argomento è NULL prosegue
+ * fino a quando non incontra un EOF.
+ *
+ * Le entry duplicate sono seplicemente
+ * scartate.
+ *
+ * Restituisce un puntatore al nuovo
+ * registro in caso di successo e NULL
+ * in caso di errore.
+ */
+struct e_register* register_parse(FILE*, enum ENTRY_SERIALIZE_RULE, int);
+
 #endif

@@ -868,3 +868,88 @@ static int getLimitedLine(FILE* fin, char* buff, size_t bufLen, int strict)
     return i;
 }
 
+struct e_register* register_parse(
+            FILE* fp,
+            enum ENTRY_SERIALIZE_RULE flag,
+            int limit)
+{
+    char line[ENTRY_TEXT_MAXLEN]; /* per prendere una riga alla volta */
+    struct e_register* R;
+    int i; /* per stare entro il limite */
+    int fail;
+    struct entry E; /* si lavora per valore stavolta */
+
+    /* controllo dei parametri */
+    if (fp == NULL || R == NULL || limit < -1)
+        return NULL;
+
+    /* prova a creare il registro */
+    R = register_create(NULL, 0);
+    if (R == NULL)
+        return NULL;
+    if (limit == -1)
+    {
+        /* controlli blandi, è  */
+        while (1)
+        {
+            switch (getLimitedLine(fp, line, sizeof(line), 0))
+            {
+            /* EOF */
+            case 0:
+                goto esci;
+            /* fail */
+            case -1:
+                register_destroy(R);
+                return NULL;
+            /* qualcosa ha letto */
+            default:
+                /* tenta il parsing della entry */
+                if (register_parse_entry(line, &E, ENTRY_SIGNATURE_OPTIONAL) == NULL)
+                {
+                    register_destroy(R);
+                    return NULL;
+                }
+                /* prova a inserirla nel registro */
+                if (register_add_entry(R, &E) != 0)
+                {
+                    register_destroy(R);
+                    return NULL;
+                }
+                break;
+            }
+        }
+        esci:
+    }
+    else
+    {
+        /* controlli "seri": una entry per riga,
+         * terminata da newline, no spazi bianchi */
+        for (i = 0; i != limit; ++i)
+        {
+            switch (getLimitedLine(fp, line, sizeof(line), 1))
+            {   /* in strict mode non restituisce mai 0 */
+            /* fail */
+            case -1:
+                register_destroy(R);
+                return NULL;
+            /* qualcosa ha letto */
+            default:
+                /* tenta il parsing della entry - DEVE avere signature */
+                if (register_parse_entry(line, &E, ENTRY_SIGNATURE_REQUIRED) == NULL)
+                {
+                    register_destroy(R);
+                    return NULL;
+                }
+                /* prova a inserirla nel registro */
+                if (register_add_entry(R, &E) != 0)
+                {
+                    register_destroy(R);
+                    return NULL;
+                }
+                break;
+            }
+        }
+    }
+
+    return R;
+}
