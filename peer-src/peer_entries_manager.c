@@ -7,6 +7,7 @@
 #include "../register.h"
 #include "../list.h"
 #include "../commons.h"
+#include "../time_utils.h"
 #include <pthread.h>
 #include <time.h>
 #include <signal.h>
@@ -22,6 +23,22 @@
  * terminare.
  */
 #define TERM_SUBSYS_SIGNAL SIGQUIT
+
+/** Indica l'anno più remoto per cui il sistema
+ * garantirà di tenere un registro per ogni suo
+ * giorno.
+ *
+ * In pratica vi saranno registri per tutti i
+ * giorni a partire dal primo gennaio dell'anno
+ * indicato da questa macro fino alla data
+ * corrente.
+ */
+#define INFERIOR_YEAR 2020
+
+/** Variabile di riferimento per definire
+ * l'ultima data.
+ */
+static struct tm lowerDate;
 
 /** MUTEX a guardia delle operazioni
  * sui registri.
@@ -174,19 +191,26 @@ static void* entriesSubsystem(void* args)
  * puntatori a funzione */
 static void healp_cleaner(void* ptr)
 {
+    struct e_register* R;
     /* non serve fare nulla */
     if (ptr == NULL)
         return;
-    /* codice da aggiungere poi per serializzare
-     * il contenuto del registro */
 
-    register_destroy((struct e_register*)ptr);
+    R = (struct e_register*)ptr;
+    /* salva il contenuto del registro su file */
+    register_flush(R, 0);
+    /* distrugge il registro */
+    register_destroy(R);
 }
 
 /** Inizializza opportunamente l'oggetto
  * REGISTERlist.
+ *
+ * L'argomento fornito svolgerà il ruolo
+ * di default signature dei registri di
+ * questo peer.
  */
-static int init_REGISTERlist(int port)
+static int init_REGISTERlist(int defaultSignature)
 {
     /* candidata lista di registri */
     struct list* test_list;
@@ -194,27 +218,65 @@ static int init_REGISTERlist(int port)
     struct e_register* head;
     /* data di creazione del registro */
     struct tm test_date;
+    /* strutture ausiliarie per generare
+     * man mano i registri di tutti i giorni */
+    struct e_register* tail;
+    struct tm tail_date;
+    /* Per il logging */
+    char dateStart[32], dateEnd[32];
 
     /* creiamo la lista */
     test_list = list_init(NULL);
     if (test_list == NULL)
         return -1;
 
+    /** Imposta l'handler che si occuperà di
+     * salvare poi su file il contenuto di
+     * tutti i registri che saranno stati
+     * modificati alla chiusura del
+     * sottosistema.
+     */
     (void)list_set_cleanup(test_list, &healp_cleaner);
 
-    /* crea il registro */
-    head = register_create(NULL, 0);
+    /* crea - o carica - il registro di oggi */
+    head = register_read(defaultSignature, NULL, 0);
     /* controllo e prova a messa in lista */
     if (head == NULL || list_prepend(test_list, (void*)head) != 0)
     {
-        free((void*)test_list);
+        if (head != NULL)
+            register_destroy(head);
+
+        list_destroy(test_list);
         return -1;
     }
 
     /* prende la data */
     test_date = *register_date(head);
 
-    /* svolge altre operazioni di configurazione */
+    /* per tutti i giorni da ieri fino a alla data limite */
+    for (tail_date = time_date_add(&test_date, -1);
+            time_date_cmp(&tail_date, &lowerDate) >= 0;
+            time_date_dec(&tail_date, 1))
+    {
+        /* prova a caricare il registro del vecchio giorno */
+        tail = register_read(defaultSignature, &tail_date, 0);
+        /* controllo e tentativo accodamento */
+        if (tail == NULL || list_append(test_list, (void*)tail) != 0)
+        {
+            if (tail != NULL)
+                register_destroy(tail);
+
+            list_destroy(test_list);
+            return -1;
+        }
+    }
+
+    /* Per mostrare un messaggio più corretto */
+    time_date_inc(&tail_date, 1);
+    /* logging di quanto fatto */
+    strftime(dateStart, sizeof(dateStart), "%Y-%m-%d", &tail_date);
+    strftime(dateEnd, sizeof(dateEnd), "%Y-%m-%d", &test_date);
+    printf("Created registers from [%s] to [%s]\n", dateStart, dateEnd);
 
     /* salva globalmente le informazioni */
     HEADdate = test_date;
@@ -233,6 +295,13 @@ static sig_atomic_t started;
 
 int startEntriesSubsystem(int port)
 {
+    /* non si può avviare due volte */
+    if (started)
+        return -1;
+
+    /* inizializza la variabile globale limite inferiore */
+    lowerDate = time_date_init(INFERIOR_YEAR, 1, 1);
+
     /* crea i registri */
     if (init_REGISTERlist(port) != 0)
         return -1;
@@ -258,6 +327,9 @@ int closeEntriesSubsystem(void)
 
     if (pthread_join(REGISTER_tid, NULL) != 0)
         errExit("*** pthread_join ***\n");
+
+    /* flush di tutti i registri rimasti aperti */
+    list_destroy(REGISTERlist);
 
     started = 0;
 
