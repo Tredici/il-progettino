@@ -429,7 +429,7 @@ int messages_make_shutdown_ack(struct shutdown_ack** ack, size_t* sz, const stru
     return 0;
 }
 
-int messages_check_shutdown_ack(void* buffer, size_t len)
+int messages_check_shutdown_ack(const void* buffer, size_t len)
 {
     struct shutdown_ack* ack;
 
