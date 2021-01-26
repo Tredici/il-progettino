@@ -879,7 +879,7 @@ struct e_register* register_parse(
     struct entry E; /* si lavora per valore stavolta */
 
     /* controllo dei parametri */
-    if (fp == NULL || R == NULL || limit < -1)
+    if (fp == NULL || limit < -1)
         return NULL;
 
     /* prova a creare il registro */
