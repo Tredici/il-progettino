@@ -186,7 +186,7 @@ static void help_accumulate(long int key, void* value, void* base)
     D->f(key, D->base);
 }
 
-int set_accumulate(struct set* S, void(*f)(long int, void*), void* base)
+int set_accumulate(const struct set* S, void(*f)(long int, void*), void* base)
 {
     struct setAccumulateData data;
 

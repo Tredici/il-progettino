@@ -41,7 +41,7 @@ int set_next(struct set*, long int, long int*);
 int set_foreach(struct set*, void(*)(long int));
 
 /* accumulate */
-int set_accumulate(struct set*, void(*)(long int, void*), void*);
+int set_accumulate(const struct set*, void(*)(long int, void*), void*);
 
 /* crea una copia del set */
 struct set* set_clone(const struct set*);
