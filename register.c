@@ -919,6 +919,7 @@ struct e_register* register_parse(
             }
         }
         esci:
+            ;
     }
     else
     {
