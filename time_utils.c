@@ -84,7 +84,6 @@ int time_date_cmp(const struct tm* time1, const struct tm* time2)
 
 int time_date_diff(const struct tm* time1, const struct tm* time2)
 {
-    int ans;
     struct tm a, b;
     time_t t_a, t_b;
 
