@@ -363,4 +363,13 @@ int register_merge(struct e_register*, const struct e_register*);
  */
 struct e_register* register_clone(const struct e_register*);
 
+/** "Chiude" un registro, ovvero pone su di esso
+ * l'assunzione che contenga tutte le entry del
+ * giorno cui si riferisce.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int register_close(struct e_register*);
+
 #endif

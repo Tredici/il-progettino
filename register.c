@@ -1178,3 +1178,12 @@ struct e_register* register_clone(const struct e_register* R)
 
     return ans;
 }
+
+int register_close(struct e_register* R)
+{
+    if (R == NULL)
+        return -1;
+
+    R->closed = 1;
+    return 0;
+}
