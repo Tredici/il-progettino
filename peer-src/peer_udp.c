@@ -661,7 +661,7 @@ int UDPconnect(const char* hostname, const char* portname)
     int err;
     /* per la gestione della risposta */
     uint32_t offeredID;
-    struct peer_data* peersAddrs[MAX_NEIGHBOUR_NUMBER];
+    struct peer_data peersAddrs[MAX_NEIGHBOUR_NUMBER];
     size_t peersNum;
     /* per il timeout di attesa della risposta */
     struct timeval now;
@@ -776,7 +776,7 @@ int UDPconnect(const char* hostname, const char* portname)
         /* prende il messaggio e lo gestisce,
             * siamo già certi della sia consistenza */
         peersNum = MAX_NEIGHBOUR_NUMBER; /* non necessario ma non si sa mai */
-        if (messages_get_boot_ack_body(ack, &offeredID, peersAddrs, &peersNum) == -1)
+        if (messages_get_boot_ack_body_cp(ack, &offeredID, peersAddrs, &peersNum) == -1)
             errExit("*** main:messages_get_boot_ack_body ***\n");
 
         /* imposta l'ID del peer */
@@ -801,7 +801,7 @@ int UDPconnect(const char* hostname, const char* portname)
         unified_io_push(UNIFIED_IO_NORMAL, "Numero neighbours: [%ld]\n", (long)peersNum);
         for (i = 0; i != (int)peersNum; ++i)
         {
-            peer_data_as_string(peersAddrs[i], neigbourStr, sizeof(neigbourStr));
+            peer_data_as_string(&peersAddrs[i], neigbourStr, sizeof(neigbourStr));
             unified_io_push(UNIFIED_IO_NORMAL, "\t%d) - %s\n", (long)peersNum, neigbourStr);
         }
 
