@@ -238,7 +238,7 @@ struct check_req
         /* query */
         uint16_t port;
     } body __attribute__ ((packed));
-};
+} __attribute__ ((packed));
 
 
 /** Dato il puntatore al buffer che ospita il
