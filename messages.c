@@ -732,3 +732,40 @@ int messages_get_check_ack_status(const struct check_ack* ack)
 {
     return ack == NULL ? -1 : ack->body.status;
 }
+
+int messages_get_check_ack_body(
+            const struct check_ack* ack,
+            uint16_t* port,
+            uint8_t* status,
+            struct peer_data* peer,
+            struct peer_data* neighbours,
+            size_t* length)
+{
+    int i, limit;
+
+    /* controllo parametri */
+    if (ack == NULL || (!neighbours ^ !length))
+        return -1;
+
+    if (port != NULL)
+        *port = ntohs(ack->body.port);
+
+    if (status != NULL)
+        *status = ack->body.status;
+
+    if (!ack->body.status)
+    {
+        if (peer != NULL)
+            *peer = ack->body.peer;
+
+        if (neighbours != NULL)
+        {
+            limit = (int)ack->body.length;
+            for (i = 0; i != limit; ++i)
+                neighbours[i] = ack->body.neighbours[i];
+            *length = (size_t)limit;
+        }
+    }
+
+    return 0;
+}

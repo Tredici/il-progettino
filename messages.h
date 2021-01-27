@@ -598,4 +598,33 @@ int messages_check_check_ack(const void*, size_t);
  */
 int messages_get_check_ack_status(const struct check_ack*);
 
+/** Permette di ottenere le varie parti
+ * del corpo di un messaggio di tipo
+ * struct check_ack - le parti non
+ * di interesse si possono ignorare
+ * fornendo dei puntatori NULL.
+ *
+ * Se lo status non è 0 i parametri
+ * peer,neighbours,length sono
+ * ignorati.
+ *
+ * I puntatori neighbours e length
+ * debbono essere coerenti (non può
+ * essere solo uno dei due NULL).
+ *
+ * Non effettua alcun controllo
+ * preventivo sull'integrità della
+ * struttura.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_get_check_ack_body(
+            const struct check_ack* ack,
+            uint16_t* port,
+            uint8_t* status,
+            struct peer_data* peer,
+            struct peer_data* neighbours,
+            size_t* length);
+
 #endif
