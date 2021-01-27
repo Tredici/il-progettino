@@ -41,7 +41,7 @@ int initSocket(int port, int family)
     memset(&hints, 0, sizeof(struct addrinfo));
     /* Inizializzazione */
     hints.ai_family = AF_UNSPEC; /* si accetta IPv4 ed IPv6 */
-    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_socktype = family;
     /* AI_PASSIVE: useremo il risultato per una bind (0.0.0.0)
      * AI_NUMERICSERV: il servizio è dato dal numero di porta
      * AI_ADDRCONFIG: per non avere ipv6 se non possiamo usarli
