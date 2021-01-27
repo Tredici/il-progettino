@@ -73,6 +73,14 @@ struct e_register
      * (non 0) oppure non è necessario (vale 0).
      * Di default  */
     int modified;
+    /** flag che indica se un registro è stato
+     * "chiuso".
+     * Un registro si definisce chiuso una volta
+     * che tutte le sue entry che dovrebbe contenere
+     * sono state recuperate e sono stati calcolati
+     * i valori aggregati di interesse.
+     */
+    int closed;
     /** Firma da considerare come di default per
      * le nuove entry che non ne posseggono una
      * valida.
@@ -1165,6 +1173,8 @@ struct e_register* register_clone(const struct e_register* R)
     ans->defaultSignature = R->defaultSignature;
     /* come nuovo */
     ans->modified = 0;
+    /* o entrambi o nessuno */
+    ans->closed = R->closed;
 
     return ans;
 }
