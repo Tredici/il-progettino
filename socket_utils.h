@@ -21,6 +21,16 @@
  * in caso di errore.
  */
 int initUDPSocket(int);
+
+/** Crea e ancora un socket del tipo
+ * specificato sulla porta fornita.
+ *
+ * Restituisce il corrispondente file
+ * descriptor in caso di successo e -1
+ * in caso di errore.
+ */
+int initSocket(int, int);
+
 int getSocketPort(int);
 /** Riempie una struttura sockaddr
  * (insieme al corrispondente socklen_t)

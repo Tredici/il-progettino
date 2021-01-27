@@ -6,6 +6,11 @@
  */
 int initUDPSocket(int port)
 {
+    return initSocket(port, SOCK_DGRAM);
+}
+
+int initSocket(int port, int family)
+{
     int sckt, err;
     int sockOpt; /* Per setsockopt */
 
