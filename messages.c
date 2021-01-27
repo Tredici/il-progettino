@@ -721,6 +721,10 @@ int messages_check_check_ack(const void* buffer, size_t bufLen)
     if (check->head.sentinel != 0 || ntohs(check->head.type) != MESSAGES_CHECK_ACK)
         return -1;
 
+    /* controllo sul corpo del messaggio */
+    if (check->body.length > MAX_NEIGHBOUR_NUMBER)
+        return -1;
+
     return 0;
 }
 
