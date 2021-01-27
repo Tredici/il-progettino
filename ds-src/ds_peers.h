@@ -8,6 +8,7 @@
 #define DS_PEERS
 
 #include "../ns_host_addr.h"
+#include "../messages.h" /* per struct peer_data */
 
 /** Inizializza il sottosistema a gestione
  * dei peers.
@@ -43,7 +44,14 @@ int peers_clear(void);
  * allocato dal chiamante, e la lunghezza
  * di questo.
  */
-int peers_add_and_find_neighbours(uint32_t, const struct ns_host_addr*, uint32_t*, struct ns_host_addr**, uint16_t*);
+int
+peers_add_and_find_neighbours(
+            uint32_t loginPid, /* pid della richiesta */
+            const struct ns_host_addr* ns_addr, /* indirizzo mittente */
+            const struct ns_host_addr* ns_tcp, /* indirizzo nel messaggio */
+            uint32_t* newID, /* pseudo ID fornito */
+            const struct peer_data** neighbours, /* lista dei vicini */
+            uint16_t* length); /* numero dei vicini */
 
 /** Trova i vicini di un peer dato il suo
  * identificativo (coincidente con il suo
@@ -53,7 +61,7 @@ int peers_add_and_find_neighbours(uint32_t, const struct ns_host_addr*, uint32_t
  * Restituisce 0 in caso di successo
  * e -1 in caso di errore.
  */
-int peers_find_neighbours(long int, struct ns_host_addr**, uint16_t*);
+int peers_find_neighbours(long int, const struct peer_data**, uint16_t*);
 
 /** Stampa l'elenco dei peer al momento
  * connessi insieme ai loro dati.

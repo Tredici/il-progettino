@@ -17,7 +17,13 @@ struct peer
 {
     uint32_t requestPid; /* pid della richiesta di login */
     uint32_t id; /* id progressivo associato ai peer */
-    struct ns_host_addr ns_addr; /* dati per raggiungerlo */
+    /* dati per raggiungerlo, indirizzo del socket mittente */
+    struct ns_host_addr ns_addr;
+    /* dati dai fornire i vicini per raggiungerlo */
+    struct ns_host_addr ns_tcp;
+    /* dati da fornire al chiamante per i messaggi
+     * costituiscono un sunto del resto del contenuto */
+    struct peer_data toSend;
 };
 
 
@@ -90,7 +96,7 @@ make_peer_data_form_peer(const struct peer* P)
 int
 peers_find_neighbours(
         long int key,
-        struct ns_host_addr** neighbours,
+        const struct peer_data** neighbours,
         uint16_t* length)
 {
     long int peerKey; /* chiave del vicinos */
@@ -140,7 +146,7 @@ peers_find_neighbours(
             errExit("*** peers_add_and_find_neighbours fault (size==2 no neighbour) ***\n");
 
         /* aggiunge il peer */
-        neighbours[0] = &peerValue->ns_addr;
+        neighbours[0] = &peerValue->toSend;
         *length = 1; /* e segna il numero a 1 */
         break;
 
@@ -154,7 +160,7 @@ peers_find_neighbours(
         else
             errExit("*** peers_add_and_find_neighbours fault (size>2 no left neighbour) ***\n");
         /* assegna il primo peer */
-        neighbours[0] = &peerValue->ns_addr;
+        neighbours[0] = &peerValue->toSend;
 
         /* cerca quello a destra */
         if (rb_tree_next(tree, key, &peerKey, (void**)&peerValue) == 0);
@@ -164,7 +170,7 @@ peers_find_neighbours(
         else
             errExit("*** peers_add_and_find_neighbours fault (size>2 no right neighbour) ***\n");
         /* assegna il secondo peer */
-        neighbours[1] = &peerValue->ns_addr;
+        neighbours[1] = &peerValue->toSend;
 
         /* e segna che i peer sono 2 */
         *length = 2;
@@ -182,8 +188,9 @@ int
 peers_add_and_find_neighbours(
             uint32_t loginPid,
             const struct ns_host_addr* ns_addr,
+            const struct ns_host_addr* ns_tcp,
             uint32_t* newID,
-            struct ns_host_addr** neighbours,
+            const struct peer_data** neighbours,
             uint16_t* length)
 {
     long int key;
@@ -226,9 +233,12 @@ peers_add_and_find_neighbours(
         /* salva l'ID della richiesta */
         value->requestPid = loginPid;
         value->ns_addr = *ns_addr;
+        value->ns_tcp = *ns_tcp;
         /* nuovo ID */
         *newID = ++counterID;
         value->id = counterID;
+        /* inizializza l'oggetto per i messaggi */
+        peer_data_init(&value->toSend, counterID, port, ns_tcp);
     }
 
     /* inserisce un nuovo valore */
@@ -306,7 +316,7 @@ static void print_showneighbour(long int node, void* arg)
     char currStr[32];
     char prevStr[32];
     char nextStr[32];
-    struct ns_host_addr* neighbours[MAX_NEIGHBOUR_NUMBER];
+    const struct peer_data* neighbours[MAX_NEIGHBOUR_NUMBER];
     struct peer* value;
     uint16_t length;
 
@@ -326,11 +336,11 @@ static void print_showneighbour(long int node, void* arg)
         switch (length)
         {
         case 2:
-            if (ns_host_addr_as_string(nextStr, sizeof(nextStr), neighbours[1]) == -1)
+            if (ns_host_addr_as_string(nextStr, sizeof(nextStr), &neighbours[1]->ns_addr) == -1)
                 errExit("print_showneighbour fault [ns_host_addr_as_string]\n");
 
         case 1:
-            if (ns_host_addr_as_string(prevStr, sizeof(prevStr), neighbours[0]) == -1)
+            if (ns_host_addr_as_string(prevStr, sizeof(prevStr), &neighbours[0]->ns_addr) == -1)
                 errExit("print_showneighbour fault [ns_host_addr_as_string]\n");
         }
 
