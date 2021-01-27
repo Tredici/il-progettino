@@ -565,4 +565,23 @@ int messages_get_check_req_body(const struct check_req*, uint16_t*);
  */
 int messages_send_check_req(int, const struct sockaddr*, socklen_t, uint16_t);
 
+/** Genera un messaggio di tipo
+ * MESSAGES_SHUTDOWN_ACK.
+ *
+ * Se lo status è diverso da 0 i
+ * parametri peer,neighbours,length
+ * vengono ignorati.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_make_check_ack(
+            struct check_ack** buffer,
+            size_t* bufLen,
+            uint16_t port, /* porta su cui si cerca il peer */
+            uint8_t status, /* 0 se tutto ok, 1 se non esiste il peer */
+            const struct peer_data* peer, /* informazioni sul peer principale */
+            const struct peer_data** neighbours, /* informazioni sui vicini */
+            size_t length);
+
 #endif

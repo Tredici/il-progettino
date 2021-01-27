@@ -652,3 +652,60 @@ messages_send_check_req(
     free((void*)req);
     return 0;
 }
+
+int messages_make_check_ack(
+            struct check_ack** buffer,
+            size_t* bufLen,
+            uint16_t port,
+            uint8_t status,
+            const struct peer_data* peer,
+            const struct peer_data** neighbours,
+            size_t length)
+{
+    struct check_ack* ans;
+    int i;
+
+    if (bufLen == NULL || bufLen == NULL)
+        return -1;
+
+
+    if (!status && (
+        peer == NULL
+        || (neighbours == NULL && length != 0)
+        || length > MAX_NEIGHBOUR_NUMBER))
+        return -1;
+
+    ans = malloc(sizeof(struct check_ack));
+    if (ans == NULL)
+        return -1;
+
+    memset(ans, 0, sizeof(struct check_ack));
+    /* prepara l'header */
+    ans->head.type = htons(MESSAGES_SHUTDOWN_ACK);
+    /* prepara il corpo */
+    ans->body.port = htons(port);
+    ans->body.status = status;
+
+    /* solo in caso di stato nullo (tutto ok) */
+    if (!status)
+    {
+        /* inserisce i dati del peer */
+        ans->body.peer = *peer;
+        /* inserisce i vicini */
+        ans->body.length = length;
+        for (i = 0; i != (int)length; ++i)
+        {
+            if (neighbours[i] == NULL)
+            {
+                free(ans);
+                return -1;
+            }
+            ans->body.neighbours[i] = *neighbours[i];
+        }
+    }
+
+    *bufLen = sizeof(struct check_ack);
+    *buffer = ans;
+
+    return 0;
+}
