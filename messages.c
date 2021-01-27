@@ -85,7 +85,7 @@ char* peer_data_as_string(const struct peer_data* pd, char* buffer, size_t bufLe
         return NULL;
     if (buffer != NULL)
     {
-        if (err+1 > bufLen)
+        if ((size_t)err+1 > bufLen)
             return NULL;
 
         ans = strcpy(buffer, tmpBuf);
