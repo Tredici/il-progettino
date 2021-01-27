@@ -237,6 +237,7 @@ struct check_req
     } body __attribute__ ((packed));
 };
 
+
 /** Dato il puntatore al buffer che ospita il
  * messaggio fornisce il tipo di questo.
  *
@@ -512,5 +513,11 @@ int messages_get_shutdown_ack_body(const struct shutdown_ack*, uint32_t*);
  * e -1 in caso di errore.
  */
 int messages_send_shutdown_response(int, const struct sockaddr*, socklen_t, const struct shutdown_req*);
+
+/** Verifica l'integrità di un
+ * messaggio del tipo
+ * MESSAGES_CHECK_REQ
+ */
+int messages_check_check_req(const void*, size_t);
 
 #endif
