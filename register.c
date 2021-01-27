@@ -1100,7 +1100,9 @@ static void merge_helper(void* elem, void* base)
                         D->Rsrc->defaultSignature :
                         E->signature;
     /* bisogna aggiungerlo? */
-    if (set_has(D->diff, signature))
+    /* si assume che due registri con firma 0 siano
+     * sempre distinti */
+    if (set_has(D->diff, signature) || signature == 0)
     {
         register_add_entry(D->Rdst, E);
     }
