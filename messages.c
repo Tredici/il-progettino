@@ -16,6 +16,35 @@
  * attraverso la rete.
  */
 
+struct peer_data*
+peer_data_init(
+            struct peer_data* ptr,
+            uint32_t ID,
+            uint16_t order,
+            const struct ns_host_addr* ns_addr)
+{
+    struct peer_data* ans;
+
+    /* controllo parametri */
+    if (ns_addr == NULL)
+        return NULL;
+
+    if (ptr == NULL)
+    {
+        ans = malloc(sizeof(struct peer_data));
+        memset(ans, 0, sizeof(struct peer_data));
+    }
+    else
+    {
+        ans = ptr;
+    }
+    ans->ID = htonl(ID);
+    ans->order = htons(order);
+    ans->ns_addr = *ns_addr;
+
+    return ans;
+}
+
 
 int recognise_messages_type(const void* msg)
 {

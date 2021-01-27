@@ -119,6 +119,15 @@ struct peer_data
     struct ns_host_addr ns_addr;
 } __attribute__ ((packed));
 
+/** Inizializza, eventualmente allocando in
+ * memoria dinamica, una struttura peer_data.
+ *
+ * Restituisce il puntatore alla struttura
+ * in caso di successo oppure NULL in caso
+ * di errore.
+ */
+struct peer_data* peer_data_init(struct peer_data*, uint32_t, uint16_t, const struct ns_host_addr*);
+
 /** Questa struttura definisce il
  * formato di un messaggio di boot
  * inviato dal server in risposta
