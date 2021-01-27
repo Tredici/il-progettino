@@ -100,6 +100,25 @@ struct boot_req
     struct ns_host_addr body;
 } __attribute__ ((packed));
 
+/** Questa semplice struttura serve a
+ * contenere tutte le informazioni che
+ * servono a un peer per contattarne
+ * un altro.
+ *
+ * Tutte le informazioni sono contenute
+ * in network order.
+ */
+struct peer_data
+{
+    /* id assegnato dal server al peer */
+    uint32_t ID;
+    /* numero di porta UDP per la relazione d'ordine */
+    uint16_t order;
+    /* struttura con le informazioni per raggiungere
+     * il socket TCP del peer */
+    struct ns_host_addr ns_addr;
+} __attribute__ ((packed));
+
 /** Questa struttura definisce il
  * formato di un messaggio di boot
  * inviato dal server in risposta
