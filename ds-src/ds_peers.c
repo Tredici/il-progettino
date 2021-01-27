@@ -74,7 +74,7 @@ static struct peer_data*
 make_peer_data_form_peer(const struct peer* P)
 {
     struct peer_data* ans;
-    int16_t orderPort;
+    uint16_t orderPort;
 
     if (ns_host_addr_get_port(&P->ns_addr, &orderPort) == -1)
         return NULL;
