@@ -136,6 +136,20 @@ struct peer_data* peer_data_init(struct peer_data*, uint32_t, uint16_t, const st
  */
 int peer_data_extract(const struct peer_data*, uint32_t*, uint16_t*, struct ns_host_addr*);
 
+/** Genera una stringa che rappresenta il
+ * contenuto di un oggetto struct peer_data.
+ * Se non viene fornito un buffer lo spazio
+ * richiesto è allocato in memoria dinamica.
+ * Se il buffer fornito risulta troppo
+ * piccolo fallisce. Il terzo parametro,
+ * ignorato se il secondo è NULL, indica la
+ * dimensione del biffer preallocato.
+ *
+ * Restituisce il puntatore al buffer in caso
+ * di successo e NULL in caso di errore.
+ */
+char* peer_data_as_string(const struct peer_data*, char*, size_t);
+
 /** Questa struttura definisce il
  * formato di un messaggio di boot
  * inviato dal server in risposta

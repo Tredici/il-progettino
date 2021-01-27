@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <string.h>
+#include <stdio.h>
 
 /** ATTENZIONE:
  * dato che in questo file andrò
@@ -58,6 +59,41 @@ int peer_data_extract(
         *ns_addr = ptr->ns_addr;
 
     return 0;
+}
+
+char* peer_data_as_string(const struct peer_data* pd, char* buffer, size_t bufLen)
+{
+    char tmpBuf[64];
+    char addrBuf[32];
+    int err;
+    uint32_t ID;
+    uint16_t port;
+    struct ns_host_addr addr;
+    char* ans;
+
+    if (pd == NULL)
+        return NULL;
+
+    if (peer_data_extract(pd, &ID, &port, &addr) == -1)
+        return NULL;
+
+    if (ns_host_addr_as_string(addrBuf, sizeof(addrBuf), &addr) == -1)
+        return NULL;
+
+    err = sprintf(tmpBuf, "[%d](%d)%s", (int)ID, (int)port, addrBuf);
+    if (err == -1)
+        return NULL;
+    if (buffer != NULL)
+    {
+        if (err+1 > bufLen)
+            return NULL;
+
+        ans = strcpy(buffer, tmpBuf);
+    }
+    else
+        ans = strdup(tmpBuf);
+
+    return ans;
 }
 
 int recognise_messages_type(const void* msg)
