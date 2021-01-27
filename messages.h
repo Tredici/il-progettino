@@ -240,6 +240,28 @@ struct check_req
     } body __attribute__ ((packed));
 } __attribute__ ((packed));
 
+/** Formato dei messaggi di tipo
+ * MESSAGES_BOOT_ACK
+ */
+struct check_ack
+{
+    /* header */
+    struct messages_head head;
+    /* body */
+    struct check_ack_body
+    {
+        /* query */
+        uint16_t port;
+        /* errore se non 0 */
+        uint8_t status;
+        /* numero di vicini */
+        uint8_t length;
+        /* informazioni sul peer legato alla porta */
+        struct peer_data peer;
+        /* informazioni sui suou vicini */
+        struct peer_data neighbours[MAX_NEIGHBOUR_NUMBER];
+    } body __attribute__ ((packed));
+} __attribute__ ((packed));
 
 /** Dato il puntatore al buffer che ospita il
  * messaggio fornisce il tipo di questo.
