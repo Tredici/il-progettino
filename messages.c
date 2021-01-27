@@ -596,3 +596,24 @@ int messages_check_check_req(const void* buffer, size_t bufLen)
 
     return 0;
 }
+
+int messages_make_check_req(struct check_req** buffer, size_t* sz, uint16_t port)
+{
+    struct check_req* ans;
+
+    if (buffer == NULL || sz == NULL)
+        return -1;
+
+    ans = malloc(sizeof(struct check_req));
+    if (ans == NULL)
+        return -1;
+
+    memset(ans, 0, sizeof(struct check_req));
+    ans->head.type = htons(MESSAGES_CHECK_REQ);
+    ans->body.port = htons(port);
+
+    *buffer = ans;
+    *sz = sizeof(struct check_req);
+
+    return 0;
+}
