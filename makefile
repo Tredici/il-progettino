@@ -91,7 +91,7 @@ peer: peer.o $(COMMONDEPS) $(PEERDEPS)
 ds.o: ds.c
 
 ds: ds.o $(COMMONDEPS) $(DSDEPS)
-	$(CC) $(CFLAGS) -o $@ ds.o $(COMMONDEPS) $(DSDEPS)
+	$(CC) $(CFLAGS) -o $@ ds.o $(COMMONDEPS) $(DSDEPS) $(LDLIBS)
 
 clean:
 	rm *.o
