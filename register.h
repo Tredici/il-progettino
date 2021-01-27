@@ -337,4 +337,15 @@ struct e_register* register_parse_fd(int, enum ENTRY_SERIALIZE_RULE, int);
  */
 struct e_register* register_read(int, const struct tm*, int);
 
+/** Dopo aver controllato che ambo i registri
+ * si riferiscono allo stesso giorno, altrimenti
+ * si ha un errore, aggiunge al primo registro
+ * tutte le entry del secondo le cui firme non
+ * sono inizialmente note al primo.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int register_merge(struct e_register*, const struct e_register*);
+
 #endif

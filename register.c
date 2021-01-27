@@ -1074,3 +1074,69 @@ struct e_register* register_read(
 
     return ans;
 }
+
+/** Struttura dati ausiliaria per implementare
+ * register_merge.
+ */
+struct mergeData
+{
+    /* registro destinazione */
+    struct e_register* Rdst;
+    const struct e_register* Rsrc;
+    /*  */
+    struct set* diff;
+};
+
+static void merge_helper(void* elem, void* base)
+{
+    struct entry* E;
+    struct mergeData* D;
+    int signature;
+
+    D = (struct mergeData*)base;
+    E = (struct entry*)elem;
+
+    signature = E->signature == 0 ?
+                        D->Rsrc->defaultSignature :
+                        E->signature;
+    /* bisogna aggiungerlo? */
+    if (set_has(D->diff, signature))
+    {
+        register_add_entry(D->Rdst, E);
+    }
+}
+
+int register_merge(struct e_register* R1, const struct e_register* R2)
+{
+    struct mergeData base; /* da passare alla funzione ausiliaria */
+    struct set* news; /* insieme dei nuovi tipi */
+
+    if (R1 == NULL || R2 == NULL)
+        return -1;
+
+    /* controllo sulla data */
+    if (time_date_cmp(&R1->date, &R2->date) != 0)
+        return -1;
+
+    /** Fa la differenza tra le firme nota a un registro
+     * e all'altro
+     */
+    news = set_diff(R2->allSignature, R1->allSignature);
+    if (news == NULL)
+        return -1;
+
+    /* se è vuoto non fa nulla */
+    if (set_size(news) == 0)
+    {
+        set_destroy(news);
+        return 0; /* OK! */
+    }
+    /* altrimenti si lavora */
+    base.diff = news;
+    base.Rdst = R1;
+    base.Rsrc = R1;
+    list_accumulate(R2->l, &merge_helper, (void*)&base);
+    set_destroy(news);
+
+    return 0;
+}
