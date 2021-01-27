@@ -128,6 +128,14 @@ struct peer_data
  */
 struct peer_data* peer_data_init(struct peer_data*, uint32_t, uint16_t, const struct ns_host_addr*);
 
+/** Estrae selttivamente in campi richiesti
+ * da un oggetto struct peer_data.
+ *
+ * Restituisce 0 in caso di successo e -1 in
+ * caso di errore.
+ */
+int peer_data_extract(const struct peer_data*, uint32_t*, uint16_t*, struct ns_host_addr*);
+
 /** Questa struttura definisce il
  * formato di un messaggio di boot
  * inviato dal server in risposta

@@ -45,6 +45,24 @@ peer_data_init(
     return ans;
 }
 
+int peer_data_extract(
+            const struct peer_data* ptr,
+            uint32_t* ID,
+            uint16_t* order,
+            struct ns_host_addr* ns_addr)
+{
+    if (ptr == NULL)
+        return -1;
+
+    if (ID != NULL)
+        *ID = ntohl(ptr->ID);
+    if (order != NULL)
+        *order = ntohs(ptr->order);
+    if (ns_addr != NULL)
+        *ns_addr = ptr->ns_addr;
+
+    return 0;
+}
 
 int recognise_messages_type(const void* msg)
 {
