@@ -1187,3 +1187,11 @@ int register_close(struct e_register* R)
     R->closed = 1;
     return 0;
 }
+
+int register_is_closed(const struct e_register* R)
+{
+    if (R == NULL)
+        return -1;
+
+    return R->closed == 1;
+}

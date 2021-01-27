@@ -372,4 +372,12 @@ struct e_register* register_clone(const struct e_register*);
  */
 int register_close(struct e_register*);
 
+/** Verifica se il registro sia stato chiuso.
+ * Restituisce 1 in caso affermativo e 0 in
+ * caso negativo.
+ *
+ * Restituisce -1 in caso di errore.
+ */
+int register_is_closed(const struct e_register*);
+
 #endif
