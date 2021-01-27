@@ -591,7 +591,7 @@ int messages_check_check_req(const void* buffer, size_t bufLen)
         return -1;
 
     check = (struct check_req*)buffer;
-    if (check->head.sentinel != 0 || ntohs(check->head.type) == MESSAGES_CHECK_REQ)
+    if (check->head.sentinel != 0 || ntohs(check->head.type) != MESSAGES_CHECK_REQ)
         return -1;
 
     return 0;
