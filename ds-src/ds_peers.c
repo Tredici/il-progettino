@@ -65,6 +65,26 @@ int peers_clear(void)
     return 0;
 }
 
+/** Funzione ausiliaria per generare un oggetto
+ * struct peer_data a partire dal corrispondente
+ * struct peer.
+ */
+static struct peer_data*
+make_peer_data_form_peer(const struct peer* P)
+{
+    struct peer_data* ans;
+    int16_t orderPort;
+
+    if (ns_host_addr_get_port(&P->ns_addr, &orderPort) == -1)
+        return NULL;
+
+    ans = peer_data_init(NULL, P->id, orderPort, &P->ns_tcp);
+    if (ans == NULL)
+        return NULL;
+
+    return ans;
+}
+
 /* si limita a trovare i soli vicini */
 int
 peers_find_neighbours(
