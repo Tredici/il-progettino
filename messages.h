@@ -584,4 +584,10 @@ int messages_make_check_ack(
             const struct peer_data** neighbours, /* informazioni sui vicini */
             size_t length);
 
+/** Verifica l'integrità di un
+ * messaggio del tipo
+ * MESSAGES_CHECK_ACK
+ */
+int messages_check_check_ack(const void*, size_t);
+
 #endif

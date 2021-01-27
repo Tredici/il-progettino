@@ -709,3 +709,17 @@ int messages_make_check_ack(
 
     return 0;
 }
+
+int messages_check_check_ack(const void* buffer, size_t bufLen)
+{
+    struct check_ack* check;
+
+    if (buffer == NULL || bufLen == sizeof(struct check_ack))
+        return -1;
+
+    check = (struct check_ack*)buffer;
+    if (check->head.sentinel != 0 || ntohs(check->head.type) != MESSAGES_CHECK_ACK)
+        return -1;
+
+    return 0;
+}
