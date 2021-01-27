@@ -619,6 +619,18 @@ int messages_make_check_req(struct check_req** buffer, size_t* sz, uint16_t port
 }
 
 int
+messages_get_check_req_body(
+            const struct check_req* req,
+            uint16_t* port)
+{
+    if (req == NULL || port == NULL)
+        return -1;
+
+    *port = ntohs(req->body.port);
+    return 0;
+}
+
+int
 messages_send_check_req(
             int sockfd,
             const struct sockaddr* dest,

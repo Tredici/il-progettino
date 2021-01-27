@@ -525,6 +525,16 @@ int messages_check_check_req(const void*, size_t);
  */
 int messages_make_check_req(struct check_req**, size_t*, uint16_t);
 
+/** Estrae il contenuto di un
+ * messaggio di tipo
+ * MESSAGES_CHECK_REQ
+ *
+ * Non effettua alcun controllo
+ * di integrità che deve essere
+ * già stato svolto precedentemente.
+ */
+int messages_get_check_req_body(const struct check_req*, uint16_t*);
+
 /** Crea e invia un messaggio di tipo
  * MESSAGES_CHECK_REQ
  */
