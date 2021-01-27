@@ -666,6 +666,8 @@ int UDPconnect(const char* hostname, const char* portname)
     /* per il timeout di attesa della risposta */
     struct timeval now;
     struct timespec waitTime;
+    int i;
+    char neigbourStr[64];
 
     /* codice per assegnare il pseudo id ai messaggi
      * inviati */
@@ -794,6 +796,15 @@ int UDPconnect(const char* hostname, const char* portname)
 
         /* libera la memoria del messaggio */
         free((void*)ack);
+
+        /* stampa le informazioni appena ottenute sui vicini */
+        unified_io_push(UNIFIED_IO_NORMAL, "Numero neighbours: [%ld]\n", (long)peersNum);
+        for (i = 0; i != (int)peersNum; ++i)
+        {
+            peer_data_as_string(peersAddrs[i], neigbourStr, sizeof(neigbourStr));
+            unified_io_push(UNIFIED_IO_NORMAL, "\t%d) - %s\n", (long)peersNum, neigbourStr);
+        }
+
         /* vede quali sono i peer vicini */
         /* li pinga */
         /* a quel punto possiamo tonnare */
