@@ -348,4 +348,12 @@ struct e_register* register_read(int, const struct tm*, int);
  */
 int register_merge(struct e_register*, const struct e_register*);
 
+/** Genera una copia del registro dato.
+ * Utile per implementare altre funzioni.
+ *
+ * Restituisce la copia in caso di successo
+ * e NULL in caso di errore.
+ */
+struct e_register* register_clone(const struct e_register*);
+
 #endif

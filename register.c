@@ -1142,3 +1142,29 @@ int register_merge(struct e_register* R1, const struct e_register* R2)
 
     return 0;
 }
+
+struct e_register* register_clone(const struct e_register* R)
+{
+    struct e_register* ans;
+
+    if (R == NULL)
+        return NULL;
+
+    /* approccio semplice ma efficace */
+    ans = register_create_date(NULL, 0, &R->date);
+    if (ans == NULL)
+        return NULL;
+
+    if (register_merge(ans, R) == -1)
+    {
+        /* fail */
+        register_destroy(ans);
+        return NULL;
+    }
+    /* è una copia */
+    ans->defaultSignature = R->defaultSignature;
+    /* come nuovo */
+    ans->modified = 0;
+
+    return ans;
+}
