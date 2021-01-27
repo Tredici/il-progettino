@@ -584,6 +584,22 @@ int messages_make_check_ack(
             const struct peer_data** neighbours, /* informazioni sui vicini */
             size_t length);
 
+/** Genera e invia all'indirizzo fornito
+ * un messaggio di tipo MESSAGES_SHUTDOWN_ACK.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_send_check_ack(
+            int sockfd,
+            const struct sockaddr* dest,
+            socklen_t destLen,
+            uint16_t port,
+            uint8_t status,
+            const struct peer_data* peer,
+            const struct peer_data** neighbours,
+            size_t length);
+
 /** Verifica l'integrità di un
  * messaggio del tipo
  * MESSAGES_CHECK_ACK

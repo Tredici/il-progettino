@@ -710,6 +710,34 @@ int messages_make_check_ack(
     return 0;
 }
 
+int messages_send_check_ack(
+            int sockfd,
+            const struct sockaddr* dest,
+            socklen_t destLen,
+            uint16_t port,
+            uint8_t status,
+            const struct peer_data* peer,
+            const struct peer_data** neighbours,
+            size_t length)
+{
+    struct check_ack* buffer;
+    size_t bufLen;
+
+    if (messages_make_check_ack(&buffer, &bufLen,
+        port, status, peer, neighbours, length) != 0)
+        return -1;
+
+    if (sendto(sockfd, buffer, bufLen, 0, dest, destLen) != (ssize_t)bufLen)
+    {
+        free(buffer);
+        return -1;
+    }
+    free(buffer);
+
+    return 0;
+}
+
+
 int messages_check_check_ack(const void* buffer, size_t bufLen)
 {
     struct check_ack* check;
