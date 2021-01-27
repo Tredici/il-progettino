@@ -769,10 +769,10 @@ char* register_filename(
     int len;
     char* ans;
 
-    if (R == NULL || R->allSignature == 0)
+    if (R == NULL || R->defaultSignature == 0)
         return NULL;
 
-    signature = R->allSignature;
+    signature = R->defaultSignature;
     time_date_read(&R->date, &year, &month, &day);
 
     len = sprintf(filename, "%d.%d-%d-%d.txt",
