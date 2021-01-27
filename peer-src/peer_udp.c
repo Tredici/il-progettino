@@ -661,7 +661,7 @@ int UDPconnect(const char* hostname, const char* portname)
     int err;
     /* per la gestione della risposta */
     uint32_t offeredID;
-    struct ns_host_addr* peersAddrs[MAX_NEIGHBOUR_NUMBER];
+    struct peer_data* peersAddrs[MAX_NEIGHBOUR_NUMBER];
     size_t peersNum;
     /* per il timeout di attesa della risposta */
     struct timeval now;
