@@ -9,6 +9,23 @@ int initUDPSocket(int port)
     return initSocket(port, SOCK_DGRAM);
 }
 
+int initTCPSocket(int port, int backlog)
+{
+    int fd;
+
+    fd = initSocket(port, SOCK_STREAM);
+    if (fd == -1)
+        return -1;
+
+    if (listen(fd, backlog) != 0)
+    {
+        close(fd);
+        return -1;
+    }
+
+    return fd;
+}
+
 int initSocket(int port, int family)
 {
     int sckt, err;

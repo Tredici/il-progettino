@@ -22,6 +22,21 @@
  */
 int initUDPSocket(int);
 
+/** Crea e "ancora" un socket TCP passivo
+ * alla porta specificata - oppure su una
+ * porta casuale disponibile se viene
+ * fornito 0.
+ *
+ * Esegue listen(2) sul socket creato
+ * fornendo il secondo argomento come
+ * backlog.
+ *
+ * Restituisce il corrispondente file
+ * descriptor in caso di successo e -1
+ * in caso di errore.
+ */
+int initTCPSocket(int, int);
+
 /** Crea e ancora un socket del tipo
  * specificato sulla porta fornita.
  *
