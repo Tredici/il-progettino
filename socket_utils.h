@@ -12,6 +12,14 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
+/** Crea e "ancora" un socket UDP sulla porta
+ * specificata - oppure su una porta
+ * casuale disponibile se viene fornito 0.
+ *
+ * Restituisce il corrispondente file
+ * descriptor in caso di successo e -1
+ * in caso di errore.
+ */
 int initUDPSocket(int);
 int getSocketPort(int);
 /** Riempie una struttura sockaddr
