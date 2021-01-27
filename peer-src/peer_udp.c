@@ -807,7 +807,7 @@ int UDPconnect(const char* hostname, const char* portname)
 
         /* vede quali sono i peer vicini */
         /* li pinga */
-        /* a quel punto possiamo tonnare */
+        /* a quel punto possiamo tornare */
         /* è andata bene */
         ans = 0;
         /* possiamo interrompere il ciclo */
