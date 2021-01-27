@@ -69,6 +69,7 @@ int peers_clear(void)
  * struct peer_data a partire dal corrispondente
  * struct peer.
  */
+__attribute__ ((unused))
 static struct peer_data*
 make_peer_data_form_peer(const struct peer* P)
 {
