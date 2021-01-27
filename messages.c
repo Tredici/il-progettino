@@ -383,6 +383,29 @@ messages_get_boot_ack_body(
     return 0;
 }
 
+int
+messages_get_boot_ack_body_cp(
+            const struct boot_ack* ack,
+            uint32_t* ID,
+            struct peer_data* neighboursArray,
+            size_t* addrN)
+{
+    struct peer_data* neighbours[MAX_NEIGHBOUR_NUMBER];
+    int i, limit;
+
+    if (messages_get_boot_ack_body(ack, ID, neighbours, addrN) == -1)
+        return -1;
+
+    limit = (int)*addrN;
+    for (i = 0; i != limit; ++i)
+    {
+        neighboursArray[i] = *neighbours[i];
+        free((void*)neighbours[i]);
+    }
+
+    return 0;
+}
+
 int messages_cmp_boot_ack_pid(const struct boot_ack* ack, uint32_t pid)
 {
     if (ack == NULL)

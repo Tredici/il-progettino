@@ -359,6 +359,16 @@ int messages_check_boot_ack(const void*, size_t);
  */
 int messages_get_boot_ack_body(const struct boot_ack*, uint32_t*, struct peer_data**, size_t*);
 
+/** Simile a messages_get_boot_ack_body ma
+ * non alloca nulla in memoria dinamica ed
+ * evita di creare problemi favorendo la
+ * nascita di memory leak.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int messages_get_boot_ack_body_cp(const struct boot_ack*, uint32_t*, struct peer_data*, size_t*);
+
 /** Verifica che il pid del messaggio di
  * tipo MESSAGES_BOOT_ACK sia pare a
  * quello fornito.
