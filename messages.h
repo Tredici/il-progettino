@@ -233,7 +233,7 @@ struct check_req
     struct check_req_body
     {
         /* query */
-        uint16_t ID;
+        uint16_t port;
     } body __attribute__ ((packed));
 };
 
