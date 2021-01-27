@@ -225,6 +225,9 @@ struct shutdown_ack
     } body __attribute__ ((packed));
 } __attribute__ ((packed));
 
+/** Formato dei messaggi
+ * MESSAGES_BOOT_REQ
+ */
 struct check_req
 {
     /* header */
