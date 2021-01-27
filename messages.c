@@ -723,3 +723,8 @@ int messages_check_check_ack(const void* buffer, size_t bufLen)
 
     return 0;
 }
+
+int messages_get_check_ack_status(const struct check_ack* ack)
+{
+    return ack == NULL ? -1 : ack->body.status;
+}

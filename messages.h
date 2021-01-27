@@ -590,4 +590,12 @@ int messages_make_check_ack(
  */
 int messages_check_check_ack(const void*, size_t);
 
+/** Estrae e fornisce lo status
+ * presente nel corpo del messaggio.
+ *
+ * Restituisce lo status del messaggio
+ * oppure -1 in caso di errore.
+ */
+int messages_get_check_ack_status(const struct check_ack*);
+
 #endif
