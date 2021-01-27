@@ -67,6 +67,14 @@ enum messages_types
     MESSAGES_SHUTDOWN_REQ,
     MESSAGES_SHUTDOWN_ACK,
 
+    /** messaggi per chiedere al server
+     * se ci sia un processo peer su
+     * una data porta, chi sia e quali
+     * siano le informazioni sui suoi
+     * vicini */
+    MESSAGES_CHECK_REQ,
+    MESSAGES_CHECK_ACK,
+
     /* tipi di messaggio
      * per interagire con
      * gli altri peer */
@@ -216,6 +224,18 @@ struct shutdown_ack
         uint32_t ID;
     } body __attribute__ ((packed));
 } __attribute__ ((packed));
+
+struct check_req
+{
+    /* header */
+    struct messages_head head;
+    /* body */
+    struct check_req_body
+    {
+        /* query */
+        uint16_t ID;
+    } body __attribute__ ((packed));
+};
 
 /** Dato il puntatore al buffer che ospita il
  * messaggio fornisce il tipo di questo.
