@@ -48,14 +48,15 @@ static void sigHandler(int sigNum)
 static int handle_MESSAGES_BOOT_REQ(int socketfd, void* buffer, size_t msgLen, struct sockaddr* source, socklen_t sourceLen)
 {
     struct boot_req* req;
-    struct ns_host_addr* ns_addr;
+    struct ns_host_addr ns_source; /* indirizzo "compresso" del mittente */
+    struct ns_host_addr* ns_tcp; /* per raggiungere socket TCP */
     char msgStr[32]; /* per stampare il contenuto del messaggio */
     char srcStr[32]; /* per stampare l'indirizzo del mittente */
     char svdStr[32]; /* per stampare ciò che sarà effettivamente memorizzato */
     /* per costruire la risposta */
     uint32_t newID;
     uint16_t length;
-    struct ns_host_addr* neighbours[MAX_NEIGHBOUR_NUMBER];
+    const struct peer_data* neighbours[MAX_NEIGHBOUR_NUMBER];
     int i;
     struct boot_ack* ack;
     size_t ackLen;
@@ -70,23 +71,23 @@ static int handle_MESSAGES_BOOT_REQ(int socketfd, void* buffer, size_t msgLen, s
     {
         req = (struct boot_req*)buffer;
         /* estrae il contenuto del messaggio */
-        if (messages_get_boot_req_body(&ns_addr, req) == -1)
+        if (messages_get_boot_req_body(&ns_tcp, req) == -1)
             errExit("*** messages_get_boot_ack_body ***\n");
 
         /* lo trasforma in stringa */
-        if (ns_host_addr_as_string(msgStr, sizeof(msgStr), ns_addr) == -1)
+        if (ns_host_addr_as_string(msgStr, sizeof(msgStr), ns_tcp) == -1)
                     errExit("*** ns_host_addr_as_string ***\n");
         /* ottiene in formato stringa l'indirizzo sorgente */
         if (sockaddr_as_string(srcStr, sizeof(srcStr), source, sourceLen) == -1)
             errExit("*** sockaddr_as_string ***\n");
         /* controlla se l'indirizzo speficificato nel messaggio è 0.0.0.0 o equivalente */
-        if (ns_host_addr_any(ns_addr) == 1)
+        if (ns_host_addr_any(ns_tcp) == 1)
         {
-            if (ns_host_addr_update_addr(ns_addr, source) == -1)
+            if (ns_host_addr_update_addr(ns_tcp, source) == -1)
                 errExit("*** ns_host_addr_update_addr ***\n");
         }
         /* rende in formato strinfa anche quello che sarà salvato */
-        if (ns_host_addr_as_string(svdStr, sizeof(svdStr), ns_addr) == -1)
+        if (ns_host_addr_as_string(svdStr, sizeof(svdStr), ns_tcp) == -1)
             errExit("*** ns_host_addr_as_string ***\n");
 
         /* invia l'output al sottosistema di io */
@@ -99,17 +100,21 @@ static int handle_MESSAGES_BOOT_REQ(int socketfd, void* buffer, size_t msgLen, s
         if (messages_get_pid((void*)req, &messagePID) == -1)
             errExit("*** messages_get_pid ***\n");
 
+        /* ottiene anche l'indirizzo del mittente in un formato "compresso" */
+        if (ns_host_addr_from_sockaddr(&ns_source, source) == -1)
+            errExit("*** ns_host_addr_from_sockaddr ***\n");
+
         /** Il controllo dei messaggi duplicati viene eseguito
          * in maniera silente dalla funzione seguente
          */
-        if (peers_add_and_find_neighbours(messagePID, ns_addr, &newID, neighbours, &length) == -1)
+        if (peers_add_and_find_neighbours(messagePID, &ns_source, ns_tcp, &newID, neighbours, &length) == -1)
             errExit("*** ns_host_addr_as_string ***\n");
 
         /* stampa i vicini */
         unified_io_push(UNIFIED_IO_NORMAL, "[ID:%d] N. neighbours: %d", newID, length);
         for (i = 0; i != length; ++i)
         {
-            if (ns_host_addr_as_string(svdStr, sizeof(svdStr), neighbours[i]) == -1)
+            if (ns_host_addr_as_string(svdStr, sizeof(svdStr), &(neighbours[i]->ns_addr)) == -1)
                 errExit("*** ns_host_addr_as_string ***\n");
             unified_io_push(UNIFIED_IO_NORMAL, "[ID:%d] neighbour (%d): %s", newID, i, svdStr);
         }
@@ -124,7 +129,7 @@ static int handle_MESSAGES_BOOT_REQ(int socketfd, void* buffer, size_t msgLen, s
                 errExit("*** messages_make_boot_ack ***\n");
 
         /* infine libera la memoria */
-        free((void*)ns_addr);
+        free((void*)ns_tcp);
     }
     else
     {
