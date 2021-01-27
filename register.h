@@ -343,6 +343,13 @@ struct e_register* register_read(int, const struct tm*, int);
  * tutte le entry del secondo le cui firme non
  * sono inizialmente note al primo.
  *
+ * Si assume che se un registro possiede
+ * una entry con una data signature allora
+ * possiede tutte le entry con la medesima
+ * e permettere l'inserimento di quelle con
+ * la medesima signature causerebbe la
+ * creazione di duplicati non desiderati.
+ *
  * Restituisce 0 in caso di successo e -1
  * in caso di errore.
  */
