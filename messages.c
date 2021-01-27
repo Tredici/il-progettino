@@ -617,3 +617,26 @@ int messages_make_check_req(struct check_req** buffer, size_t* sz, uint16_t port
 
     return 0;
 }
+
+int
+messages_send_check_req(
+            int sockfd,
+            const struct sockaddr* dest,
+            socklen_t destLen,
+            uint16_t port)
+{
+    struct check_req* req;
+    size_t len;
+
+    if (messages_make_check_req(&req, &len, port) == -1)
+        return -1;
+
+    if (sendto(sockfd, (void*)req, len, 0, dest, destLen) == -1)
+    {
+        free((void*)req);
+        return -1;
+    }
+
+    free((void*)req);
+    return 0;
+}

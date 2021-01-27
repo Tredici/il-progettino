@@ -525,4 +525,9 @@ int messages_check_check_req(const void*, size_t);
  */
 int messages_make_check_req(struct check_req**, size_t*, uint16_t);
 
+/** Crea e invia un messaggio di tipo
+ * MESSAGES_CHECK_REQ
+ */
+int messages_send_check_req(int, const struct sockaddr*, socklen_t, uint16_t);
+
 #endif
