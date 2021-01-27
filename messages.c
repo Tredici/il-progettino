@@ -30,14 +30,10 @@ peer_data_init(
         return NULL;
 
     if (ptr == NULL)
-    {
         ans = malloc(sizeof(struct peer_data));
-        memset(ans, 0, sizeof(struct peer_data));
-    }
     else
-    {
         ans = ptr;
-    }
+    memset(ans, 0, sizeof(struct peer_data));
     ans->ID = htonl(ID);
     ans->order = htons(order);
     ans->ns_addr = *ns_addr;
