@@ -155,7 +155,7 @@ struct boot_ack
         uint32_t ID;
         /* numero di vicini, deve valere length<MAX_NEIGHBOUR_NUMBER */
         uint16_t length;
-        struct ns_host_addr neighbours[MAX_NEIGHBOUR_NUMBER];
+        struct peer_data neighbours[MAX_NEIGHBOUR_NUMBER];
     } body __attribute__ ((packed));
 } __attribute__ ((packed));
 
@@ -314,7 +314,7 @@ int messages_get_boot_req_body(struct ns_host_addr**, const struct boot_req*);
  *
  * È pensata per essere usata solo dal server.
  */
-int messages_make_boot_ack(struct boot_ack**, size_t*, const struct boot_req*, uint32_t, const struct ns_host_addr**, size_t);
+int messages_make_boot_ack(struct boot_ack**, size_t*, const struct boot_req*, uint32_t, const struct peer_data**, size_t);
 
 /** Verifica che il messaggio di tipo
  * MESSAGES_BOOT_ACK, di cui vengono
@@ -343,7 +343,7 @@ int messages_check_boot_ack(const void*, size_t);
  * Restituisce 0 in caso di successo e -1
  * in caso di errore.
  */
-int messages_get_boot_ack_body(const struct boot_ack*, uint32_t*, struct ns_host_addr**, size_t*);
+int messages_get_boot_ack_body(const struct boot_ack*, uint32_t*, struct peer_data**, size_t*);
 
 /** Verifica che il pid del messaggio di
  * tipo MESSAGES_BOOT_ACK sia pare a

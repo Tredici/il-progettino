@@ -257,7 +257,7 @@ messages_make_boot_ack(struct boot_ack** buffer,
             size_t* sz,
             const struct boot_req* req,
             uint32_t ID,
-            const struct ns_host_addr** peers,
+            const struct peer_data** peers,
             size_t nPeers)
 {
     struct boot_ack* ans;
@@ -312,34 +312,34 @@ int
 messages_get_boot_ack_body(
             const struct boot_ack* ack,
             uint32_t* ID,
-            struct ns_host_addr** ns_addrs,
+            struct peer_data** neighbours,
             size_t* addrN)
 {
     int i, j, len;
-    struct ns_host_addr* ns;
+    struct peer_data* peer;
 
     if (ack == NULL || ID == NULL
-        || ns_addrs == NULL || addrN == NULL)
+        || neighbours == NULL || addrN == NULL)
         return -1;
 
     len = (int) ack->body.length;
     for (i = 0; i != len; ++i)
     {
-        ns = malloc(sizeof(struct ns_host_addr));
-        if (ns == NULL)
+        peer = malloc(sizeof(struct peer_data));
+        if (peer == NULL)
         {
             /* distrugge gli elementi precedenti */
             for (j = 0; j != i; ++j)
             {
-                free(ns_addrs[j]);
-                ns_addrs[j] = NULL;
+                free(neighbours[j]);
+                neighbours[j] = NULL;
             }
             /* segnala l'errore */
             return -1;
         }
         /* altrimenti copia il valore */
-        *ns = ack->body.neighbours[i];
-        ns_addrs[i] = ns;
+        *peer = ack->body.neighbours[i];
+        neighbours[i] = peer;
     }
     *addrN = (size_t)len;
     *ID = ack->body.ID;
