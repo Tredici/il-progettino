@@ -42,6 +42,11 @@
  */
 pthread_t mainThreadID;
 
+/** Serve a memorizzare la porta sulla
+ * quale ascolta il thread UDP
+ */
+static int UDP_port;
+
 /** Questo mutex e questo flag servono
  * per risolvere il problema che si
  * ha quando sia il main thread sia
@@ -83,6 +88,121 @@ static pthread_mutex_t IDguard = PTHREAD_MUTEX_INITIALIZER;
  */
 static struct sockaddr_storage DSaddr;
 static socklen_t DSaddrLen;
+
+/** Variabili che servono a garantire la corretta
+ * temporizzazione nell'utilizzo di UDPcheck.
+ *
+ * Protocollo:
+ *  All'inizio di ogni giro:
+ *      CHECKnumber=0
+ *      CHECKflag=0
+ *  1) il chiamante:
+ *      prende il mutex
+ *      invia un messaggio
+ *      imposta CHECKflag a 1
+ *      si mette in attesa sulla cond.var. per al più 2s
+ *  2) il thread UDP (eventualmente):
+ *      riceve la risposta
+ *      controlla che sia corretta
+ *          altrimenti lascia perdere
+ *      cattura il mutex
+ *      verifica CHECKflag!=0 && CHECKnumber==0
+ *          altrimenti rilascia il mutex senza far nulla
+ *      riempie CHECKneighbours e imposta opportunamente CHECKnumber
+ *      spegne il CHECKflag
+ *      segnala la cond.var.
+ *  3) il chiamante:
+ *      acquisisce il mutex
+ *      controlla che non sia passato il timeout
+ *      verifica CHECKflag==0
+ *          altrimenti pone CHECKflag=0, rilascia il mutex e termina
+ *      utilizza i dati in CHECKneighbours e CHECKflag per rispondere
+ *      rilascia il mutex e termina
+ */
+static pthread_mutex_t CHECKguard = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t CHECKcond = PTHREAD_COND_INITIALIZER;
+static struct peer_data CHECKneighbours[MAX_NEIGHBOUR_NUMBER];
+static size_t CHECKnumber; /* se non 0 non bisogna scrivere */
+static int CHECKflag; /* se c'è un thread in attesa */
+
+/** Funzione ausiliaria che collabora con
+ * UDPcheck per la ricezione delle informazioni
+ * sui vicini attuali del peer.
+ */
+static void
+handle_MESSAGES_CHECK_ACK(
+            int socketfd,
+            const void* buffer,
+            size_t bufLen)
+{
+    const struct check_ack* ack;
+    uint16_t port;
+    uint8_t status;
+    struct peer_data peer; /* infomazioni sul peer */
+    /* vicini */
+    struct peer_data neighbours[MAX_NEIGHBOUR_NUMBER];
+    size_t length;
+    int i;
+    char neigStr[128];
+
+    (void)socketfd; /* sopprime il warning */
+
+    /* controlla l'integrità del messaggio */
+    if (messages_check_check_ack(buffer, (size_t)bufLen) != 0)
+    {
+        unified_io_push(UNIFIED_IO_ERROR, "\tMalformed Message!");
+        return;
+    }
+    /* casta di controllo */
+    ack = (const struct check_ack*)buffer;
+
+    if (messages_get_check_ack_body(ack, &port, &status,
+        &peer, neighbours, &length) != 0)
+        errExit("*** UDP:messages_get_check_ack_body ***\n");
+
+    /* controlla se le porta è diversa da quella del peer */
+    if ((int)port != UDP_port)
+    {
+        /* questo messaggio non era per noi */
+        unified_io_push(UNIFIED_IO_ERROR,  "\tUnexpected message,"
+            " specified port is (%d) instead of (%d)! Discarded.",
+            (int)port, UDP_port);
+        return;
+    }
+    /* INIZIO SEZIONE CRITICA */
+    if (pthread_mutex_lock(&CHECKguard) != 0)
+        abort();
+    /* controlla che fosse richiesto di operare */
+    if (CHECKflag && CHECKnumber == 0)
+    {
+        /* controlla lo status */
+        if (status) /* caso di errore */
+        {
+            unified_io_push(UNIFIED_IO_ERROR, "\tBad response status!");
+            /* segnala senza spegnere il flag: */
+            pthread_cond_signal(&CHECKcond);
+        }
+        else
+        {
+            /* quanti peer ha trovato */
+            unified_io_push(UNIFIED_IO_NORMAL, "\tTrovati (%d) neighbour", (int)length);
+            /* copia i vicini */
+            for (i = 0; i != (int)length; ++i)
+            {
+                peer_data_as_string(&neighbours[i], neigStr, sizeof(neigStr));
+                unified_io_push(UNIFIED_IO_NORMAL, "\t%d)-> %s", (int)i, neigStr);
+                CHECKneighbours[i] = neighbours[i];
+            }
+            /* segnala */
+            pthread_cond_signal(&CHECKcond);
+            CHECKnumber = length; /* numero di vicini */
+            CHECKflag = 0; /* spegne il flag, richiesta servita */
+        }
+    }
+    /* TERMINE SEZIONE CRITICA */
+    if (pthread_mutex_unlock(&CHECKguard) != 0)
+        abort();
+}
 
 /** APPROCCIO SEGUITO:
  * un thread PASSIVO che si occupa
@@ -388,6 +508,13 @@ static void UDPReadLoop()
             /* normale, il messaggio era farlocco, si va avanti */
             break;
 
+        case MESSAGES_CHECK_ACK:
+            unified_io_push(UNIFIED_IO_NORMAL, "\tMessage MESSAGES_CHECK_ACK!");
+            /* leggere la descrizione sopra la definizione di CHECKguard
+             * per capire il ruolo */
+            handle_MESSAGES_CHECK_ACK(socketfd, buffer, (size_t)msgLen);
+            break;
+
         default:
             unified_io_push(UNIFIED_IO_NORMAL, "\tBad message received!", sendName);
             break;
@@ -625,11 +752,6 @@ static void* UDP(void* args)
     return NULL;
 }
 
-/** Serve a memorizzare la porta sulla
- * quale ascolta il thread UDP
- */
-static int UDP_port;
-
 int UDPstart(int port)
 {
     int listeningOn;
@@ -857,4 +979,98 @@ int UDPstop(void)
 int UDPport(void)
 {
     return UDP_port;
+}
+
+/** Quanti secondi al più può aspettare
+ * per la risoluzione della chiamata?
+ */
+#define UDPcheckTIMEOUT 2
+
+int UDPcheck(
+            struct peer_data* neighbours,
+            size_t* length)
+{
+    /* per garantire la mutua esclusione nell'uso
+     * di questa funzionalità */
+    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+    /* per l'attesa sulla cond.var. */
+    struct timeval now;
+    struct timespec timeout;
+    int retcode;
+    int ans = 0; /* ottimista */
+    int i;
+
+    /* controllo validità degli argomenti */
+    if (neighbours == NULL || length == NULL)
+        return -1;
+
+    /* se non si è connessi ritorna immediatamente */
+    if (pthread_mutex_lock(&mutex) != 0)
+        abort();
+    if (!ISPeerConnected)
+    {
+        pthread_mutex_unlock(&mutex);
+        return -1;
+    }
+    if (pthread_mutex_unlock(&mutex) != 0)
+        abort();
+    /* OK: la funzionalità è disponibile */
+    /* solo un thread per volta può invocare questa
+     * funzione */
+    /* SEZIONE CRITICA ESTERNA */
+    if (pthread_mutex_lock(&mutex) != 0)
+        abort();
+
+    /* SEZIONE CRITICA INTERNA - vedere descrizione
+     * sopra la dichiarazione del mutex */
+    if(pthread_mutex_lock(&CHECKguard) != 0)
+        abort();
+    /* vale: CHECKnumber==0&&CHECKflag==0 */
+
+    /* invia il messaggio */
+    if (messages_send_check_req(socketfd, (struct sockaddr*)&DSaddr,
+        DSaddrLen, (uint16_t)UDP_port) != 0)
+        abort();
+    /* accende il flag */
+    CHECKflag = 1;
+    /* pausa temporizzata - vedi man pthread_cond_timedwait */
+    gettimeofday(&now, NULL);
+    timeout.tv_sec = now.tv_sec + UDPcheckTIMEOUT; /* imposta il timeout */
+    timeout.tv_nsec = now.tv_usec * 1000;
+    retcode = 0;
+    while (CHECKflag && retcode != ETIMEDOUT)
+    {
+        retcode = pthread_cond_timedwait(&CHECKcond, &CHECKguard, &timeout);
+    }
+    /* Perché si è sbloccato? */
+    if (retcode == ETIMEDOUT && CHECKflag)
+    {
+        ans = -1; /* andata male */
+        errno = ETIMEDOUT; /* casomai interessi */
+        CHECKflag = 0; /* ripristina lo stato */
+    }
+    else if (CHECKflag == 0)/* ci sono dei dati */
+    {
+        /* copia i risultati per renderli disponibili al chiamante */
+        for (i = 0; i != (int)CHECKnumber; ++i) /* passa le info sui vicini */
+            neighbours[i] = CHECKneighbours[i];
+
+        *length = CHECKnumber; /* passa il numero di vicini  */
+        CHECKnumber = 0; /* alla fine ripristina lo stato */
+    }
+    else /* errore prematuro - status della risposta anomalo */
+    {
+        CHECKflag = 0;
+        ans = 1;
+    }
+
+    /* TERMINE SEZIONE CRITICA INTERNA */
+    if (pthread_mutex_unlock(&CHECKguard) != 0)
+        abort();
+
+    /* TERMINE SEZIONE CRITICA ESTERNA */
+    if (pthread_mutex_unlock(&mutex) != 0)
+        abort();
+
+    return ans;
 }
