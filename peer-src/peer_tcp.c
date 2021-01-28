@@ -17,6 +17,11 @@
  */
 static int tcpFd;
 
+/** Flag che indica se il thread tcp
+ * era stato avviato con successo.
+ */
+static volatile int running;
+
 int peer_tcp_init(int port)
 {
     int sk;
@@ -31,5 +36,25 @@ int peer_tcp_init(int port)
 
     tcpFd = sk;
 
+    return 0;
+}
+
+
+int peer_tcp_close(void)
+{
+    /* controlla se era stato attivato */
+    if (!tcpFd)
+        return -1;
+
+    if (running)
+    {
+        /* abbiamo un thread da fermare */
+        running = 0;
+    }
+
+    if (close(tcpFd) != 0)
+        return -1;
+
+    tcpFd = 0;
     return 0;
 }

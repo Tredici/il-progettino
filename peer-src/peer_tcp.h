@@ -20,6 +20,16 @@
  */
 int peer_tcp_init(int port);
 
+/** Stoppa il sottosistema tcp.
+ * Va chiamato dal thread principale al
+ * termine dell'esecuzione del programma
+ * e DOPO la chiusura del sottosistema
+ * UDP.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int peer_tcp_close(void);
 
 
 #endif
