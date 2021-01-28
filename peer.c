@@ -5,6 +5,7 @@
  */
 #include "peer-src/peer_stop.h"
 #include "peer-src/peer_add.h"
+#include "peer-src/peer_get.h"
 #include "peer-src/peer_udp.h"
 #include "peer-src/peer_start.h"
 #include "peer-src/peer_entries_manager.h"
@@ -33,6 +34,7 @@ int main(int argc, char* argv[])
     struct main_loop_command commands[] = {
         { "start", &start, "<DS_addr DS_port> termina il peer" },
         { "add", &add, "{" ADD_SWAB "|" ADD_NEW_CASE "} <quantity> crea e inserisce una nuova entry nel registo di oggi" },
+        { "get", &get, "{totale|variazione} {" ADD_SWAB "|" ADD_NEW_CASE "} [period] calcola l'aggregazione sull'intervallo specificato" },
         { "stop", &stop, "termina il peer" }
     };
 
