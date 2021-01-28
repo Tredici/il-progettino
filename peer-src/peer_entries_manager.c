@@ -15,6 +15,8 @@
 #include <string.h>
 #include <poll.h>
 #include <errno.h>
+#include <fcntl.h>
+
 /* syscall specifica di linux, vediamo come va */
 #include <sys/timerfd.h>
 
@@ -125,6 +127,8 @@ static void* entriesSubsystem(void* args)
     struct pollfd pollFd;
     /* test valore di ritorno */
     int err;
+    /* per svuotare il timerFd - vedi man timerfd_create */
+    unsigned long long int expTime;
 
     ts = thread_semaphore_form_args(args);
     if (ts == NULL)
@@ -143,6 +147,13 @@ static void* entriesSubsystem(void* args)
     if (timerFd == -1)
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
             errExit("*** ENTRIES ***\n");
+
+    if (fcntl(timerFd, F_GETFD, O_NONBLOCK) != 0)
+    {
+        close(timerFd);
+        if (thread_semaphore_signal(ts, -1, NULL) == -1)
+            errExit("*** ENTRIES ***\n");
+    }
 
     /* dalle 18 di oggi ogni 24 ore */
     memset(&start, 0, sizeof(start));
@@ -179,6 +190,9 @@ static void* entriesSubsystem(void* args)
                 break;
             errExit("*** ENTRIES:ppoll ***\n");
         }
+        /* svuota il fd */
+        while (read(timerFd, &expTime, sizeof(expTime)) > 0 );
+
         /* nuova testa per l'elemento */
         newListHead(); /* se fallisce termina */
     }
