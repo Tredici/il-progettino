@@ -207,13 +207,26 @@ static void* entriesSubsystem(void* args)
 static void healp_cleaner(void* ptr)
 {
     struct e_register* R;
+    char filename[64];
+
     /* non serve fare nulla */
     if (ptr == NULL)
         return;
 
     R = (struct e_register*)ptr;
     /* salva il contenuto del registro su file */
-    register_flush(R, 0);
+    switch (register_flush(R, 0))
+    {
+    case -1:
+        errExit("*** ENTRY:register_flush ***");
+        break;
+    case 0: /* non fa nulla */
+        break;
+    default: /* Ha aggiornato un file! */
+        register_filename(R, filename, sizeof(filename));
+        unified_io_push(UNIFIED_IO_NORMAL, "Updated file \"%s\"", filename);
+        break;
+    }
     /* distrugge il registro */
     register_destroy(R);
 }
