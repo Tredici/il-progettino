@@ -42,6 +42,11 @@ int TCPinit(int port)
     return 0;
 }
 
+int TCPrun(uint32_t ID, struct peer_data* neighbours, size_t N)
+{
+    running;
+    return 0;
+}
 
 int TCPclose(void)
 {

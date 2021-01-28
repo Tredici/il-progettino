@@ -6,6 +6,8 @@
 #ifndef PEER_TCP
 #define PEER_TCP
 
+#include "../messages.h"
+
 /** Prepara il sottosistema TCP all'avvio ma non
  * lo avvia!
  * Sarà avviato solo dopo che il peer si sarà
@@ -19,6 +21,14 @@
  * in caso di errore.
  */
 int TCPinit(int port);
+
+/** Attiva il thread TCP fornendogli i
+ * dati dei neighbour iniziali.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int TCPrun(uint32_t ID, struct peer_data* neighbours, size_t N);
 
 /** Stoppa il sottosistema tcp.
  * Va chiamato dal thread principale al
