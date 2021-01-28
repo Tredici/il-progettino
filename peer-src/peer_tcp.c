@@ -62,3 +62,8 @@ int peer_tcp_close(void)
     activated = 0;
     return 0;
 }
+
+int peer_tcp_get_socket(void)
+{
+    return activated ? tcpFd : -1;
+}
