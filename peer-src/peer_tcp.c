@@ -12,6 +12,9 @@
  */
 #define MAX_TCP_CONNECTION 20
 
+/** Flag che permette di riconoscere se
+ * il thread TCP è già stato avviato.
+ */
 static int activated;
 
 /** Descrittore di file
