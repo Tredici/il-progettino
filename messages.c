@@ -681,7 +681,7 @@ int messages_make_check_ack(
 
     memset(ans, 0, sizeof(struct check_ack));
     /* prepara l'header */
-    ans->head.type = htons(MESSAGES_SHUTDOWN_ACK);
+    ans->head.type = htons(MESSAGES_CHECK_ACK);
     /* prepara il corpo */
     ans->body.port = htons(port);
     ans->body.status = status;
