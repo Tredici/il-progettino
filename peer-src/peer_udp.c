@@ -2,6 +2,7 @@
 #define _GNU_SOURCE /* per pipe2 */
 
 #include "peer_udp.h"
+#include "peer_tcp.h"
 #include <pthread.h>
 #include "../socket_utils.h"
 #include "../thread_semaphore.h"
@@ -927,8 +928,9 @@ int UDPconnect(const char* hostname, const char* portname)
             unified_io_push(UNIFIED_IO_NORMAL, "\t%d) - %s\n", (long)peersNum, neigbourStr);
         }
 
-        /* vede quali sono i peer vicini */
-        /* li pinga */
+        /* si può adesso avviare correttamente il thread TCP */
+        if (TCPrun(offeredID, peersAddrs, peersNum) != 0)
+            errExit("*** TCPrun ***\n");
         /* a quel punto possiamo tornare */
         /* è andata bene */
         ans = 0;
