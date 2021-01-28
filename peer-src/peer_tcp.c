@@ -117,7 +117,12 @@ static void* TCP(void* args)
 {
     struct thread_semaphore* ts;
     char buffer[128];
-    int i;
+    int i, j;
+    /* struttura con i peer riconosciuti */
+    struct peer_tcp reachedPeers[MAX_NEIGHBOUR_NUMBER];
+    size_t reachedNumber = 0; /* totale peer raggiunti */
+    /* per i tentativi di connessione */
+    int connFd;
 
     ts = thread_semaphore_form_args(args);
     if (ts == NULL)
@@ -130,6 +135,22 @@ static void* TCP(void* args)
     {
         peer_data_as_string(&neighbours[i], buffer, sizeof(buffer));
         unified_io_push(UNIFIED_IO_NORMAL, "%d)-> %s", i, buffer);
+        /* prova a raggiungerli */
+        unified_io_push(UNIFIED_IO_NORMAL, "Trying to connect to %s", buffer);
+        connFd = connectToPeer(&neighbours[i]);
+        if (connFd == -1)
+        {
+            unified_io_push(UNIFIED_IO_ERROR, "Connectiona attempt failed!");
+            for (j = 0; j!=i; ++j) /* chiusura dei vecchi socket */
+                close(reachedPeers[j].sockfd);
+            if (thread_semaphore_signal(ts, -1, NULL) == -1)
+                errExit("*** TCP ***\n");
+        }
+        /* Successo! Aggiorna i dati del thread. */
+        unified_io_push(UNIFIED_IO_NORMAL, "Successfully connected!");
+        reachedPeers[i].data = neighbours[i];
+        reachedPeers[i].sockfd = connFd;
+        ++reachedNumber;
     }
 
     /* Ora è pronto */
