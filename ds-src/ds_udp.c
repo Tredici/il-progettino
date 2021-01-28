@@ -139,6 +139,62 @@ static int handle_MESSAGES_BOOT_REQ(int socketfd, void* buffer, size_t msgLen, s
     return 0;
 }
 
+/** Funzione ausiliaria per la gestione
+ * dei messaggi di tipo MESSAGES_CHECK_REQ.
+ */
+static void
+handle_MESSAGES_CHECK_REQ(int socketfd,
+            void* buffer, size_t msgLen,
+            struct sockaddr* source, socklen_t sourceLen)
+{
+    /* Porta. */
+    uint16_t port;
+    /* puntatore tipizzato */
+    struct check_req* req;
+    /* dati del peer in questione */
+    const struct peer_data *peer;
+    /* informazioni sui vicini */
+    const struct peer_data* neighbours[MAX_NEIGHBOUR_NUMBER];
+    uint16_t length;
+    /* test */
+    int err, i;
+    char dataStr[64];
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Received msg [MESSAGES_CHECK_REQ]");
+    if (messages_check_check_req(buffer, msgLen) != 0)
+    {
+        unified_io_push(UNIFIED_IO_ERROR, "\tMalformed message!");
+        return;
+    }
+    req = (struct check_req*)buffer;
+    /* estrae il contenuto del messaggio */
+    if (messages_get_check_req_body(req, &port) != 0)
+        errExit("*** messages_get_check_req_body ***\n");
+
+    unified_io_push(UNIFIED_IO_NORMAL, "\tRichieste informazioni per la porta (%d)", (int)port);
+    /* cerca i dati */
+    err = peers_get_data_and_neighbours(port, &peer, neighbours, &length);
+    if (err)
+        unified_io_push(UNIFIED_IO_ERROR, "\tNessun peer trovato!");
+    else
+    {
+        peer_data_as_string(peer, dataStr, sizeof(dataStr));
+        unified_io_push(UNIFIED_IO_NORMAL, "\tPeer -> %s", dataStr);
+        unified_io_push(UNIFIED_IO_NORMAL, "\tN. neighbours: %d", (int)length);
+        /* ora stampa le informazioni su tutti i vicini */
+        for (i = 0; i != (int)length; ++i)
+        {
+            peer_data_as_string(neighbours[i], dataStr, sizeof(dataStr));
+            unified_io_push(UNIFIED_IO_NORMAL, "\t\t%d)-> %s", i, dataStr);
+        }
+    }
+
+    if (messages_send_check_ack(socketfd, source, sourceLen, port, err != 0,
+        peer, neighbours, (size_t)length) == -1)
+        errExit("*** messages_send_check_ack ***\n");
+    unified_io_push(UNIFIED_IO_NORMAL, "\tSent response [MESSAGES_CHECK_ACK]");
+}
+
 /** Prova a spegnere tutti al più
  * 5 volte e si pone un tempo di
  * attesa di al più due secondi
@@ -488,6 +544,10 @@ static void* UDP(void* args)
                 unified_io_push(UNIFIED_IO_NORMAL, "Received msg [MESSAGES_SHUTDOWN_REQ]");
                 /* un peer si vuole staccare, gestisce il caso */
                 handle_peer_DETATCH(socket, (void*)buffer, msgLen, (struct sockaddr*)&sender, senderLen);
+                break;
+
+            case MESSAGES_CHECK_REQ:
+                handle_MESSAGES_CHECK_REQ(socket, (void*)buffer, msgLen, (struct sockaddr*)&sender, senderLen);
                 break;
 
             default:
