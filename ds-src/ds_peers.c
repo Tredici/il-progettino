@@ -185,6 +185,47 @@ peers_find_neighbours(
 }
 
 int
+peers_get_data_and_neighbours(
+            long int key,
+            const struct peer_data** peer,
+            const struct peer_data** neighbours,
+            uint16_t* length)
+{
+    /* per ottenere le informazioni sul peer */
+    const struct peer* P;
+
+    /* SEZIONE CRITICA */
+    if (pthread_mutex_lock(&guard) != 0)
+        return -1;
+
+    /* controllo - spero - superfluo */
+    if (tree == NULL)
+    {
+        pthread_mutex_unlock(&guard);
+        return -1;
+    }
+    /* il nodo esiste */
+    if (rb_tree_get(tree, key, (void**)&P) == -1)
+    {
+        pthread_mutex_unlock(&guard);
+        return -1;
+    }
+    *peer = &P->toSend;
+
+    /* cerca i vicini ora */
+    if (peers_find_neighbours(key, neighbours, length) == -1)
+    {
+        pthread_mutex_unlock(&guard);
+        return -1;
+    }
+
+    if (pthread_mutex_unlock(&guard) != 0)
+        return -1;
+
+    return 0;
+}
+
+int
 peers_add_and_find_neighbours(
             uint32_t loginPid,
             const struct ns_host_addr* ns_addr,

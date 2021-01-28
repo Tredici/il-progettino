@@ -63,6 +63,15 @@ peers_add_and_find_neighbours(
  */
 int peers_find_neighbours(long int, const struct peer_data**, uint16_t*);
 
+/** Ottiene i dati su un peer e i
+ * suoi vicini.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore (es. il peer
+ * cercato non esiste).
+ */
+int peers_get_data_and_neighbours(long int, const struct peer_data**, const struct peer_data**, uint16_t*);
+
 /** Stampa l'elenco dei peer al momento
  * connessi insieme ai loro dati.
  */
