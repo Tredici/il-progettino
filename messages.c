@@ -742,7 +742,7 @@ int messages_check_check_ack(const void* buffer, size_t bufLen)
 {
     struct check_ack* check;
 
-    if (buffer == NULL || bufLen == sizeof(struct check_ack))
+    if (buffer == NULL || bufLen != sizeof(struct check_ack))
         return -1;
 
     check = (struct check_ack*)buffer;
