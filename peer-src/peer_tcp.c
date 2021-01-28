@@ -3,7 +3,7 @@
 #include "../thread_semaphore.h"
 #include <pthread.h>
 #include "peer_udp.h" /* per UDPcheck */
-#include "messages.h"
+#include "../messages.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 
