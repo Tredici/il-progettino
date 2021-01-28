@@ -52,10 +52,12 @@ int add(const char* args)
      * la nuova entry al registro del peer */
     if (addEntryToCurrent(E) != 0)
     {
+        fprintf(stderr, "Tentativo fallito!\n");
         register_free_entry(E);
         return ERR_FAIL;
     }
 
+    printf("Entry inserita con successo!\n");
     register_free_entry(E);
 
     return OK_CONTINUE;
