@@ -1077,6 +1077,7 @@ struct e_register* register_read(
         {
             ans->modified = 0; /* è pari al suo file */
             ans->defaultSignature = defaultSignature;
+            ans->date = tmpDate;/* imposta la data */
         }
     }
 
