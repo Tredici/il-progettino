@@ -18,7 +18,7 @@
  * Restituisce 0 in caso di successo e -1
  * in caso di errore.
  */
-int peer_tcp_init(int port);
+int TCPinit(int port);
 
 /** Stoppa il sottosistema tcp.
  * Va chiamato dal thread principale al
@@ -29,12 +29,12 @@ int peer_tcp_init(int port);
  * Restituisce 0 in caso di successo e -1
  * in caso di errore.
  */
-int peer_tcp_close(void);
+int TCPclose(void);
 
 /** Fornisce il descrittore del socket
  * tcp oppure -1 in caso di errore.
  */
-int peer_tcp_get_socket(void);
+int TCPgetSocket(void);
 
 
 #endif

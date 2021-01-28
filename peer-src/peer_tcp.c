@@ -24,7 +24,7 @@ static int tcpFd;
  */
 static volatile int running;
 
-int peer_tcp_init(int port)
+int TCPinit(int port)
 {
     int sk;
 
@@ -43,7 +43,7 @@ int peer_tcp_init(int port)
 }
 
 
-int peer_tcp_close(void)
+int TCPclose(void)
 {
     /* controlla se era stato attivato */
     if (!activated)
@@ -63,7 +63,7 @@ int peer_tcp_close(void)
     return 0;
 }
 
-int peer_tcp_get_socket(void)
+int TCPgetSocket(void)
 {
     return activated ? tcpFd : -1;
 }
