@@ -4,3 +4,6 @@ test
 test/*
 
 *.o
+
+# ignora i file che contengono il contenuto dei registri
+*.txt
