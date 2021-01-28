@@ -134,7 +134,7 @@ static void* TCP(void* args)
 
     /* Ora è pronto */
     if (thread_semaphore_signal(ts, 0, NULL) == -1)
-        errExit("*** UDP ***\n");
+        errExit("*** TCP ***\n");
 
     unified_io_push(UNIFIED_IO_NORMAL, "Thread TCP running.");
 
