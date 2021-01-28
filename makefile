@@ -51,6 +51,9 @@ peer_udp.o: peer-src/peer_udp.c  peer-src/peer_udp.h
 peer_add.o: peer-src/peer_add.c  peer-src/peer_add.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+peer_get.o: peer-src/peer_get.c  peer-src/peer_get.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 peer_stop.o: peer-src/peer_stop.c peer-src/peer_stop.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
@@ -60,7 +63,7 @@ peer_tcp.o: peer-src/peer_tcp.c peer-src/peer_tcp.h
 peer_entries_manager.o: peer-src/peer_entries_manager.c peer-src/peer_entries_manager.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-PEERDEPS = peer_stop.o peer_add.o peer_udp.o peer_start.o peer_entries_manager.o peer_tcp.o
+PEERDEPS = peer_stop.o peer_add.o peer_udp.o peer_start.o peer_entries_manager.o peer_tcp.o peer_get.o
 
 # file per tutti
 list.o: 			list.h list.c
