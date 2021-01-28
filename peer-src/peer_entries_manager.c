@@ -190,6 +190,7 @@ static void* entriesSubsystem(void* args)
                 break;
             errExit("*** ENTRIES:ppoll ***\n");
         }
+        unified_io_push(UNIFIED_IO_NORMAL, "Timer has fired!");
         /* svuota il fd */
         while (read(timerFd, &expTime, sizeof(expTime)) > 0 );
 
