@@ -148,7 +148,7 @@ static void* entriesSubsystem(void* args)
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
             errExit("*** ENTRIES ***\n");
 
-    if (fcntl(timerFd, F_GETFD, O_NONBLOCK) != 0)
+    if (fcntl(timerFd, F_SETFL, O_NONBLOCK) != 0)
     {
         close(timerFd);
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
