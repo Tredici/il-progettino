@@ -75,7 +75,8 @@ static void newListHead(void)
     /* nuovo candidato testa */
     struct e_register* newHEAD;
 
-    newHEAD = register_create(NULL, 0);
+    /* i registri sono identificati dall'ID del peer */
+    newHEAD = register_create(NULL, peerIDentifier);
     if (newHEAD == NULL)
         errExit("*** ENTRIES:register_create ***\n");
 
@@ -299,6 +300,9 @@ int startEntriesSubsystem(int port)
     if (started)
         return -1;
 
+    /* in modo che l'id del peer sia disponibile
+     * ovunque nel file */
+    peerIDentifier = port;
     /* inizializza la variabile globale limite inferiore */
     lowerDate = time_date_init(INFERIOR_YEAR, 1, 1);
 
