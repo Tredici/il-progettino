@@ -12,6 +12,8 @@
  */
 #define MAX_TCP_CONNECTION 20
 
+static int activated;
+
 /** Descrittore di file
  * del socket tcp
  */
@@ -27,7 +29,7 @@ int peer_tcp_init(int port)
     int sk;
 
     /* controlla che il sistema non sia già stato avviato */
-    if (tcpFd)
+    if (activated)
         return -1;
 
     sk = initTCPSocket(port, MAX_TCP_CONNECTION);
@@ -35,6 +37,7 @@ int peer_tcp_init(int port)
         return -1;
 
     tcpFd = sk;
+    activated = 1;
 
     return 0;
 }
@@ -43,7 +46,7 @@ int peer_tcp_init(int port)
 int peer_tcp_close(void)
 {
     /* controlla se era stato attivato */
-    if (!tcpFd)
+    if (!activated)
         return -1;
 
     if (running)
@@ -56,5 +59,6 @@ int peer_tcp_close(void)
         return -1;
 
     tcpFd = 0;
+    activated = 0;
     return 0;
 }
