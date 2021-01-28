@@ -8,7 +8,8 @@
 #include <time.h>
 
 /** Inizalizza e fornisce una struct tm
- * con data e orario correnti.
+ * con data e orario correnti in accordo
+ * con la locale (timezone) dell'utente.
  */
 struct tm time_date_now(void);
 

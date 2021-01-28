@@ -11,8 +11,9 @@ struct tm time_date_now(void)
     time_t t;
 
     t = time(NULL);
-    (void)gmtime_r(&t, &ans);
-    return ans;}
+    (void)localtime_r(&t, &ans);
+    return ans;
+}
 
 struct tm time_date_today(void)
 {
