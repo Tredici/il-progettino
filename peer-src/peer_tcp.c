@@ -107,7 +107,7 @@ static int connectToPeer(const struct peer_data* data)
  * ottenere le informazioni sui suoi
  * vicini */
 static uint32_t peerID; /* ID nel netword */
-static struct peer_data neighbours[MAX_TCP_CONNECTION]; /* dati sui vicini */
+static struct peer_data neighbours[MAX_NEIGHBOUR_NUMBER]; /* dati sui vicini */
 static size_t neighboursNumber; /* numero di vicini. */
 
 /** Codice del thread TCP. Sarà attivato al
