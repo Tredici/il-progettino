@@ -170,4 +170,14 @@ int ns_host_addr_update_addr(struct ns_host_addr*, const struct sockaddr*);
  */
 int ns_host_addr_send(int, const void*, size_t, int, const struct ns_host_addr*);
 
+/** Crea un socket TCP e cerca di
+ * connetterlo all'indirizzo fornito
+ * tramite l'oggetto struct ns_host_addr.
+ *
+ * Restituisce il file descriptor
+ * del nuovo socket in caso di
+ * successo e -1 in caso di errore.
+ */
+int connect_to_ns_host_addr(const struct ns_host_addr*);
+
 #endif
