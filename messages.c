@@ -587,7 +587,7 @@ int messages_check_check_req(const void* buffer, size_t bufLen)
 {
     struct check_req* check;
 
-    if (buffer == NULL || bufLen == sizeof(struct check_req))
+    if (buffer == NULL || bufLen != sizeof(struct check_req))
         return -1;
 
     check = (struct check_req*)buffer;
