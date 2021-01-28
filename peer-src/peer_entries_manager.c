@@ -252,6 +252,8 @@ static int init_REGISTERlist(int defaultSignature)
     struct tm tail_date;
     /* Per il logging */
     char dateStart[32], dateEnd[32];
+    /* per stampare se viene letto un file */
+    char filename[64];
 
     /* creiamo la lista */
     test_list = list_init(NULL);
@@ -277,6 +279,11 @@ static int init_REGISTERlist(int defaultSignature)
         list_destroy(test_list);
         return -1;
     }
+    else if (register_size(head) > 0) /* caricati dei dati di file? */
+    {
+        register_filename(head, filename, sizeof(filename));
+        unified_io_push(UNIFIED_IO_NORMAL, "Loaded file \"%s\"", filename);
+    }
 
     /* prende la data */
     test_date = *register_date(head);
@@ -296,6 +303,11 @@ static int init_REGISTERlist(int defaultSignature)
 
             list_destroy(test_list);
             return -1;
+        }
+        else if (register_size(tail) > 0) /* caricati dei dati di file? */
+        {
+            register_filename(tail, filename, sizeof(filename));
+            unified_io_push(UNIFIED_IO_NORMAL, "Loaded file \"%s\"", filename);
         }
     }
 
