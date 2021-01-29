@@ -26,17 +26,6 @@
  */
 #define TERM_SUBSYS_SIGNAL SIGQUIT
 
-/** Indica l'anno più remoto per cui il sistema
- * garantirà di tenere un registro per ogni suo
- * giorno.
- *
- * In pratica vi saranno registri per tutti i
- * giorni a partire dal primo gennaio dell'anno
- * indicato da questa macro fino alla data
- * corrente.
- */
-#define INFERIOR_YEAR 2020
-
 /** Variabile di riferimento per definire
  * l'ultima data.
  */
