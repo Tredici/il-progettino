@@ -115,4 +115,17 @@ struct tm* time_date_dec(struct tm*, int);
  */
 int time_parse_date(const char* str, struct tm* date);
 
+/** Converte oggetto data in una stringa
+ * nel formato:
+ *  dd-mm-yyyy
+ *
+ * Il buffer fornito deve avere dimensione
+ * almeno pari a 11 (al più dieci caratteri
+ * per la data più uno per il carattere '\0').
+ *
+ * Restituisce il puntatore al buffer in
+ * caso di successo e NULL in caso di errore.
+ */
+char* time_serialize_date(char* str, const struct tm* date);
+
 #endif

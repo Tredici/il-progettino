@@ -187,3 +187,14 @@ int time_parse_date(const char* str, struct tm* date)
 
     return 0;
 }
+
+char* time_serialize_date(char* str, const struct tm* date)
+{
+    if (date == NULL)
+        return NULL;
+
+    if (strftime(str, 11, "%d-%m-%Y", date) == 0)
+        return NULL;
+
+    return str;
+}
