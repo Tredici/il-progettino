@@ -7,6 +7,7 @@
 
 #include "../register.h"
 #include "../list.h"
+#include "../time_utils.h"
 
 /** Enumerazione che elenca tutti i tipi delle
  * aggregazioni il cui calcolo può essere
@@ -18,6 +19,14 @@ enum aggregation_type
     AGGREGATION_DIFF
 };
 
+/** Struttura che permette di descrivere
+ * interamente una query.
+ *
+ * Non dovrebbe mai essere manipolata
+ * direttamente ma solo tramite le
+ * apposite funzioni fornite.
+ */
+struct query;
 
 
 
