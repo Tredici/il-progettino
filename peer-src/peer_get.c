@@ -91,7 +91,7 @@ int get(const char* args)
     if (ret >= 3)
     {
         if (parsePeriod(period, &date_min, &date_max) != 0)
-            return -1;
+            return ERR_PARAMS;
     }
     else
     {
