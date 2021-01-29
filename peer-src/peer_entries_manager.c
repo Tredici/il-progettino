@@ -59,6 +59,25 @@ static struct tm HEADdate;
  */
 static int peerIDentifier;
 
+struct tm firstRegisterClosed(void)
+{
+    struct tm date;
+    int zero;
+
+    if (!started)
+        memset(&date, 0, sizeof(struct tm));
+    else
+    {
+        if (pthread_mutex_lock(&REGISTERguard) != 0)
+            abort();
+        date = lowerDate;
+        if (pthread_mutex_unlock(&REGISTERguard) != 0)
+            abort();
+    }
+
+    return date;
+}
+
 struct tm lastRegisterClosed(void)
 {
     struct tm date;

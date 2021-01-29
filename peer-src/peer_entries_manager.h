@@ -20,6 +20,15 @@
  */
 #define INFERIOR_YEAR 2020
 
+/** Fornisce la data del più vecchio
+ * registro posseduto dal peer corrente.
+ *
+ * In caso di errore restituisce
+ * una struttura completamente
+ * azzerata.
+ */
+struct tm firstRegisterClosed(void);
+
 /** Fornisce la data dell'ultimo
  * registro chiuso - ovvero non
  * più modificabile dal peer corrente.
