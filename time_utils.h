@@ -106,7 +106,7 @@ struct tm* time_date_dec(struct tm*, int);
 
 /** Estrae un oggetto data da una stringa.
  * Formato atteso:
- *  dd-mm-yyyy
+ *  dd:mm:yyyy
  *
  * Restituisce 0 in caso di successo e -1
  * in caso di errore.
@@ -117,7 +117,7 @@ int time_parse_date(const char* str, struct tm* date);
 
 /** Converte oggetto data in una stringa
  * nel formato:
- *  dd-mm-yyyy
+ *  dd:mm:yyyy
  *
  * Il buffer fornito deve avere dimensione
  * almeno pari a 11 (al più dieci caratteri
