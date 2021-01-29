@@ -59,6 +59,26 @@ static struct tm HEADdate;
  */
 static int peerIDentifier;
 
+struct tm lastRegisterClosed(void)
+{
+    struct tm date;
+    int zero;
+
+    if (!started)
+        memset(&date, 0, sizeof(struct tm));
+    else
+    {
+        if (pthread_mutex_lock(&REGISTERguard) != 0)
+            abort();
+        date = HEADdate;
+        if (pthread_mutex_unlock(&REGISTERguard) != 0)
+            abort();
+        time_date_dec(&date, 1);
+    }
+
+    return date;
+}
+
 /* handler farlocco */
 static void fakeHandler(int x) {(void)x;}
 

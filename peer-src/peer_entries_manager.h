@@ -20,6 +20,16 @@
  */
 #define INFERIOR_YEAR 2020
 
+/** Fornisce la data dell'ultimo
+ * registro chiuso - ovvero non
+ * più modificabile dal peer corrente.
+ *
+ * In caso di errore restituisce
+ * una struttura completamente
+ * azzerata.
+ */
+struct tm lastRegisterClosed(void);
+
 /** Avvia il sottosistema che gestisce le
  * entry.
  *
