@@ -1,4 +1,5 @@
 #define _POSIX_C_SOURCE 1
+#define _XOPEN_SOURCE /* per strptime */
 
 #include "time_utils.h"
 #include <errno.h>
@@ -151,4 +152,38 @@ struct tm* time_date_dec(struct tm* date, int days)
     *date = time_date_add(&tmp, -days);
 
     return date;
+}
+
+int time_parse_date(const char* str, struct tm* date)
+{
+    char* res;
+    struct tm value, test;
+    time_t t;
+
+    if (date == NULL)
+        return -1;
+
+    memset(&value, 0, sizeof(struct tm));
+    memset(&test, 0, sizeof(struct tm));
+
+    /* parsing */
+    res = strptime(str, "%d-%m-%Y", &value);
+    if (res == NULL || *res != '\0')
+        return -1;
+    /* controllo dei dati */
+    test.tm_year = value.tm_year;
+    test.tm_mon = value.tm_mon;
+    test.tm_mday = value.tm_mday;
+    /* la data è corretta? */
+    t = mktime(&test);
+    localtime_r(&t, &test);
+    /* test */
+    if (test.tm_year != value.tm_year
+        || test.tm_mon != value.tm_mon
+        || test.tm_mday != value.tm_mday)
+        return -1;
+
+    *date = value;
+
+    return 0;
 }

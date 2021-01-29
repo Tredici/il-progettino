@@ -104,4 +104,15 @@ struct tm* time_date_inc(struct tm*, int);
  */
 struct tm* time_date_dec(struct tm*, int);
 
+/** Estrae un oggetto data da una stringa.
+ * Formato atteso:
+ *  dd-mm-yyyy
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ * In caso di errore non modifica
+ * l'oggetto puntato da date.
+ */
+int time_parse_date(const char* str, struct tm* date);
+
 #endif
