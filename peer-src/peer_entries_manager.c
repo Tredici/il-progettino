@@ -31,6 +31,9 @@
  */
 static struct tm lowerDate;
 
+/* flag che indica se il sottosistema è stato avviato */
+static sig_atomic_t started;
+
 /** MUTEX a guardia delle operazioni
  * sui registri.
  */
@@ -319,9 +322,6 @@ static int init_REGISTERlist(int defaultSignature)
  * i registri
  */
 static pthread_t REGISTER_tid;
-
-/* flag che indica se il sottosistema è stato avviato */
-static sig_atomic_t started;
 
 int startEntriesSubsystem(int port)
 {
