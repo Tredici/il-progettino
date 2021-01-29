@@ -99,6 +99,12 @@ int get(const char* args)
         date_max = lastRegisterClosed();
     }
 
+    if (time_date_cmp(&date_min, &date_max) > 0)
+    {
+        fprintf(stderr, "La seconda data precede la prima!\n");
+        return ERR_PARAMS;
+    }
+
     printf("Ricerca nell'intervallo [%s|%s]\n", time_serialize_date(date1, &date_min),
         time_serialize_date(date2, &date_max));
 
