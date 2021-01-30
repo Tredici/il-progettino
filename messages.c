@@ -845,3 +845,31 @@ int messages_make_flood_req(
 
     return 0;
 }
+
+int messages_send_flood_req(
+            int sockFd,
+            uint32_t authID,
+            uint32_t reqID,
+            const struct tm* date,
+            uint32_t length,
+            uint32_t* signatures)
+{
+    struct flood_req* req;
+    size_t reqLen;
+
+    if (sockFd < 0)
+        return -1;
+
+    if (messages_make_flood_req(&req, &reqLen,
+        authID, reqID, date, length, signatures) == -1)
+        return -1;
+
+    if (send(sockFd, (void*)req, reqLen, 0) == (ssize_t)reqLen)
+    {
+        free(req);
+        return -1;
+    }
+
+    free(req);
+    return 0;
+}

@@ -695,4 +695,24 @@ int messages_make_flood_req(
             uint32_t length,
             uint32_t* signatures);
 
+/** Crea e invia un messaggio di tipo
+ * MESSAGES_FLOOD_FOR_ENTRIES usando
+ * un socket TCP (non necessita quindi
+ * di informazioni per raggiungere la
+ * destinazione).
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_send_flood_req(
+            int sockFd,
+            uint32_t authID,
+            uint32_t reqID,
+            const struct tm* date,
+            uint32_t length,
+            uint32_t* signatures);
+
 #endif
