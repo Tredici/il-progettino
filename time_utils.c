@@ -21,6 +21,20 @@ int time_init_ns_tm(struct ns_tm* ns_date, const struct tm* date)
     return 0;
 }
 
+int time_read_ns_tm(struct tm* date, const struct ns_tm* ns_date)
+{
+    int year, month, day;
+    if (ns_date == NULL || date == NULL)
+        return -1;
+
+    year = ntohs(ns_date->year);
+    month = ns_date->month;
+    day = ns_date->day;
+    *date = time_date_init(year, month, day);
+
+    return 0;
+}
+
 struct tm time_date_now(void)
 {
     struct tm ans;

@@ -28,6 +28,15 @@ struct ns_tm
  */
 int time_init_ns_tm(struct ns_tm*, const struct tm*);
 
+/** Inizializza un oggetto di tipo struct tm
+ * con il contenuto di un oggetto struct ns_tm.
+ *
+ * Restituisce 0 in caso di
+ * successo e -1 in caso di
+ * errore.
+ */
+int time_read_ns_tm(struct tm*, const struct ns_tm*);
+
 /** Inizalizza e fornisce una struct tm
  * con data e orario correnti in accordo
  * con la locale (timezone) dell'utente.
