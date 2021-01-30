@@ -6,6 +6,18 @@
 #define TIME_UTILS
 
 #include <time.h>
+#include <arpa/inet.h>
+
+/** Struttura che permette di rappresentare
+ * un oggetto di tipo struct tm in maniera
+ * "network safe"
+ */
+struct ns_tm
+{
+    uint16_t year;
+    uint8_t month;
+    uint8_t day;
+};
 
 /** Inizalizza e fornisce una struct tm
  * con data e orario correnti in accordo
