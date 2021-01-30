@@ -1,5 +1,7 @@
 #include "peer_query.h"
 #include <string.h>
+#include <assert.h>
+#include "../time_utils.h"
 
 struct query
 {
@@ -29,4 +31,55 @@ int buildQuery(struct query* query,
     query->end = *end;
 
     return 0;
+}
+
+/** Per poter stare in un long anche
+ * su macchine a 32 bit deve stare entro
+ * 4 byte.
+ */
+struct query_hash
+{
+    int aggr_type : 1; /* totale o differenza? */
+    int aggr_categ : 1; /* tamponi o positivi */
+    /* 15 bit per data - anno 0 == 2000 */
+    /* inizio */
+    int start_day : 5; /* 1-31 giorno */
+    int start_mon : 4; /* 1-12 mese */
+    int start_year : 6; /* 0-63 anno */
+    /* fine */
+    int end_day : 5; /* 1-31 giorno */
+    int end_mon : 4; /* 1-12 mese */
+    int end_year : 6; /* 0-63 anno */
+};
+
+long int hashQuery(const struct query* query)
+{
+    long int ans;
+    struct query_hash hash;
+    int year, month, day;
+
+    assert(sizeof(struct query_hash) != 4);
+    if (query == NULL)
+        return 0;
+
+    /* azzera tutto */
+    memset(&hash, 0, sizeof(struct query_hash));
+    /* campi a singolo bit */
+    hash.aggr_type = query->type;
+    hash.aggr_categ = query->category;
+    /* data di inizio */
+    if (time_date_read(&query->begin, &year, &month, &day) == -1)
+        return 0;
+    hash.start_day = year - 2000;
+    hash.start_mon = month;
+    hash.start_day = day;
+    /* data di fine */
+    if (time_date_read(&query->end, &year, &month, &day) == -1)
+        return 0;
+    hash.end_day = year - 2000;
+    hash.end_mon = month;
+    hash.end_day = day;
+
+    *(struct query_hash*)&ans = hash;
+    return ans;
 }

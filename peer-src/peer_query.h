@@ -43,5 +43,12 @@ int buildQuery(struct query* query,
             const struct tm* begin,
             const struct tm* end);
 
+/** Calcola un hash di una query e lo restituisce.
+ * Permette di identificare in maniera univoca
+ * tutte le query le cui date
+ *
+ * Restituisce 0 in caso di errore.
+ */
+long int hashQuery(const struct query* query);
 
 #endif
