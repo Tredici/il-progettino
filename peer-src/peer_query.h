@@ -28,6 +28,20 @@ enum aggregation_type
  */
 struct query;
 
+/** Inizializza l'oggetto puntato da query
+ * con i valori forniti.
+ *
+ * ATTENZIONE: non garantisce alcun controllo
+ * sull'integrità dei dati forniti.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int buildQuery(struct query* query,
+            enum aggregation_type type,
+            enum entry_type category,
+            const struct tm* begin,
+            const struct tm* end);
 
 
 #endif
