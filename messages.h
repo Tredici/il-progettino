@@ -9,6 +9,7 @@
 
 #include "ns_host_addr.h"
 #include <stdlib.h>
+#include "time_utils.h"
 
 /* in questo progetto minimale */
 #define MAX_NEIGHBOUR_NUMBER 2
@@ -260,6 +261,39 @@ struct check_ack
         struct peer_data peer;
         /* informazioni sui suou vicini */
         struct peer_data neighbours[MAX_NEIGHBOUR_NUMBER];
+    } body __attribute__ ((packed));
+} __attribute__ ((packed));
+
+/** Struttura che rappresenta il formato
+ * di un messaggio di tipo
+ * MESSAGES_FLOOD_FOR_ENTRIES
+ *
+ * Il corpo del messaggio contiene
+ * la data di interesse e l'elenco
+ * delle firme delle entry già
+ * possedute dal peer che invia
+ * il messaggio.
+ */
+struct flood_req
+{
+    /* header */
+    struct messages_head head;
+    /* body */
+    struct flood_req_body
+    {
+        /* id che identifica l'autore
+         * per evitare duplicati */
+        uint32_t authorID;
+        /* id che identifica la richiesta
+         * dato l'autore, sempre per
+         * evitare duplicati */
+        uint32_t reqID;
+        /* data di interesse */
+        struct ns_tm date;
+        /* numero di elementi in coda */
+        uint32_t length;
+        /* informazioni sui suou vicini */
+        uint32_t signatures[0];
     } body __attribute__ ((packed));
 } __attribute__ ((packed));
 
