@@ -19,6 +19,15 @@ struct ns_tm
     uint8_t day;
 };
 
+/** Inizializza un oggetto di tipo struct ns_tm
+ * con il contenuto di un oggetto struct tm.
+ *
+ * Restituisce 0 in caso di
+ * successo e -1 in caso di
+ * errore.
+ */
+int time_init_ns_tm(struct ns_tm*, const struct tm*);
+
 /** Inizalizza e fornisce una struct tm
  * con data e orario correnti in accordo
  * con la locale (timezone) dell'utente.

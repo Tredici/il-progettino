@@ -6,6 +6,21 @@
 #include <string.h>
 #include <math.h>
 
+int time_init_ns_tm(struct ns_tm* ns_date, const struct tm* date)
+{
+    int year, month, day;
+    if (ns_date == NULL || date == NULL)
+        return -1;
+
+    memset(ns_date, 0, sizeof(struct ns_tm));
+    time_date_read(date, &year, &month, &day);
+    ns_date->year = htons(year);
+    ns_date->month = month;
+    ns_date->day = day;
+
+    return 0;
+}
+
 struct tm time_date_now(void)
 {
     struct tm ans;
