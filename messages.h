@@ -715,4 +715,14 @@ int messages_send_flood_req(
             uint32_t length,
             uint32_t* signatures);
 
+/** Controlla l'integrità di un messaggio
+ * di tipo MESSAGES_FLOOD_FOR_ENTRIES.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_check_flood_req(
+            const void* buffer,
+            size_t bufferLen);
+
 #endif

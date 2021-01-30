@@ -873,3 +873,31 @@ int messages_send_flood_req(
     free(req);
     return 0;
 }
+
+int messages_check_flood_req(
+            const void* buffer,
+            size_t bufLen)
+{
+    const struct flood_req* req;
+
+    /* controllo che l'array di dimensione 0
+     * abbia dimensione 0 */
+    assert(sizeof(struct flood_req) == offsetof(struct flood_req, body.signatures));
+
+    /* controllo sulla validità dei parametri;
+     * attenzione al fatto che questi messaggi
+     * abbiano dimensione variabile */
+    if (buffer == NULL || bufLen < sizeof(struct flood_req))
+        return -1;
+
+    req = (const struct flood_req*)buffer;
+    /* controllo dell'header */
+    if (req->head.sentinel != 0 || req->head.type != htons(MESSAGES_BOOT_ACK))
+        return -1;
+
+    /* controlla il corpo */
+    if (bufLen - offsetof(struct flood_req, body.signatures) != ntohl(req->body.length))
+        return -1;
+
+    return 0;
+}
