@@ -677,4 +677,22 @@ int messages_get_check_ack_body(
             struct peer_data* neighbours,
             size_t* length);
 
+/** Alloca e fornisce un oggetto di tipo
+ * MESSAGES_FLOOD_FOR_ENTRIES
+ * inizializzato con i dati forniti.
+ * La memoria allocata può essere
+ * liberata in maniera sicura con free.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_make_flood_req(
+            struct flood_req** req,
+            size_t* reqLen,
+            uint32_t authID,
+            uint32_t reqID,
+            const struct tm* date,
+            uint32_t length,
+            uint32_t* signatures);
+
 #endif

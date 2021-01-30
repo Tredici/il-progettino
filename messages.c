@@ -5,6 +5,8 @@
 #include <sys/socket.h>
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
+#include <stddef.h>
 
 /** ATTENZIONE:
  * dato che in questo file andrò
@@ -794,6 +796,52 @@ int messages_get_check_ack_body(
             *length = (size_t)limit;
         }
     }
+
+    return 0;
+}
+
+int messages_make_flood_req(
+            struct flood_req** req,
+            size_t* reqLen,
+            uint32_t authID,
+            uint32_t reqID,
+            const struct tm* date,
+            uint32_t length,
+            uint32_t* signatures)
+{
+    struct flood_req* ans;
+    size_t ansLen;
+    size_t i;
+
+    if (req == NULL || reqLen == NULL || date == NULL || (!length ^ !signatures))
+        return -1;
+
+    /* controllo che l'array di dimensione 0
+     * abbia dimensione 0 */
+    assert(sizeof(struct flood_req) == offsetof(struct flood_req, body.signatures));
+    ansLen = sizeof(struct flood_req) + length*sizeof(uint32_t);
+    ans = malloc(ansLen);
+    if (ans == NULL)
+        return -1;
+    memset(ans, 0, ansLen);
+
+    /* inizializza l'intestazione */
+    ans->head.type = htons(MESSAGES_BOOT_ACK);
+
+    /* inizializza il corpo */
+    ans->body.authorID = htonl(authID);
+    ans->body.reqID = htonl(reqID);
+    if (time_init_ns_tm(&ans->body.date, date) == -1)
+    {
+        free(ans);
+        return -1;
+    }
+    ans->body.length = htonl(length);
+    for (i = 0; i != length; ++i) /* Riempie la "coda" */
+        ans->body.signatures[i] = htonl(signatures[i]);
+
+    *req = ans;
+    *reqLen = ansLen;
 
     return 0;
 }
