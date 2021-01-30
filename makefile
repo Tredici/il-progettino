@@ -63,7 +63,10 @@ peer_tcp.o: peer-src/peer_tcp.c peer-src/peer_tcp.h
 peer_entries_manager.o: peer-src/peer_entries_manager.c peer-src/peer_entries_manager.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-PEERDEPS = peer_stop.o peer_add.o peer_udp.o peer_start.o peer_entries_manager.o peer_tcp.o peer_get.o
+peer_query.o: peer-src/peer_query.c peer-src/peer_query.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+PEERDEPS = peer_stop.o peer_add.o peer_udp.o peer_start.o peer_entries_manager.o peer_tcp.o peer_get.o peer_query.o
 
 # file per tutti
 list.o: 			list.h list.c
