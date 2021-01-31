@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stddef.h>
+#include <sys/uio.h>
 
 /** ATTENZIONE:
  * dato che in questo file andrò
@@ -944,6 +945,60 @@ int messages_get_flood_req_body(
 
     if (date != NULL)
         time_read_ns_tm(date, &req->body.date);
+
+    return 0;
+}
+
+int messages_send_flood_ack(
+            int sockFd,
+            const struct flood_req* req,
+            const struct e_register* R,
+            const struct set* skip)
+{
+    struct flood_ack* ack;
+    struct ns_entry* entryList;
+    size_t entryLen;
+    struct iovec iov[2];
+
+    /* l'array in coda ha dimensione 0? */
+    assert(sizeof(struct flood_ack) != offsetof(struct flood_ack, body.entry));
+    if (sockFd < 0 || req == NULL)
+        return -1;
+
+    if (register_as_ns_array(R, &entryList, &entryLen, skip, NULL) == -1)
+        return -1;
+    iov[1].iov_base = entryList;
+    iov[1].iov_len = entryLen;
+
+    ack = malloc(sizeof(struct flood_ack));
+    if (ack == NULL)
+    {
+        free(entryList);
+        return -1;
+    }
+    iov[0].iov_base = ack;
+    iov[0].iov_len = sizeof(struct flood_ack);
+
+    /* prepara l'header */
+    memset(ack, 0, sizeof(struct flood_ack));
+    ack->head.type = htonl(MESSAGES_REQ_ENTRIES);
+    /* il corpo - parte copiata */
+    ack->body.authorID = req->body.authorID;
+    ack->body.reqID = req->body.reqID;
+    ack->body.date = req->body.date;
+    /* il corpo - parte nuova */
+    ack->body.length = htonl(entryLen);
+
+    /* invia i messaggi */
+    if(writev(sockFd, iov, 2) != iov[0].iov_len + iov[1].iov_len)
+    {
+        free(ack);
+        free(entryList);
+        return -1;
+    }
+
+    free(ack);
+    free(entryList);
 
     return 0;
 }

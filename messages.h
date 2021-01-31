@@ -10,6 +10,7 @@
 #include "ns_host_addr.h"
 #include <stdlib.h>
 #include "time_utils.h"
+#include "register.h"
 
 /* in questo progetto minimale */
 #define MAX_NEIGHBOUR_NUMBER 2
@@ -294,6 +295,35 @@ struct flood_req
         uint32_t length;
         /* informazioni sui suou vicini */
         uint32_t signatures[0];
+    } body __attribute__ ((packed));
+} __attribute__ ((packed));
+
+/** Struttura che rappresenta il formato
+ * di un messaggio di tipo
+ * MESSAGES_REQ_ENTRIES.
+ *
+ * Il corpo di un messaggio ha lunghezza
+ * variabile e permette di di associarlo
+ * al messaggio di tipo
+ * MESSAGES_FLOOD_FOR_ENTRIES
+ */
+struct flood_ack
+{
+    /* header */
+    struct messages_head head;
+    /* body */
+    struct flood_ack_body
+    {
+        /* informazioni per identificare
+         * univocamente la richiesta */
+        uint32_t authorID;
+        uint32_t reqID;
+        /* per controllo */
+        struct ns_tm date;
+        /* numero di elementi in coda */
+        uint32_t length;
+        /* informazioni sui suou vicini */
+        struct ns_entry entry[0];
     } body __attribute__ ((packed));
 } __attribute__ ((packed));
 
@@ -751,5 +781,22 @@ int messages_get_flood_req_body(
             struct tm* date,
             uint32_t* length,
             uint32_t** signatures);
+
+/** Genera e invia un messaggio di tipo
+ * MESSAGES_REPLY_DATA in risposta al
+ * messaggio di tipo MESSAGES_REQ_DATA
+ * fornito.
+ *
+ * Il messaggio è eventualmente riempito
+ * con i dati presenti nel registro fornito
+ * o è vuoto se è fornito invece NULL.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_send_flood_ack(int sockFd,
+            const struct flood_req*,
+            const struct e_register*,
+            const struct set*);
 
 #endif
