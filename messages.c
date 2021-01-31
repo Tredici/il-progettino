@@ -990,7 +990,7 @@ int messages_send_flood_ack(
     ack->body.length = htonl(entryLen);
 
     /* invia i messaggi */
-    if(writev(sockFd, iov, 2) != iov[0].iov_len + iov[1].iov_len)
+    if(writev(sockFd, iov, 2) != (ssize_t)(iov[0].iov_len + iov[1].iov_len))
     {
         free(ack);
         free(entryList);
