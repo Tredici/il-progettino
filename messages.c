@@ -901,3 +901,49 @@ int messages_check_flood_req(
 
     return 0;
 }
+
+int messages_get_flood_req_body(
+            const struct flood_req* req,
+            uint32_t* authID,
+            uint32_t* reqID,
+            struct tm* date,
+            uint32_t* length,
+            uint32_t** signatures)
+{
+    uint32_t* arr;
+    uint32_t i, tot;
+
+    if (req == NULL || (length == NULL && signatures != NULL))
+        return -1;
+
+    /* valutazione campo per campo */
+    if (signatures != NULL)
+    {
+        tot = ntohl(req->body.length);
+        if (tot != 0)
+        {
+            arr = calloc(tot, sizeof(uint32_t));
+            if (arr == NULL)
+                return -1;
+            for (i = 0; i != tot; ++i)
+                arr[i] = ntohl(req->body.signatures[i]);
+            *signatures = arr;
+        }
+        else
+            *signatures = NULL;
+        *length = tot;
+    }
+    else if (length != NULL)
+        *length = ntohl(req->body.length);
+
+    if (authID != NULL)
+        *authID = ntohl(req->body.authorID);
+
+    if (reqID != NULL)
+        *reqID = ntohl(req->body.reqID);
+
+    if (date != NULL)
+        time_read_ns_tm(date, &req->body.date);
+
+    return 0;
+}

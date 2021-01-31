@@ -725,4 +725,31 @@ int messages_check_flood_req(
             const void* buffer,
             size_t bufferLen);
 
+/** Estrae le informazioni richieste
+ * da un messaggio di tipo
+ * MESSAGES_FLOOD_FOR_ENTRIES.
+ * Se l'argomento length è NULL allora
+ * deve essere anche l'argomento
+ * signatures.
+ *
+ * Se il messaggio ha length 0 e
+ * signatures non è null la variabile
+ * puntata viene messa a NULL.
+ *
+ * ATTENZIONE: non garantisce alcun
+ * controllo dell'integrità del
+ * messaggio che deve essere già
+ * stata verificata in precedenza.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_get_flood_req_body(
+            const struct flood_req* req,
+            uint32_t* authID,
+            uint32_t* reqID,
+            struct tm* date,
+            uint32_t* length,
+            uint32_t** signatures);
+
 #endif
