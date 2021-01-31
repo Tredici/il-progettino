@@ -427,4 +427,20 @@ int register_is_closed(const struct e_register*);
  */
 int register_as_ns_array(const struct e_register*, struct ns_entry**, size_t*, const struct set*, struct set**);
 
+/** Inizializza e riempie un oggetto di
+ * tipo "struct e_register" con i dati
+ * presenti nell'array di oggetti
+ * struct ns_entry fornito.
+ *
+ * Se la lunghezza dell'array è maggiore
+ * di 0 è un errore fornire NULL al posto
+ * dell'array, altrimenti il parametro
+ * viene ignorato.
+ *
+ * Restituisce il nuovo registro in caso
+ * di successo oppure NULL in caso di
+ * errore.
+ */
+struct e_register* register_from_ns_array(const struct tm*, const struct ns_entry*, size_t);
+
 #endif

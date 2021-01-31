@@ -1317,3 +1317,32 @@ int register_as_ns_array(
 
     return 0;
 }
+
+struct e_register* register_from_ns_array(
+            const struct tm* date,
+            const struct ns_entry* ns_arr,
+            size_t arrLen)
+{
+    struct e_register* R;
+    struct entry E;
+    size_t i;
+
+    if (arrLen != 0 && ns_arr == NULL)
+        return NULL;
+
+    R = register_create_date(NULL, 0, date);
+    if (R == NULL)
+        return NULL;
+
+    for (i = 0; i < arrLen; ++i)
+    {
+        entry_from_ns_entry(&E, &ns_arr[i]);
+        if (register_add_entry(R, &E) == -1)
+        {
+            register_destroy(R);
+            return NULL;
+        }
+    }
+
+    return R;
+}
