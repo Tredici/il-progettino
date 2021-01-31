@@ -49,6 +49,21 @@ struct entry
     int signature;
 };
 
+int ns_entry_from_entry(struct ns_entry* ns, const struct entry* E)
+{
+    if (ns == NULL || E == NULL)
+        return -1;
+
+    if (time_init_ns_tm(&ns->date, &E->e_time) == -1)
+        return -1;
+
+    ns->type = htonl(E->type);
+    ns->totale = htonl(E->counter);
+    ns->signature = htonl(E->signature);
+
+    return 0;
+}
+
 struct e_register
 {
     /* memorizza data di crezione
