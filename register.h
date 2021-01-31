@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include "time_utils.h"
 
 /** Spazio massimo necessario per
  * serializzare un'entry
@@ -28,6 +29,19 @@ enum entry_type
 struct e_register;
 
 struct entry;
+
+/** Struttura dati che permette di
+ * rappresentare il contenuto di
+ * un oggetto struct entry in
+ * maniera network safe.
+ */
+struct ns_entry
+{
+    struct ns_tm date;
+    uint32_t type;
+    uint32_t totale;
+    uint32_t signature;
+};
 
 /** La struttura testuale di un entry
  * sarà:
