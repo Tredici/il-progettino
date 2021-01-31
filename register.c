@@ -1,5 +1,6 @@
 #define _XOPEN_SOURCE 500  /* per strptime */
 #define _POSIX_C_SOURCE 1 /* per localtime_r */
+#define _GNU_SOURCE
 
 #include "register.h"
 #include <time.h>
@@ -1225,4 +1226,94 @@ int register_is_closed(const struct e_register* R)
         return -1;
 
     return R->closed == 1;
+}
+
+/** Struttura dati ausiliaria per
+ * far funzionare register_as_ns_array.
+ */
+struct registerAsArray
+{
+    struct e_register* R;
+    struct ns_entry* tmpArr;
+    size_t tmpLen;
+    const struct set* skip; /* firme da ignorare */
+    struct set* choosen;
+};
+
+static void as_assay_helper(void* elem, void* base)
+{
+    struct entry* E;
+    struct registerAsArray* D;
+    int signature, defaultSignature;
+
+    E = (struct entry*)elem;
+    D = (struct registerAsArray*)base;
+    signature = register_retrieve_entry_signature(E);
+    if (signature == 0)
+        signature = D->R->defaultSignature;
+
+    /* controlla se deve saltare questo elemento */
+    if (signature != 0 && D->skip != NULL && set_has(D->skip, signature))
+        return;
+    /* aggiunge all'insieme */
+    ns_entry_from_entry(&D->tmpArr[D->tmpLen++], E);
+    if (D->choosen != NULL)
+        set_add(D->choosen, signature);
+}
+
+int register_as_ns_array(
+            const struct e_register* R,
+            struct ns_entry** ns_array,
+            size_t* ns_lenght,
+            const struct set* skip,
+            struct set** choosen)
+{
+    struct ns_entry* tmpArr;
+    size_t tmpLen;
+    struct registerAsArray base;
+    size_t rLen;
+    struct set* S;
+
+    if (R == NULL || ns_array == NULL || ns_lenght == NULL)
+        return -1;
+
+    memset(&base, 0, sizeof(struct registerAsArray));
+    rLen = (size_t)register_size(R);
+    tmpArr = calloc(rLen, sizeof(struct ns_entry));
+    if (tmpArr == NULL)
+        return -1;
+
+    base.R = R; /* registro di riferimento */
+    base.tmpArr = tmpArr;/* tmpLen a 0 */
+    base.skip = skip;/* insieme da scartare */
+    if (choosen != NULL)
+    {
+        S = set_init(NULL);
+        if (S == NULL)
+        {
+            free(tmpArr);
+            return -1;
+        }
+        base.choosen = S;
+    }
+    else
+        S = NULL;
+
+    /* foreach per tutte le entry */
+    list_accumulate(R->l, &as_assay_helper, &base);
+    /* preparazione dei risultati */
+    tmpArr = reallocarray(base.tmpArr, base.tmpLen, sizeof(struct ns_entry));
+    if (tmpArr == NULL) /* andata male */
+    {
+        free(base.tmpArr);
+        free(S);
+        return -1;
+    }
+    /* passa ai risultati */
+    *ns_array = tmpArr;
+    *ns_lenght = base.tmpLen;
+    if (choosen != NULL)
+        *choosen = S;
+
+    return 0;
 }

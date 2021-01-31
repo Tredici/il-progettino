@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <time.h>
 #include "time_utils.h"
+#include "set.h"
 
 /** Spazio massimo necessario per
  * serializzare un'entry
@@ -409,5 +410,21 @@ int register_close(struct e_register*);
  * Restituisce -1 in caso di errore.
  */
 int register_is_closed(const struct e_register*);
+
+/** Permette di trasformare un register in un
+ * array di strutture "struct ns_entry" usando
+ * tutte le entry del register la cui firma
+ * non è presente nel set fornito, oppure
+ * usandole tutte se questo è NULL.
+ * Opzionalmente restituisce un nuovo set
+ * contenente tutte le firme delle entry
+ * selezionate.
+ *
+ * Se la lunghezza dell'array allocato è 0.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int register_as_ns_array(const struct e_register*, struct ns_entry**, size_t*, const struct set*, struct set**);
 
 #endif
