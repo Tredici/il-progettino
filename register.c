@@ -1269,7 +1269,6 @@ int register_as_ns_array(
             struct set** choosen)
 {
     struct ns_entry* tmpArr;
-    size_t tmpLen;
     struct registerAsArray base;
     size_t rLen;
     struct set* S;
