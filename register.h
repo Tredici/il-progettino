@@ -51,6 +51,14 @@ struct ns_entry
  */
 int ns_entry_from_entry(struct ns_entry*, const struct entry*);
 
+/** Inizializza un oggetto struct ns_entry
+ * con il contenuto di un oggetto struct entry.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int entry_from_ns_entry(struct entry*, const struct ns_entry*);
+
 /** La struttura testuale di un entry
  * sarà:
  *  \d{4}-\d{2}-\d{2}|[NT]|\d+(\[\d+\])?

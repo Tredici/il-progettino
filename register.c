@@ -64,6 +64,21 @@ int ns_entry_from_entry(struct ns_entry* ns, const struct entry* E)
     return 0;
 }
 
+int entry_from_ns_entry(struct entry* E, const struct ns_entry* ns)
+{
+    if (ns == NULL || E == NULL)
+        return -1;
+
+    if (time_read_ns_tm(&E->e_time, &ns->date) == -1)
+        return -1;
+
+    E->type = ntohl(ns->type);
+    E->counter = ntohl(ns->totale);
+    E->signature = ntohl(ns->signature);
+
+    return 0;
+}
+
 struct e_register
 {
     /* memorizza data di crezione
