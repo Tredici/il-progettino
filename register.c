@@ -1244,7 +1244,7 @@ static void as_assay_helper(void* elem, void* base)
 {
     struct entry* E;
     struct registerAsArray* D;
-    int signature, defaultSignature;
+    int signature;
 
     E = (struct entry*)elem;
     D = (struct registerAsArray*)base;
