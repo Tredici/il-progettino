@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include "time_utils.h"
 #include "register.h"
+#include "peer-src/peer_query.h"
 
 /* in questo progetto minimale */
 #define MAX_NEIGHBOUR_NUMBER 2
@@ -324,6 +325,25 @@ struct flood_ack
         uint32_t length;
         /* informazioni sui suou vicini */
         struct ns_entry entry[0];
+    } body __attribute__ ((packed));
+} __attribute__ ((packed));
+
+/** Struttura che rappresenta il formato dei
+ * messaggi ti tipo MESSAGES_REQ_DATA.
+ */
+struct req_data
+{
+    /* header */
+    struct messages_head head;
+    /* body */
+    struct req_data_body
+    {
+        /** Autore iniziale della query
+         */
+        uint32_t autorID;
+        /** Query effettiva
+         */
+        struct ns_query query;
     } body __attribute__ ((packed));
 } __attribute__ ((packed));
 
