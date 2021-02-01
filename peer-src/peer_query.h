@@ -46,6 +46,17 @@ struct ns_query
  */
 int initNsQuery(struct ns_query*, const struct query*);
 
+/** Trasferisce il contenuto di un oggetto di tipo
+ * struct ns_query in un oggetto struct query.
+ *
+ * Svolge un ruolo complementare a quello di
+ * initNsQuery.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int readNsQuery(struct query*, const struct ns_query*);
+
 /** Inizializza l'oggetto puntato da query
  * con i valori forniti.
  *

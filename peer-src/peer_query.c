@@ -30,6 +30,21 @@ int initNsQuery(struct ns_query* nsQuery, const struct query* Q)
     return 0;
 }
 
+int readNsQuery(struct query* Q, const struct ns_query* nsQuery)
+{
+    if (nsQuery == NULL || Q == NULL)
+        return -1;
+
+    if (time_read_ns_tm(&Q->begin, &nsQuery->begin) == -1
+        || time_read_ns_tm(&Q->end, &nsQuery->end) == -1)
+        return -1;
+
+    Q->type = ntohs(nsQuery->type);
+    Q->category = ntohs(nsQuery->category);
+
+    return 0;
+}
+
 int buildQuery(struct query* query,
             enum aggregation_type type,
             enum entry_type category,
