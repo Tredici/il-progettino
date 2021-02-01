@@ -1233,7 +1233,7 @@ int register_is_closed(const struct e_register* R)
  */
 struct registerAsArray
 {
-    struct e_register* R;
+    const struct e_register* R;
     struct ns_entry* tmpArr;
     size_t tmpLen;
     const struct set* skip; /* firme da ignorare */
