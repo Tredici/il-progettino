@@ -968,7 +968,7 @@ int messages_send_flood_ack(
     if (register_as_ns_array(R, &entryList, &entryLen, skip, NULL) == -1)
         return -1;
     iov[1].iov_base = entryList;
-    iov[1].iov_len = entryLen;
+    iov[1].iov_len = entryLen * sizeof(struct ns_entry);
 
     ack = malloc(sizeof(struct flood_ack));
     if (ack == NULL)
