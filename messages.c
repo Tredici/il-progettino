@@ -1002,3 +1002,34 @@ int messages_send_flood_ack(
 
     return 0;
 }
+
+int messages_make_req_data(
+            struct req_data** req,
+            size_t* reqLen,
+            uint32_t authID,
+            const struct query* query)
+{
+    struct req_data* ans;
+
+    if (req == NULL || reqLen == NULL || query == NULL)
+        return -1;
+
+    ans = malloc(sizeof(struct req_data));
+    if (ans == NULL)
+        return -1;
+
+    memset(ans, 0, sizeof(struct req_data));
+    ans->head.type = MESSAGES_REQ_DATA;
+
+    ans->body.autorID = htonl(authID);
+    if (initNsQuery(&ans->body.query, query) == -1)
+    {
+        free(ans);
+        return -1;
+    }
+
+    *req = ans;
+    *reqLen = sizeof(struct req_data);
+
+    return 0;
+}

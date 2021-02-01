@@ -819,4 +819,18 @@ int messages_send_flood_ack(int sockFd,
             const struct e_register*,
             const struct set*);
 
+
+/** Inizializza e fornisce un messaggio
+ * di tipo MESSAGES_REQ_DATA con l'ID
+ * dell'autore e la query indicata.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_make_req_data(
+            struct req_data** req,
+            size_t* reqLen,
+            uint32_t authID,
+            const struct query* query);
+
 #endif
