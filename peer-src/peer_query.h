@@ -38,6 +38,14 @@ struct ns_query
     uint16_t type, category;
 };
 
+/** Inizializza un oggetto di tipo struct ns_query
+ * con il contenuto di un oggetto struct query.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int initNsQuery(struct ns_query*, const struct query*);
+
 /** Inizializza l'oggetto puntato da query
  * con i valori forniti.
  *

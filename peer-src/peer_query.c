@@ -15,6 +15,21 @@ struct query
     struct tm begin, end;
 };
 
+int initNsQuery(struct ns_query* nsQuery, const struct query* Q)
+{
+    if (nsQuery == NULL || Q == NULL)
+        return -1;
+
+    if (time_init_ns_tm(&nsQuery->begin, &Q->begin) == -1
+        || time_init_ns_tm(&nsQuery->end, &Q->end) == -1)
+        return -1;
+
+    nsQuery->type = htons(Q->type);
+    nsQuery->category = htons(Q->category);
+
+    return 0;
+}
+
 int buildQuery(struct query* query,
             enum aggregation_type type,
             enum entry_type category,
