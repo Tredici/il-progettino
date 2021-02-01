@@ -28,6 +28,16 @@ enum aggregation_type
  */
 struct query;
 
+/** Struttura in grado di rappresentare
+ * il contenuto di un oggetto di tipo
+ * struct query in maniera network safe.
+ */
+struct ns_query
+{
+    struct ns_tm begin, end;
+    uint16_t type, category;
+};
+
 /** Inizializza l'oggetto puntato da query
  * con i valori forniti.
  *
