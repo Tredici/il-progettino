@@ -52,6 +52,39 @@ int readNsQuery(struct query* Q, const struct ns_query* nsQuery)
     return 0;
 }
 
+int initNsAnswer(
+            struct ns_answer** answer,
+            size_t* answerLen,
+            const struct answer* A)
+{
+    struct ns_answer* tmp;
+    size_t tmpLen;
+    size_t i;
+
+    if (answer == NULL || answerLen == NULL || A == NULL || (!A->length ^ !A->data))
+        return -1;
+
+    /* assume che la risposta sia integra */
+    tmpLen = sizeof(struct ns_answer) + sizeof(uint32_t)*A->length;
+    tmp = malloc(tmpLen);
+    memset(tmp, 0, tmpLen);
+
+    /* rimepie la risposta */
+    if (initNsQuery(&tmp->query, &A->query) == -1)
+    {
+        free(tmp);
+        return -1;
+    }
+    tmp->lenght = htonl((uint32_t)A->length);
+    for (i = 0; i != A->length; ++i)
+        tmp->data[i] = htonl((uint32_t)A->data[i]);
+
+    *answer = tmp;
+    *answerLen = tmpLen;
+
+    return 0;
+}
+
 int buildQuery(struct query* query,
             enum aggregation_type type,
             enum entry_type category,
