@@ -15,6 +15,13 @@ struct query
     struct tm begin, end;
 };
 
+/** Nel caso in cui la query chieda
+ * un totale l'array contiene un unico
+ * elemento, nel caso chieda la
+ * variazione contiene tanti elementi
+ * quanto è la differenza tra le date
+ * agli estremi.
+ */
 struct answer
 {
     struct query query;
