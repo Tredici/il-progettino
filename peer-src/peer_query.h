@@ -53,6 +53,13 @@ struct ns_answer
     uint32_t data[0];
 };
 
+/** Controlla l'integrità di una query.
+ *
+ * Restituisce 0 in caso di successo (la
+ * query è valida) oppure -1 altrimenti.
+ */
+int checkQuery(const struct query*);
+
 /** Libera correttamente lo spazio allocato da
  * un oggetto di tipo struct answer.
  */

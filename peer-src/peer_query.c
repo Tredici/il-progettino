@@ -30,6 +30,35 @@ struct answer
     int* data; /* array in memoria dinamica */
 };
 
+int checkQuery(const struct query* Q)
+{
+    if (Q == NULL)
+        return -1;
+
+    if (time_date_cmp(&Q->begin, &Q->end) > 0)
+        return -1;
+
+    switch (Q->type)
+    {
+    case AGGREGATION_SUM:
+    case AGGREGATION_DIFF:
+        break;
+    default:
+        return -1;
+    }
+
+    switch (Q->category)
+    {
+    case SWAB:
+    case NEW_CASE:
+        break;
+    default:
+        return -1;
+    }
+
+    return 0;
+}
+
 void freeAnswer(struct answer* A)
 {
     if (A->length != 0)
