@@ -81,6 +81,14 @@ int readNsQuery(struct query*, const struct ns_query*);
  */
 int initNsAnswer(struct ns_answer**, size_t*, const struct answer*);
 
+/** Inizializza un oggetto di tipo struct answer
+ * con il contenuto di un oggetto struct ns_answer.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int readNsAnswer(struct answer**, const struct ns_answer*, size_t);
+
 /** Inizializza l'oggetto puntato da query
  * con i valori forniti.
  *

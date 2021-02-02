@@ -85,6 +85,49 @@ int initNsAnswer(
     return 0;
 }
 
+int readNsAnswer(struct answer** Q,
+            const struct ns_answer* nsQ,
+            size_t nsLen)
+{
+    struct answer* ans;
+    size_t i, len;
+    int* data;
+
+    if (Q == NULL || nsQ == NULL)
+        return -1;
+
+    if (nsLen != sizeof(struct ns_answer) + ntohl(nsQ->lenght)*sizeof(uint32_t))
+        return -1;
+
+    ans = sizeof(struct answer);
+    if (ans == NULL)
+        return -1;
+
+    memset(ans, 0, sizeof(struct answer));
+
+    if (readNsQuery(&ans->query, &nsQ->query) == -1)
+    {
+        free(ans);
+        return -1;
+    }
+    len = (size_t)ntohl(nsQ->lenght);
+    ans->length = len;
+
+    data = calloc(len, sizeof(int));
+    if (data == NULL)
+    {
+        free(ans);
+        return -1;
+    }
+    for (i = 0; i != len; ++i)
+        data[i] = ntohl(nsQ->data[i]);
+
+    ans->data = data;
+    *Q = ans;
+
+    return 0;
+}
+
 int buildQuery(struct query* query,
             enum aggregation_type type,
             enum entry_type category,
