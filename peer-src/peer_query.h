@@ -38,6 +38,21 @@ struct ns_query
     uint16_t type, category;
 };
 
+/** Oggetto che rappresenta una risposta
+ * a una data query.
+ */
+struct answer;
+
+/** Oggetto che permette di memorizzare una
+ * query in maniera network safe.
+ */
+struct ns_answer
+{
+    struct ns_query query;
+    uint32_t lenght;
+    uint32_t data[0];
+};
+
 /** Inizializza un oggetto di tipo struct ns_query
  * con il contenuto di un oggetto struct query.
  *

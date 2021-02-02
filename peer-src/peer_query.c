@@ -15,6 +15,13 @@ struct query
     struct tm begin, end;
 };
 
+struct answer
+{
+    struct query query;
+    size_t length;
+    int* data; /* array in memoria dinamica */
+};
+
 int initNsQuery(struct ns_query* nsQuery, const struct query* Q)
 {
     if (nsQuery == NULL || Q == NULL)
