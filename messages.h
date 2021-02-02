@@ -803,8 +803,8 @@ int messages_get_flood_req_body(
             uint32_t** signatures);
 
 /** Genera e invia un messaggio di tipo
- * MESSAGES_REPLY_DATA in risposta al
- * messaggio di tipo MESSAGES_REQ_DATA
+ * MESSAGES_REQ_ENTRIES in risposta al
+ * messaggio di tipo MESSAGES_FLOOD_FOR_ENTRIES
  * fornito.
  *
  * Il messaggio è eventualmente riempito
