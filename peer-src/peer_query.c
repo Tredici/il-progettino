@@ -41,7 +41,11 @@ int checkQuery(const struct query* Q)
     switch (Q->aggregation)
     {
     case AGGREGATION_SUM:
+        break;
     case AGGREGATION_DIFF:
+        /* se le date sono uguali non ha senso */
+        if (time_date_cmp(&Q->begin, &Q->end) == 0)
+            return -1;
         break;
     default:
         return -1;
