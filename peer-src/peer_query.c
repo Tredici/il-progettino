@@ -2,6 +2,7 @@
 #include <string.h>
 #include <assert.h>
 #include "../time_utils.h"
+#include <stddef.h>
 
 struct query
 {
@@ -74,6 +75,8 @@ int initNsAnswer(
     struct ns_answer* tmp;
     size_t tmpLen;
     size_t i;
+
+    assert(sizeof(struct ns_answer) == offsetof(struct ns_answer, data));
 
     if (answer == NULL || answerLen == NULL || A == NULL || (!A->length ^ !A->data))
         return -1;
