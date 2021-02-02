@@ -7,7 +7,7 @@
 struct query
 {
     /* tipo della query */
-    enum aggregation_type type;
+    enum aggregation_type aggregation;
     /* "categoria" degli oggetti
      * da considerare */
     enum entry_type category;
@@ -38,7 +38,7 @@ int checkQuery(const struct query* Q)
     if (time_date_cmp(&Q->begin, &Q->end) > 0)
         return -1;
 
-    switch (Q->type)
+    switch (Q->aggregation)
     {
     case AGGREGATION_SUM:
     case AGGREGATION_DIFF:
@@ -75,7 +75,7 @@ int initNsQuery(struct ns_query* nsQuery, const struct query* Q)
         || time_init_ns_tm(&nsQuery->end, &Q->end) == -1)
         return -1;
 
-    nsQuery->type = htons(Q->type);
+    nsQuery->type = htons(Q->aggregation);
     nsQuery->category = htons(Q->category);
 
     return 0;
@@ -90,7 +90,7 @@ int readNsQuery(struct query* Q, const struct ns_query* nsQuery)
         || time_read_ns_tm(&Q->end, &nsQuery->end) == -1)
         return -1;
 
-    Q->type = ntohs(nsQuery->type);
+    Q->aggregation = ntohs(nsQuery->type);
     Q->category = ntohs(nsQuery->category);
 
     return 0;
@@ -184,7 +184,7 @@ int buildQuery(struct query* query,
         return -1;
 
     memset(query, 0, sizeof(struct query));
-    query->type = type;
+    query->aggregation = type;
     query->category = category;
     query->begin = *begin;
     query->end = *end;
@@ -224,7 +224,7 @@ long int hashQuery(const struct query* query)
     /* azzera tutto */
     memset(&hash, 0, sizeof(struct query_hash));
     /* campi a singolo bit */
-    hash.aggr_type = query->type;
+    hash.aggr_type = query->aggregation;
     hash.aggr_categ = query->category;
     /* data di inizio */
     if (time_date_read(&query->begin, &year, &month, &day) == -1)
