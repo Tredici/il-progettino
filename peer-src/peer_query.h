@@ -53,6 +53,11 @@ struct ns_answer
     uint32_t data[0];
 };
 
+/** Libera correttamente lo spazio allocato da
+ * un oggetto di tipo struct answer.
+ */
+void freeAnswer(struct answer*);
+
 /** Inizializza un oggetto di tipo struct ns_query
  * con il contenuto di un oggetto struct query.
  *

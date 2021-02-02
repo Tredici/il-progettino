@@ -29,6 +29,13 @@ struct answer
     int* data; /* array in memoria dinamica */
 };
 
+void freeAnswer(struct answer* A)
+{
+    if (A->length != 0)
+        free(A->data);
+    free(A);
+}
+
 int initNsQuery(struct ns_query* nsQuery, const struct query* Q)
 {
     if (nsQuery == NULL || Q == NULL)
