@@ -493,6 +493,30 @@ const struct answer* findCachedAnswer(const struct query* Q)
     return ans;
 }
 
+int addAnswerToCache(const struct query* Q, const struct answer* A)
+{
+    long int hash;
+
+    if (!started || checkQuery(Q) != 0 || A == NULL)
+        return -1;
+
+    hash = hashQuery(Q);
+    if (pthread_mutex_lock(&REGISTERguard) != 0)
+        errExit("*** addAnswerToCache:pthread_mutex_lock ***\n");
+
+    if (rb_tree_set(ANSWERcache, hash, (void*)A) == -1)
+    {
+        if (pthread_mutex_unlock(&REGISTERguard) != 0)
+            errExit("*** addAnswerToCache:pthread_mutex_lock ***\n");
+        return -1;
+    }
+
+    if (pthread_mutex_unlock(&REGISTERguard) != 0)
+        errExit("*** addAnswerToCache:pthread_mutex_lock ***\n");
+
+    return 0;
+}
+
 static int calcEntryQuery_helper(void* reg, void* que)
 {
     const struct e_register* R;

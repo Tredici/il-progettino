@@ -82,4 +82,18 @@ int addEntryToCurrent(const struct entry*);
  */
 const struct answer* findCachedAnswer(const struct query*);
 
+/** Aggiunge il risultato di una query alla
+ * cache per poterlo recuperare più avanti
+ * mediante findCachedAnswer.
+ *
+ * ATTENZIONE: non bisogna mai invocare free
+ * o qualsiasi altra funzione con side effect,
+ * in caso di successo, sul puntatore all'oggetto
+ * struct answer fornito.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int addAnswerToCache(const struct query*, const struct answer*);
+
 #endif
