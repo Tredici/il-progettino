@@ -289,7 +289,7 @@ int readNsAnswer(struct answer** Q,
     if (nsLen != sizeof(struct ns_answer) + ntohl(nsQ->lenght)*sizeof(uint32_t))
         return -1;
 
-    ans = sizeof(struct answer);
+    ans = malloc(sizeof(struct answer));
     if (ans == NULL)
         return -1;
 
