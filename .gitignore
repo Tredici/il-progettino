@@ -1,3 +1,6 @@
+#per vscode
+.vscode/
+
 *.pdf
 
 test
