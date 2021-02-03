@@ -60,6 +60,16 @@ struct ns_answer
  */
 int checkQuery(const struct query*);
 
+/** Calcola la risposta alla query fornita
+ * usando i dati presenti della lista fornita,
+ * la quale risponde a questo "prototipo":
+ *      list<register>
+ *
+ * Restituisce 0 in caso di successo e -1 in
+ * caso di errore.
+ */
+int calcAnswer(struct answer**, const struct query*, const struct list*);
+
 /** Libera correttamente lo spazio allocato da
  * un oggetto di tipo struct answer.
  */

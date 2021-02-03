@@ -3,6 +3,7 @@
 #include <assert.h>
 #include "../time_utils.h"
 #include <stddef.h>
+#include <errno.h>
 
 struct query
 {
@@ -59,6 +60,145 @@ int checkQuery(const struct query* Q)
     default:
         return -1;
     }
+
+    return 0;
+}
+
+/** Struttura ausiliaria per calcolare
+ * una query del tipo AGGREGATION_SUM
+ */
+struct calcAns
+{
+    int* data;
+    enum entry_type type;
+    int error; /* flag, se non 0 è un disastro */
+};
+
+static void calcAns_helper(void* reg, void* base)
+{
+    struct e_register* R;
+    struct calcAns* ref;
+    int ans;
+
+    R = (struct e_register*) reg;
+    ref = (struct calcAns*)base;
+    ans = register_calc_type(R, ref->type);
+    if (ans == -1)
+        ref->error = -1;
+    else
+        *(ref->data) = ans;
+}
+
+static void calcAns_diff_helper(void* reg, void* base)
+{
+    struct e_register* R;
+    struct calcAns* ref;
+    int ans;
+
+    R = (struct e_register*) reg;
+    ref = (struct calcAns*)base;
+    ans = register_calc_type(R, ref->type);
+    if (ans == -1)
+        ref->error = -1;
+    else
+        *(ref->data++) = ans;
+}
+
+int calcAnswer(
+            struct answer** A,
+            const struct query* Q,
+            const struct list* l)
+{
+    struct answer* ans;
+    int* data; /* dati */
+    struct e_register* R;
+    struct tm* date; /* data - giorno */
+    struct calcAns calcData;
+    size_t i, numRegisters;
+    int* tmp;
+
+    if (A == NULL || Q == NULL || l == NULL || checkQuery(Q) != 0)
+        return -1;
+
+    /* controlla la lista */
+    /* lunghezza totale - compatibile con l'intervallo */
+    if (list_size(l) != (ssize_t)time_date_diff(&Q->end, &Q->begin)+1)
+        return -1;
+
+    numRegisters = (size_t)list_size(l); /* serve nel caso delle differenze */
+    /* la prima data - quella più recente */
+    if (list_first(l, (void**)&R) == -1)
+        return -1;
+    date = register_date(R);
+    errno = 0;
+    if (date == NULL || time_date_cmp(date, &Q->end) != 0 || errno != 0)
+        return -1;
+    /* l'ultima data - quella più remota */
+    if (list_last(l, (void**)&R) == -1)
+        return -1;
+    date = register_date(R);
+    errno = 0;
+    if (date == NULL || time_date_cmp(date, &Q->end) != 0 || errno != 0)
+        return -1;
+
+    ans = malloc(sizeof(struct answer));
+    if (ans == NULL)
+        return -1;
+
+    switch (Q->aggregation)
+    {
+    case AGGREGATION_SUM:
+        data = calloc(1, sizeof(int));
+        if (data == NULL)
+        {
+            free(ans);
+            return -1;
+        }
+        calcData.data = data; /* accumulatore */
+        calcData.type = Q->category;
+        calcData.error = 0;
+        /* calcolo */
+        list_accumulate((struct list*)l, &calcAns_helper, (void*)&calcData);
+        /* controllo dell'errore */
+        if (calcData.error)
+        {
+            free(data);
+            free(ans);
+            return -1;
+        }
+        ans->length = 1;
+        ans->data = data;
+        break;
+
+    case AGGREGATION_DIFF:
+        data = calloc(numRegisters, sizeof(int));
+        if (data == NULL)
+        {
+            free(ans);
+            return -1;
+        }
+        calcData.data = data; /* accumulatore */
+        calcData.type = Q->category;
+        calcData.error = 0;
+        /* calcolo */
+        list_accumulate((struct list*)l, &calcAns_diff_helper, (void*)&calcData);
+        /* controllo dell'errore */
+        if (calcData.error)
+        {
+            free(data);
+            free(ans);
+            return -1;
+        }
+        /* calcolo delle differenze */
+        for (i = 1; i != numRegisters; ++i)
+            data[i-1] -= data[i];
+        /* passaggio dei dati */
+        ans->length = --numRegisters;
+        ans->data = data;
+        break;
+    }
+    ans->query = *Q;
+    *A = ans;
 
     return 0;
 }
