@@ -328,7 +328,7 @@ struct list* list_select(const struct list* l, int (*cmp)(void*,void*), void* ba
     elem* curr; /* puntatore all'elemento della */
     int cmpRes; /* risultato della finalizzazione */
 
-    if (l == NULL || cmp == NULL || base == NULL)
+    if (l == NULL || cmp == NULL)
         return NULL;
 
     ans = list_init(NULL);
