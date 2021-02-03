@@ -8,6 +8,7 @@
 #include "../list.h"
 #include "../commons.h"
 #include "../time_utils.h"
+#include "../rb_tree.h"
 #include <pthread.h>
 #include <time.h>
 #include <signal.h>
@@ -49,6 +50,19 @@ static struct list* REGISTERlist;
  * in testa alla lista di registri
  */
 static struct tm HEADdate;
+
+/** Cache con le risposte alle query
+ * già calcolate.
+ * I dati salvati vengono mantenuti
+ * inalterati fino alla chiusura
+ * del sottosistema e possono essere
+ * letti contemporaneamente da più
+ * thread senza problemi.
+ *
+ * È una sorta di mappa del tipo
+ * map<hash(query), answer>
+ */
+static struct rb_tree* ANSWERcache;
 
 /** Identifica il peer quando si tratta
  * di salvare il contenuto dei registri
@@ -374,13 +388,25 @@ int startEntriesSubsystem(int port)
     /* inizializza la variabile globale limite inferiore */
     lowerDate = time_date_init(INFERIOR_YEAR, 1, 1);
 
+    ANSWERcache = rb_tree_init(NULL);
+    if (ANSWERcache == NULL)
+        return -1;
+
     /* crea i registri */
     if (init_REGISTERlist(port) != 0)
+    {
+        rb_tree_destroy(ANSWERcache);
+        ANSWERcache = NULL;
         return -1;
+    }
 
     /* avvia il subsystem */
     if (start_long_life_thread(&REGISTER_tid, &entriesSubsystem, NULL, NULL) == -1)
+    {
+        rb_tree_destroy(ANSWERcache);
+        ANSWERcache = NULL;
         return -1;
+    }
 
     /* accende il flag */
     started = 1;
@@ -402,6 +428,8 @@ int closeEntriesSubsystem(void)
 
     /* flush di tutti i registri rimasti aperti */
     list_destroy(REGISTERlist);
+    /* distrugge la cache delle risposte */
+    rb_tree_destroy(ANSWERcache);
 
     started = 0;
 
