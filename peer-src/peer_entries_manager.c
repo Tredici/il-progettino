@@ -38,7 +38,7 @@ static sig_atomic_t started;
 /** MUTEX a guardia delle operazioni
  * sui registri.
  */
-static pthread_mutex_t REGISTERguard = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t REGISTERguard = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 /** Lista dei registri a disposizione
  * del peer corrente.
  * In testa v'è quello corrispondente
