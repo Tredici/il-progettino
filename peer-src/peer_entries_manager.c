@@ -468,6 +468,31 @@ int addEntryToCurrent(const struct entry* E)
     return 0;
 }
 
+const struct answer* findCachedAnswer(const struct query* Q)
+{
+    const struct answer* ans;
+    long int hash;
+
+    if (!started || checkQuery(Q) != 0)
+        return NULL;
+
+    hash = hashQuery(Q);
+    if (pthread_mutex_lock(&REGISTERguard) != 0)
+        errExit("*** findCachedAnswer:pthread_mutex_lock ***\n");
+
+    if (rb_tree_get(ANSWERcache, hash, (void**)&ans) == -1)
+    {
+        if (pthread_mutex_unlock(&REGISTERguard) != 0)
+            errExit("*** findCachedAnswer:pthread_mutex_lock ***\n");
+        return NULL;
+    }
+
+    if (pthread_mutex_unlock(&REGISTERguard) != 0)
+        errExit("*** findCachedAnswer:pthread_mutex_lock ***\n");
+
+    return ans;
+}
+
 static int calcEntryQuery_helper(void* reg, void* que)
 {
     const struct e_register* R;

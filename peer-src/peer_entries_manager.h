@@ -69,4 +69,17 @@ int closeEntriesSubsystem(void);
  */
 int addEntryToCurrent(const struct entry*);
 
+/** Cerca nella cache la risposta alla query
+ * fornita.
+ *
+ * ATTENZIONE: non bisogna mai invocare free
+ * o qualsiasi altra funzione con side effect
+ * sul puntatore eventualmente restituito.
+ *
+ * Restituisce il puntatore all'oggetto
+ * struct answer in caso di successo e
+ * NULL in caso di fallimento.
+ */
+const struct answer* findCachedAnswer(const struct query*);
+
 #endif
