@@ -467,3 +467,23 @@ int addEntryToCurrent(const struct entry* E)
 
     return 0;
 }
+
+static int calcEntryQuery_helper(void* reg, void* que)
+{
+    const struct e_register* R;
+    const struct query* Q;
+    struct tm* date;
+    struct tm begin, end;
+
+    R = (const struct e_register*)reg;
+    Q = (const struct query*)que;
+
+    date = register_date(R);
+    if (date == NULL)
+        errExit("*** DISASTRO:calcEntryQuery_helper ***\n");
+
+    if (readQuery(Q, NULL, NULL, &begin, &end) == -1)
+        errExit("*** DISASTRO:calcEntryQuery_helper ***\n");
+
+    return !(time_date_cmp(date, &begin) < 0 || time_date_cmp(date, &end) > 0);
+}
