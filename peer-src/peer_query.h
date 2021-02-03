@@ -126,6 +126,18 @@ int buildQuery(struct query* query,
             const struct tm* begin,
             const struct tm* end);
 
+/** Estrae e fornisce i dati richiesti
+ * da un oggetto di tipo struct query.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int readQuery(const struct query* query,
+            enum aggregation_type* type,
+            enum entry_type* category,
+            struct tm* begin,
+            struct tm* end);
+
 /** Calcola un hash di una query e lo restituisce.
  * Permette di identificare in maniera univoca
  * tutte le query le cui date

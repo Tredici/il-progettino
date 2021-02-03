@@ -336,6 +336,27 @@ int buildQuery(struct query* query,
     return 0;
 }
 
+int readQuery(const struct query* query,
+            enum aggregation_type* type,
+            enum entry_type* category,
+            struct tm* begin,
+            struct tm* end)
+{
+    if (checkQuery(query) != 0)
+        return -1;
+
+    if (type != NULL)
+        *type = query->aggregation;
+    if (category != NULL)
+        *category = query->category;
+    if (begin != NULL)
+        *begin = query->begin;
+    if (end != NULL)
+        *end = query->end;
+
+    return 0;
+}
+
 /** Per poter stare in un long anche
  * su macchine a 32 bit deve stare entro
  * 4 byte.
