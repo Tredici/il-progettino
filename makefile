@@ -37,7 +37,7 @@ ds_esc.o: ds-src/ds_esc.c ds-src/ds_esc.h
 ds_showneighbours.o: ds-src/ds_showneighbours.c ds-src/ds_showneighbours.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-DSDEPS = ds_esc.o ds_udp.o ds_peers.o ds_showpeers.o ds_showneighbours.o
+DSDEPS = ds_esc.o ds_udp.o ds_peers.o ds_showpeers.o ds_showneighbours.o peer_query.o
 
 
 # file esclusivi dei peer
