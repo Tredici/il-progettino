@@ -437,3 +437,39 @@ long int hashQuery(const struct query* query)
     *(struct query_hash*)&ans = hash;
     return ans;
 }
+
+int printAnswer(const struct answer* A)
+{
+    char query[128];
+    char str1[16], str2[16];
+    struct tm data1, data2;
+    int i;
+
+    printf("%s\n", stringifyQuery(&A->query, query, sizeof(query)));
+
+    switch (A->query.aggregation)
+    {
+    case AGGREGATION_SUM:
+        /* era richiesto il totale */
+        printf("\tTOTAL:\t%8d\n", A->data[0]);
+        break;
+    case AGGREGATION_DIFF:
+        /* calcolo delle differenze - data1>data2 */
+        i = 0;
+        for (data1 = A->query.end, data2 = time_date_sub(&data1, 1);
+            time_date_cmp(&data2, &A->query.begin) >= 0;
+            time_date_dec(&data1, 1), time_date_dec(&data2, 1))
+            printf("\tDIFF[%s-%s]:%8d\n",
+                time_serialize_date(str1, &data1),
+                time_serialize_date(str2, &data2),
+                A->data[i++]);
+        break;
+
+    default:
+        fprintf(stderr, "*** DISASTER:printAnswer ***\n");
+        abort();
+        break;
+    }
+
+    return 0;
+}

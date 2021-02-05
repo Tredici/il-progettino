@@ -169,4 +169,13 @@ int readQuery(const struct query* query,
  */
 long int hashQuery(const struct query* query);
 
+/** Stampa su stdout il contenuto di una
+ * risposta a una query, ovvero il contenuto
+ * di un oggetto di tipo struct answer.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int printAnswer(const struct answer*);
+
 #endif
