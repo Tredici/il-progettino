@@ -7,7 +7,7 @@
 #ifndef PEER_ENTRIES_MANAGER
 #define PEER_ENTRIES_MANAGER
 
-#include "../register.h"
+#include "peer_query.h"
 
 /** Indica l'anno più remoto per cui il sistema
  * garantirà di tenere un registro per ogni suo
