@@ -26,7 +26,17 @@ enum aggregation_type
  * direttamente ma solo tramite le
  * apposite funzioni fornite.
  */
-struct query;
+struct query
+{
+    /* tipo della query */
+    enum aggregation_type aggregation;
+    /* "categoria" degli oggetti
+     * da considerare */
+    enum entry_type category;
+    /* date di inizio e di fine
+     * del periodo di interesse */
+    struct tm begin, end;
+};
 
 /** Struttura in grado di rappresentare
  * il contenuto di un oggetto di tipo
