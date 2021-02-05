@@ -433,6 +433,7 @@ long int hashQuery(const struct query* query)
     hash.end_mon = month;
     hash.end_day = day;
 
+    ans = 0;
     *(struct query_hash*)&ans = hash;
     return ans;
 }
