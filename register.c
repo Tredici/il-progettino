@@ -1345,3 +1345,21 @@ struct e_register* register_from_ns_array(
 
     return R;
 }
+
+int register_print(const struct e_register* R)
+{
+    char date[20];
+
+    if (R == NULL)
+        return -1;
+
+    /* "introduzione" */
+    printf("Register [%s] signature[%d] size(%d) %s\n",
+        time_serialize_date(date, &R->date), R->defaultSignature,
+        (int)register_size(R), (R->closed ? "CLOSED" : ""));
+    /* stampa tutte le entry */
+    if (register_serialize(stdout, R, ENTRY_SIGNATURE_OPTIONAL) != 0)
+        errExit("*** register_print:register_serialize ***\n");
+
+    return 0;
+}

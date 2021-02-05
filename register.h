@@ -443,4 +443,14 @@ int register_as_ns_array(const struct e_register*, struct ns_entry**, size_t*, c
  */
 struct e_register* register_from_ns_array(const struct tm*, const struct ns_entry*, size_t);
 
+/** Stampa su stdout tutto il contenuto del
+ * registro fornito.
+ *
+ * Utile per il debugging.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int register_print(const struct e_register*);
+
 #endif
