@@ -70,6 +70,19 @@ struct ns_answer
  */
 int checkQuery(const struct query*);
 
+/** Fornisce una stringa rappresentante il
+ * contenuto di una query.
+ *
+ * Se il puntatore al buffer è NULL alloca
+ * lo spazio richiesto in memoria dinamica
+ * usando strdup.
+ *
+ * Restituisce il puntatore al buffer
+ * in caso di successo e NULL in caso di
+ * errore.
+ */
+char* stringifyQuery(const struct query*, char*, size_t);
+
 /** Calcola la risposta alla query fornita
  * usando i dati presenti della lista fornita,
  * la quale risponde a questo "prototipo":

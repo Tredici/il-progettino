@@ -52,6 +52,43 @@ int checkQuery(const struct query* Q)
     return 0;
 }
 
+char* stringifyQuery(const struct query* query, char* buffer, size_t bufLen)
+{
+    char* tmp[128];
+    char date1[32];
+    char date2[32];
+    int outLen;
+    char* ans;
+
+    if (checkQuery(query) != 0)
+        return NULL;
+
+    outLen = sprintf(tmp, "%s %s [%s-%s]",
+        (query->aggregation == AGGREGATION_SUM ? "SUM" : "DIFF"),
+        (query->category == SWAB ? "SWABS" : "CASES"),
+        time_serialize_date(date1, &query->begin),
+        time_serialize_date(date2, &query->end));
+
+    if (outLen < 0)
+    {
+        return NULL;
+    }
+    else if (buffer != NULL)
+    {
+        if (outLen+1 < (int)bufLen)
+            return NULL;
+        ans = strcpy(buffer, tmp);
+    }
+    else
+    {
+        ans = strdup(tmp);
+        if (ans == NULL)
+            return NULL;
+    }
+
+    return ans;
+}
+
 /** Struttura ausiliaria per calcolare
  * una query del tipo AGGREGATION_SUM
  */
