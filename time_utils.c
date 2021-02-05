@@ -157,6 +157,11 @@ struct tm time_date_add(const struct tm* date, int days)
     return ans;
 }
 
+struct tm time_date_sub(const struct tm* date, int days)
+{
+    return time_date_add(date, -days);
+}
+
 struct tm* time_date_inc(struct tm* date, int days)
 {
     struct tm tmp;

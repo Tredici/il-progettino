@@ -110,6 +110,18 @@ int time_date_diff(const struct tm*, const struct tm*);
  */
 struct tm time_date_add(const struct tm*, int);
 
+/** Svolge un ruolo simile a quello di
+ * time_date_add sottraendo (in senso algebrico, +-)
+ * tanti giorni quanti quelli specificati all'oggetto
+ * struct tm fornito. Equivale a una chiamata a
+ * time_date_add con il segno del secondo argomento
+ * invertito.
+ *
+ * In caso di errore (argomento NULL) fornisce una
+ * struttura tutti i cui campi sono stati azzerati.
+ */
+struct tm time_date_sub(const struct tm*, int);
+
 /** Incrementa, dopo aver isolato solo i
  * campi relativi a una data, la data
  * fornita di tanti giorni quanti sono
