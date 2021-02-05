@@ -11,6 +11,11 @@
  * variazione contiene tanti elementi
  * quanto è la differenza tra le date
  * agli estremi.
+ *
+ * Nel caso del calcolo delle variazioni
+ * le posizioni minori dell'array
+ * riguardano le date più prossime e quelle
+ * maggiori quelle più remote.
  */
 struct answer
 {
