@@ -196,7 +196,7 @@ int time_parse_date(const char* str, struct tm* date)
     memset(&test, 0, sizeof(struct tm));
 
     /* parsing */
-    res = strptime(str, "%d:%m:%Y", &value);
+    res = strptime(str, "%Y:%m:%d", &value);
     if (res == NULL || *res != '\0')
         return -1;
     /* controllo dei dati */
