@@ -4,11 +4,10 @@ CC=gcc
 # vedi: http://retis.santannapisa.it/luca/makefiles.pdf
 LDLIBS=-lm
 
-default:
-	echo "Speficificare una regola"
+#default:
+#	echo "Speficificare una regola"
 
-all: peer
-	./peer
+all: peer ds
 
 
 #copiata dal .pdf di Abeni su make all'indirizzo:
