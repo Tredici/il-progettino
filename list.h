@@ -167,8 +167,8 @@ int list_append(struct list*, void*);
  * In caso di lista vuota impostano
  * errno a ENODATA.
  */
-int list_first(struct list*, void**);
-int list_last(struct list*, void**);
+int list_first(const struct list*, void**);
+int list_last(const struct list*, void**);
 
 #ifdef _LIST_DEBUG
 /* Stampa il contenuto di una lista considerando

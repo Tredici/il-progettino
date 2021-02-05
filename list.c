@@ -404,7 +404,7 @@ int list_append(struct list* l, void* val)
     return 0;
 }
 
-int list_first(struct list* l, void** val)
+int list_first(const struct list* l, void** val)
 {
     if (l == NULL || val == NULL)
         return -1;
@@ -420,7 +420,7 @@ int list_first(struct list* l, void** val)
     return 0;
 }
 
-int list_last(struct list* l, void** val)
+int list_last(const struct list* l, void** val)
 {
     if (l == NULL || val == NULL)
         return -1;
