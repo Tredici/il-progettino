@@ -54,7 +54,7 @@ int checkQuery(const struct query* Q)
 
 char* stringifyQuery(const struct query* query, char* buffer, size_t bufLen)
 {
-    char* tmp[128];
+    char tmp[128];
     char date1[32];
     char date2[32];
     int outLen;
@@ -75,7 +75,7 @@ char* stringifyQuery(const struct query* query, char* buffer, size_t bufLen)
     }
     else if (buffer != NULL)
     {
-        if (outLen+1 < (int)bufLen)
+        if (outLen+1 > (int)bufLen)
             return NULL;
         ans = strcpy(buffer, tmp);
     }
