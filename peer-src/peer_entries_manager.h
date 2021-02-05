@@ -96,4 +96,13 @@ const struct answer* findCachedAnswer(const struct query*);
  */
 int addAnswerToCache(const struct query*, const struct answer*);
 
+/** Provvede a eseguire il calcolo di una
+ * query su un dato intervallo.
+ *
+ * Restituisce un puntatore a un oggetto
+ * rappresentante il risultato della query
+ * oppure NULL in caso di errore.
+ */
+struct answer* calcEntryQuery(const struct query*);
+
 #endif

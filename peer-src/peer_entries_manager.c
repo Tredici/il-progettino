@@ -544,3 +544,74 @@ static int calcEntryQuery_helper(void* reg, void* que)
 
     return !(time_date_cmp(date, &begin) < 0 || time_date_cmp(date, &end) > 0);
 }
+
+#ifndef NDEBUG
+/* a solo scopo di test - permette di aggirare le restrizioni
+ * sui cast di puntatori a funzione */
+static void register_print_helper(void* ptr)
+{
+    if (register_print((const struct e_register*)ptr) != 0)
+        errExit("*** DEBUG:calcEntryQuery ***\n");
+}
+#endif
+
+struct answer* calcEntryQuery(const struct query* query)
+{
+    struct list* l = NULL;
+    struct answer* ans;
+
+    /* sistema avviato? */
+    if (!started)
+        return NULL;
+
+    if (checkQuery(query) != 0)
+        return NULL;
+
+    /* INIZIO SEZIONE CRITICA */
+    if (pthread_mutex_lock(&REGISTERguard) != 0)
+        errExit("*** calcEntryQuery:pthread_mutex_lock ***\n");
+
+    ans = findCachedAnswer(query); /* cerca la soluzione nella cache */
+    if (ans != NULL) /* trovata! */
+    {
+        unified_io_push(UNIFIED_IO_NORMAL, "CACHE HIT!");
+    }
+    else /* il risultato va calcolato */
+    {
+        unified_io_push(UNIFIED_IO_NORMAL, "CACHE MISS!");
+        l = list_select(REGISTERlist, &calcEntryQuery_helper, (void*)query);
+        if (l == NULL)
+        {
+            if (pthread_mutex_unlock(&REGISTERguard) != 0)
+                errExit("*** calcEntryQuery:pthread_mutex_lock ***\n");
+            return NULL;
+        }
+
+#ifndef NDEBUG
+/* a solo scopo di test - stampa le info su tutti i registri trovati */
+printf("Stampa dei registri scelti:\n");
+list_foreach(l, &register_print_helper);
+#endif
+
+        if (calcAnswer(&ans, query, l) != 0)
+            errExit("*** calcEntryQuery:calcAnswer ***\n");
+
+        /** Salva il dato nella cache.
+         */
+        if (addAnswerToCache(query, ans) == -1)
+            errExit("*** calcEntryQuery:addAnswerToCache ***\n");
+
+    }
+
+    /* FINE SEZIONE CRITICA */
+    if (pthread_mutex_unlock(&REGISTERguard) != 0)
+        errExit("*** calcEntryQuery:pthread_mutex_lock ***\n");
+
+    /* libera la memoria richiesta - non ha effetti collaterali
+    * sui registri quindi non è un'operazione che necessita di
+    * essere protetta da dei mutex */
+    if (l != NULL)
+        list_destroy(l);
+
+    return ans;
+}
