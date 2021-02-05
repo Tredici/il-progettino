@@ -116,7 +116,7 @@ static void calcAns_helper(void* reg, void* base)
     if (ans == -1)
         ref->error = -1;
     else
-        *(ref->data) = ans;
+        *(ref->data) += ans;
 }
 
 static void calcAns_diff_helper(void* reg, void* base)
