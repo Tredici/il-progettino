@@ -64,6 +64,12 @@ static struct tm HEADdate;
  */
 static struct rb_tree* ANSWERcache;
 
+/** funzione di cleanup per l'albero */
+static void ANSWERcleanup(void* ptr)
+{
+    freeAnswer((struct answer*)ptr);
+}
+
 /** Identifica il peer quando si tratta
  * di salvare il contenuto dei registri
  * in dei file.
@@ -391,6 +397,8 @@ int startEntriesSubsystem(int port)
     ANSWERcache = rb_tree_init(NULL);
     if (ANSWERcache == NULL)
         return -1;
+    /* imposta la funzione di cleanup ler l'albero */
+    rb_tree_set_cleanup_f(ANSWERcache, &ANSWERcleanup);
 
     /* crea i registri */
     if (init_REGISTERlist(port) != 0)
