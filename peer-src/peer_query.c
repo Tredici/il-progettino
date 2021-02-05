@@ -142,10 +142,9 @@ int calcAnswer(
     struct answer* ans;
     int* data; /* dati */
     struct e_register* R;
-    struct tm* date; /* data - giorno */
+    const struct tm* date; /* data - giorno */
     struct calcAns calcData;
     size_t i, numRegisters;
-    int* tmp;
 
     if (A == NULL || Q == NULL || l == NULL || checkQuery(Q) != 0)
         return -1;
