@@ -407,7 +407,7 @@ long int hashQuery(const struct query* query)
     struct query_hash hash;
     int year, month, day;
 
-    assert(sizeof(struct query_hash) != 4);
+    assert(sizeof(struct query_hash) == 4);
     if (query == NULL)
         return 0;
 
