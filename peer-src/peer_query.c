@@ -167,7 +167,7 @@ int calcAnswer(
         return -1;
     date = register_date(R);
     errno = 0;
-    if (date == NULL || time_date_cmp(date, &Q->end) != 0 || errno != 0)
+    if (date == NULL || time_date_cmp(date, &Q->begin) != 0 || errno != 0)
         return -1;
 
     ans = malloc(sizeof(struct answer));
