@@ -9,6 +9,7 @@
 #include "peer_entries_manager.h"
 #include "../time_utils.h"
 #include "../unified_io.h"
+#include "../commons.h"
 
 static int
 parsePeriod(const char* args,
@@ -51,12 +52,14 @@ int get(const char* args)
     char aggr[16] = "";
     char type[16] = "";
     char period[32] = "";
-    struct tm timeStart, timeEnd;
     int ret;
-    enum aggregation_type query;
+    enum aggregation_type aggregation;
     enum entry_type query_type;
     struct tm date_min, date_max;
     char date1[16], date2[16];
+    struct query query;
+    struct answer* ans;
+    char strQuery[128];
 
     ret = sscanf(args, "%15s %15s %31s", aggr, type, period);
     if (ret < 2)
@@ -66,9 +69,9 @@ int get(const char* args)
     }
     /* controllo sul parametro aggregazione */
     if (strcasecmp(aggr, "totale") == 0)
-        query = AGGREGATION_SUM;
+        aggregation = AGGREGATION_SUM;
     else if (strcasecmp(aggr, "variazione") == 0)
-        query = AGGREGATION_DIFF;
+        aggregation = AGGREGATION_DIFF;
     else
     {
         fprintf(stderr, "Le aggregazioni possono "
@@ -91,7 +94,10 @@ int get(const char* args)
     if (ret >= 3)
     {
         if (parsePeriod(period, &date_min, &date_max) != 0)
+        {
+            fprintf(stderr, "Errore nel parsing delle date!\n");
             return ERR_PARAMS;
+        }
     }
     else
     {
@@ -108,7 +114,22 @@ int get(const char* args)
     printf("Ricerca nell'intervallo [%s|%s]\n", time_serialize_date(date1, &date_min),
         time_serialize_date(date2, &date_max));
 
-    unified_io_push(UNIFIED_IO_ERROR, "UNIMPLEMENTED!");
+    if (buildQuery(&query, aggregation, query_type, &date_min, &date_max) != 0)
+    {
+        fprintf(stderr, "Qualcosa non va nella query!\n");
+        return ERR_FAIL;
+    }
+
+    printf("Calculating: %s\n", stringifyQuery(&query, strQuery, sizeof(strQuery)));
+    ans = calcEntryQuery(&query);
+    if (ans == NULL)
+    {
+        fprintf(stderr, "Impossibile rispondere alla query!\n");
+        return ERR_FAIL;
+    }
+    printf("Result:\n");
+    if (printAnswer(ans) != 0)
+        errExit("*** FAIL:printAnswer ***\n");
 
     return OK_CONTINUE;
 }
