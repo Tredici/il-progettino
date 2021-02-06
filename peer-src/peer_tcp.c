@@ -139,10 +139,17 @@ static void* TCP(void* args)
     size_t reachedNumber = 0; /* totale peer raggiunti */
     /* per i tentativi di connessione */
     int connFd;
+    sigset_t toBlock, toTest;
 
     ts = thread_semaphore_form_args(args);
     if (ts == NULL)
         errExit("*** TCP ***\n");
+
+    /* si prepara a bloccare il segnale TERM_SUBSYS_SIGNAL */
+    if (sigemptyset(&toBlock) == -1 || sigaddset(&toBlock, TERM_SUBSYS_SIGNAL) == -1
+        || pthread_sigmask(SIG_BLOCK, &toBlock, NULL) != 0)
+        if (thread_semaphore_signal(ts, -1, NULL) == -1)
+            errExit("*** TCP ***\n");
 
     unified_io_push(UNIFIED_IO_NORMAL, "Starting thread TCP...");
     unified_io_push(UNIFIED_IO_NORMAL, "Peer ID (%ld)", (long)peerID);
@@ -174,6 +181,30 @@ static void* TCP(void* args)
         errExit("*** TCP ***\n");
 
     unified_io_push(UNIFIED_IO_NORMAL, "Thread TCP running.");
+
+    /* test per UDPcheck */
+    for (;;)
+    {
+        unified_io_push(UNIFIED_IO_NORMAL, "TEST UDPcheck");
+        /* code */
+        if (UDPcheck(neighbours, &neighboursNumber) == -1)
+        {
+            unified_io_push(UNIFIED_IO_ERROR, "FAIL UDPcheck");
+        }
+        else
+        {
+            unified_io_push(UNIFIED_IO_NORMAL, "SUCCESS UDPcheck");
+            print_neighbours(neighbours, neighboursNumber);
+        }
+        sleep(5);
+        /* check e rottura */
+        if (sigemptyset(&toTest) != 0)
+            errExit("*** TCP:sigemptyset ***\n");
+        if (sigpending(&toTest) != 0)
+            errExit("*** TCP:sigemptyset ***\n");
+        if (sigismember(&toTest, TERM_SUBSYS_SIGNAL))
+            break;
+    }
 
     return NULL;
 }
@@ -212,7 +243,9 @@ int TCPclose(void)
     if (running)
     {
         /* abbiamo un thread da fermare */
-
+        /* invia il segnale */
+        if (pthread_kill(TCP_tid, TERM_SUBSYS_SIGNAL) != 0)
+            errExit("*** TCPclose:pthread_kill ***\n");
         /* esegue una join */
         if (pthread_join(TCP_tid, NULL) != 0)
             errExit("*** TCPclose:pthread_join ***\n");
