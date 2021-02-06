@@ -9,6 +9,10 @@
 #ifndef COMMONS
 #define COMMONS
 
+/* sempre utili */
+inline int min(int x, int y) { return x<y ? x : y; }
+inline int max(int x, int y) { return x>y ? x : y; }
+
 /* Mostra un messaggio di errore e il termina il programma  */
 void errExit(const char *format, ...);
 
