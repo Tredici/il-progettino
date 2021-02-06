@@ -81,6 +81,9 @@ enum messages_types
     /* tipi di messaggio
      * per interagire con
      * gli altri peer */
+    /* per la connessione */
+    MESSAGES_PEER_HELLO_REQ,
+    MESSAGES_PEER_HELLO_ACK,
     MESSAGES_REQ_DATA,
     MESSAGES_REPLY_DATA,
     MESSAGES_FLOOD_FOR_ENTRIES,
@@ -344,6 +347,26 @@ struct req_data
         /** Query effettiva
          */
         struct ns_query query;
+    } body __attribute__ ((packed));
+} __attribute__ ((packed));
+
+/** Formato dei messaggi di tipo
+ * MESSAGES_PEER_HELLO_REQ.
+ *
+ * Questo tipo di messaggio viene inviato
+ * da ogni peer che prova ad aprire una
+ * connessione con i suoi vicini "per
+ * informarli" della sua comparsa
+ */
+struct hello_req
+{
+    /* header */
+    struct messages_head head;
+    /* body */
+    struct hello_req_body
+    {
+        uint32_t authID; /* ID dell'autore */
+        uint32_t destID; /* ID di chi ci si aspetta sia il destinatario */
     } body __attribute__ ((packed));
 } __attribute__ ((packed));
 
