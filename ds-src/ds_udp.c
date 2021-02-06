@@ -428,7 +428,7 @@ static void* UDP(void* args)
     if (peers_init() == -1)
     {
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
-            errExit("*** sigaction ***\n");
+            errExit("*** UDP:sigaction ***\n");
         pthread_exit(NULL);
     }
 
@@ -437,25 +437,25 @@ static void* UDP(void* args)
     toStop.sa_handler = &sigHandler;
     if (sigfillset(&toStop.sa_mask) != 0)
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
-            errExit("*** sigaction ***\n");
+            errExit("*** UDP:sigaction ***\n");
 
     /* si prepara per bloccare il segnale da usare poi */
     if (sigemptyset(&toBlock) != 0)
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
-            errExit("*** sigemptyset ***\n");
+            errExit("*** UDP:sigemptyset ***\n");
     /* inserisce il segnale nella maschera */
     if (sigaddset(&toBlock, INTERRUPT_SIGNAL) != 0)
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
-            errExit("*** sigaddset ***\n");
+            errExit("*** UDP:sigaddset ***\n");
     /* lo blocca per tutto il tempo necessario */
     if (pthread_sigmask(SIG_BLOCK, &toBlock, NULL) != 0)
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
-            errExit("*** pthread_sigmask ***\n");
+            errExit("*** UDP:pthread_sigmask ***\n");
 
     /* ora imposta l'opportuno handler */
     if (sigaction(INTERRUPT_SIGNAL, &toStop, NULL) != 0)
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
-            errExit("*** sigaction ***\n");
+            errExit("*** UDP:sigaction ***\n");
 
     requestedPort = *data;
 
@@ -492,7 +492,7 @@ static void* UDP(void* args)
     {
         /* ora è tutto pronto e si può sbloccare il segnale */
         if (pthread_sigmask(SIG_UNBLOCK, &toBlock, NULL) != 0)
-            errExit("*** pthread_sigmask ***\n");
+            errExit("*** UDP:pthread_sigmask ***\n");
 
         while (UDPloop)
         {
@@ -503,20 +503,20 @@ static void* UDP(void* args)
 
             /* gestisce una richiesta alla volta */
             if (pthread_sigmask(SIG_BLOCK, &toBlock, NULL) != 0)
-                errExit("*** pthread_sigmask ***\n");
+                errExit("*** UDP:pthread_sigmask ***\n");
 
             /* ora quello che viene fatto qui è al sicuro
              * da interruzioni anomale */
             /* controlla che tutto sia andato bene */
             if (msgLen == -1)
-                errExit("*** recvfrom ***\n");
+                errExit("*** UDP:recvfrom ***\n");
 
             /* orario e mittente del pacchetti */
             if (sockaddr_as_string(srcStr, sizeof(srcStr), (struct sockaddr*)&sender, senderLen) == -1)
-                errExit("*** sockaddr_as_string ***\n");
+                errExit("*** UDP:sockaddr_as_string ***\n");
             currTime = time(NULL);
             if (ctime_r(&currTime, timeStr) == NULL)
-                errExit("*** ctime_r ***\n");
+                errExit("*** UDP:ctime_r ***\n");
             timeStr[strlen(timeStr)-1] = '\0';
             unified_io_push(UNIFIED_IO_NORMAL, "[%s\b] packet from %s", timeStr, srcStr);
 
@@ -526,7 +526,7 @@ static void* UDP(void* args)
             {
             case -1:
                 /* errore - non dovrebbe mai accadere */
-                errExit("*** recognise_messages_type ***\n");
+                errExit("*** UDP:recognise_messages_type ***\n");
                 break;
 
             case MESSAGES_MSG_UNKWN:
@@ -556,7 +556,7 @@ static void* UDP(void* args)
             }
 
             if (pthread_sigmask(SIG_UNBLOCK, &toBlock, NULL) != 0)
-                errExit("*** pthread_sigmask ***\n");
+                errExit("*** UDP:pthread_sigmask ***\n");
         }
     }
     /* ora il segnale è di nuovo bloccato */
@@ -568,11 +568,11 @@ static void* UDP(void* args)
     handlerPeersShutdown(socket);
 
     if (close(socket) != 0)
-        errExit("*** close ***\n");
+        errExit("*** UDP:close ***\n");
 
     /* distrugge gli ultimi registri dei peer */
     if (peers_clear() == -1)
-        errExit("*** peers_clear ***\n");
+        errExit("*** UDP:peers_clear ***\n");
 
     return NULL;
 }
