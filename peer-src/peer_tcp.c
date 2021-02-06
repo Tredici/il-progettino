@@ -110,6 +110,22 @@ static uint32_t peerID; /* ID nel netword */
 static struct peer_data neighbours[MAX_NEIGHBOUR_NUMBER]; /* dati sui vicini */
 static size_t neighboursNumber; /* numero di vicini. */
 
+/** Funzione ausiliaria e per il testing che stampa
+ * le informazioni su un elenco di peer.
+ */
+static void print_neighbours(const struct peer_data neighbours[], size_t length)
+{
+    size_t i;
+    char buffer[64];
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Total neighbours: (%ld)", (long)length);
+    for (i = 0; i != length; ++i)
+    {
+        peer_data_as_string(&neighbours[i], buffer, sizeof(buffer));
+        unified_io_push(UNIFIED_IO_NORMAL, "\t%d)-> %s", i, buffer);
+    }
+}
+
 /** Codice del thread TCP. Sarà attivato al
  * momento della connessione al network.
  */
