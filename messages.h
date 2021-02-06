@@ -856,4 +856,19 @@ int messages_make_req_data(
             uint32_t authID,
             const struct query* query);
 
+/** Invia un messaggio di tipo
+ * MESSAGES_PEER_HELLO_REQ
+ * tramite il socket fornito.
+ *
+ * Il messaggio include l'ID, assegnato
+ * dal peer, dell'autore e del destinatario.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_send_hello_req(
+            int sockfd,
+            uint32_t senderID,
+            uint32_t receiverID);
+
 #endif

@@ -1033,3 +1033,22 @@ int messages_make_req_data(
 
     return 0;
 }
+
+int messages_send_hello_req(int sockfd, uint32_t senderID, uint32_t receiverID)
+{
+    /* non serve allocare memoria a parte in questo caso */
+    struct hello_req msg;
+
+    memset(&msg, 0, sizeof(struct hello_req));
+    /* inizializza l'header */
+    msg.head.type = htons(MESSAGES_PEER_HELLO_ACK);
+    /* inizializza il corpo del messaggio */
+    msg.body.authID = htonl(senderID);
+    msg.body.destID = htonl(senderID);
+
+    /* ora lo invia */
+    if (send(sockfd, (void*)&msg, sizeof(struct hello_req), 0) != (ssize_t)sizeof(struct hello_req))
+        return -1;
+
+    return 0;
+}
