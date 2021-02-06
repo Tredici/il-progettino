@@ -436,26 +436,41 @@ static void* UDP(void* args)
     memset(&toStop, 0, sizeof(struct sigaction));
     toStop.sa_handler = &sigHandler;
     if (sigfillset(&toStop.sa_mask) != 0)
+    {
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
             errExit("*** UDP:sigaction ***\n");
+        pthread_exit(NULL);
+    }
 
     /* si prepara per bloccare il segnale da usare poi */
     if (sigemptyset(&toBlock) != 0)
+    {
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
             errExit("*** UDP:sigemptyset ***\n");
+        pthread_exit(NULL);
+    }
     /* inserisce il segnale nella maschera */
     if (sigaddset(&toBlock, INTERRUPT_SIGNAL) != 0)
+    {
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
             errExit("*** UDP:sigaddset ***\n");
+        pthread_exit(NULL);
+    }
     /* lo blocca per tutto il tempo necessario */
     if (pthread_sigmask(SIG_BLOCK, &toBlock, NULL) != 0)
+    {
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
             errExit("*** UDP:pthread_sigmask ***\n");
+        pthread_exit(NULL);
+    }
 
     /* ora imposta l'opportuno handler */
     if (sigaction(INTERRUPT_SIGNAL, &toStop, NULL) != 0)
+    {
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
             errExit("*** UDP:sigaction ***\n");
+        pthread_exit(NULL);
+    }
 
     requestedPort = *data;
 
@@ -465,6 +480,7 @@ static void* UDP(void* args)
     {
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
             errExit("*** UDP ***\n");
+        pthread_exit(NULL);
     }
     /* verifica la porta */
     usedPort = getSocketPort(socket);
@@ -472,6 +488,7 @@ static void* UDP(void* args)
     {
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
             errExit("*** UDP ***\n");
+        pthread_exit(NULL);
     }
     /* metodo per fornire al chiamante
      * la porta utilizzata */
