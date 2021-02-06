@@ -678,35 +678,35 @@ static void* UDP(void* args)
     if (sigfillset(&toStop.sa_mask) != 0)
     {
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
-            errExit("*** sigaction ***\n");
+            errExit("*** UDP:sigaction ***\n");
         pthread_exit(NULL);
     }
     /* si prepara per bloccare il segnale da usare poi */
     if (sigemptyset(&toBlock) != 0)
     {
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
-            errExit("*** sigemptyset ***\n");
+            errExit("*** UDP:sigemptyset ***\n");
         pthread_exit(NULL);
     }
     /* inserisce il segnale nella maschera */
     if (sigaddset(&toBlock, INTERRUPT_SIGNAL) != 0)
     {
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
-            errExit("*** sigaddset ***\n");
+            errExit("*** UDP:sigaddset ***\n");
         pthread_exit(NULL);
     }
     /* lo blocca per tutto il tempo necessario */
     if (pthread_sigmask(SIG_BLOCK, &toBlock, NULL) != 0)
     {
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
-            errExit("*** pthread_sigmask ***\n");
+            errExit("*** UDP:pthread_sigmask ***\n");
         pthread_exit(NULL);
     }
     /* ora imposta l'opportuno handler */
     if (sigaction(INTERRUPT_SIGNAL, &toStop, NULL) != 0)
     {
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
-            errExit("*** sigaction ***\n");
+            errExit("*** UDP:sigaction ***\n");
         pthread_exit(NULL);
     }
     /* FINE della parte copiata dal ds */
@@ -749,7 +749,7 @@ static void* UDP(void* args)
     {
         /* ora è tutto pronto e si può sbloccare il segnale */
         if (pthread_sigmask(SIG_UNBLOCK, &toBlock, NULL) != 0)
-            errExit("*** pthread_sigmask ***\n");
+            errExit("*** UDP:pthread_sigmask ***\n");
 
         /* il ciclo è gestito altrove per ragioni
          * di leggibilità */
