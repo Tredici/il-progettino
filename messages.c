@@ -1044,7 +1044,7 @@ int messages_send_hello_req(int sockfd, uint32_t senderID, uint32_t receiverID)
     msg.head.type = htons(MESSAGES_PEER_HELLO_REQ);
     /* inizializza il corpo del messaggio */
     msg.body.authID = htonl(senderID);
-    msg.body.destID = htonl(senderID);
+    msg.body.destID = htonl(receiverID);
 
     /* ora lo invia */
     if (send(sockfd, (void*)&msg, sizeof(struct hello_req), 0) != (ssize_t)sizeof(struct hello_req))
