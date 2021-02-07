@@ -1041,7 +1041,7 @@ int messages_send_hello_req(int sockfd, uint32_t senderID, uint32_t receiverID)
 
     memset(&msg, 0, sizeof(struct hello_req));
     /* inizializza l'header */
-    msg.head.type = htons(MESSAGES_PEER_HELLO_ACK);
+    msg.head.type = htons(MESSAGES_PEER_HELLO_REQ);
     /* inizializza il corpo del messaggio */
     msg.body.authID = htonl(senderID);
     msg.body.destID = htonl(senderID);
