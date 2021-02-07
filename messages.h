@@ -370,6 +370,38 @@ struct hello_req
     } body __attribute__ ((packed));
 } __attribute__ ((packed));
 
+enum messages_hello_status
+{
+    MESSAGES_HELLO_OK,
+    MESSAGES_HELLO_ERROR
+};
+
+/** Formato di un messaggio di tipo
+ * MESSAGES_PEER_HELLO_ACK.
+ *
+ * Il corpo del messaggio contiene
+ * un unico campo il cui valore
+ * indica se il peer che invia
+ * questo messaggio è quello "giusto",
+ * ovvero se il mittente è effettivamente
+ * un suo vicino nella attuale topologia
+ * della rete.
+ *
+ * Status:
+ *  +MESSAGES_HELLO_OK: OK
+ *  !MESSAGES_HELLO_ERROR: errore
+ */
+struct hello_ack
+{
+    /* header */
+    struct messages_head head;
+    /* body */
+    struct hello_ack_body
+    {
+        uint32_t status;
+    } body __attribute__ ((packed));
+} __attribute__ ((packed));
+
 /** Dato il puntatore al buffer che ospita il
  * messaggio fornisce il tipo di questo.
  *
