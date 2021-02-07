@@ -1052,3 +1052,24 @@ int messages_send_hello_req(int sockfd, uint32_t senderID, uint32_t receiverID)
 
     return 0;
 }
+
+int messages_send_hello_ack(
+            int sockfd,
+            enum messages_hello_status status
+            )
+{
+    /* non serve allocare memoria a parte in questo caso */
+    struct hello_ack msg;
+
+    memset(&msg, 0, sizeof(struct hello_ack));
+    /* inizializza l'header */
+    msg.head.type = htons(MESSAGES_PEER_HELLO_ACK);
+    /* inizializza il corpo del messaggio */
+    msg.body.status = htonl(status);
+
+    /* ora lo invia */
+    if (send(sockfd, (void*)&msg, sizeof(struct hello_ack), 0) != (ssize_t)sizeof(struct hello_ack))
+        return -1;
+
+    return 0;
+}
