@@ -58,6 +58,7 @@ static volatile int running;
 int TCPinit(int port)
 {
     int sk;
+    int flag;
 
     /* controlla che il sistema non sia già stato avviato */
     if (activated)
@@ -68,7 +69,9 @@ int TCPinit(int port)
         return -1;
 
     /* lo rende non bloccante */
-    if (fcntl(sk, F_SETFL, O_NONBLOCK) != 0)
+    flag = fcntl(sk, F_GETFL);
+    flag |= O_NONBLOCK;
+    if (fcntl(sk, F_SETFL, flag) != 0)
     {
         close(sk);
         return -1;
