@@ -1053,6 +1053,24 @@ int messages_send_hello_req(int sockfd, uint32_t senderID, uint32_t receiverID)
     return 0;
 }
 
+int messages_read_hello_req_body(
+            int sockfd,
+            uint32_t* senderID,
+            uint32_t* receiverID)
+{
+    struct hello_req_body body;
+
+    if (senderID == NULL || receiverID == NULL)
+        return -1;
+
+    if (recv(sockfd, (void*)&body, sizeof(body), MSG_DONTWAIT) != (ssize_t)sizeof(body))
+        return -1;
+
+    *senderID = ntohl(body.authID);
+    *receiverID = ntohl(body.destID);
+    return 0;
+}
+
 int messages_send_hello_ack(
             int sockfd,
             enum messages_hello_status status

@@ -911,6 +911,19 @@ int messages_send_hello_req(
             uint32_t senderID,
             uint32_t receiverID);
 
+/** Cerca di leggere da un socket TCP
+ * il corpo di un messaggio di tipo
+ * MESSAGES_PEER_HELLO_REQ e di
+ * restituirne il contenuto.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_read_hello_req_body(
+            int sockfd,
+            uint32_t* senderID,
+            uint32_t* receiverID);
+
 /** Genera e invia un messaggio di
  * tipo MESSAGES_PEER_HELLO_ACK.
  *
