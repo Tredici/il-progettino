@@ -83,9 +83,11 @@ enum messages_types
      * gli altri peer */
     /* per la connessione */
     MESSAGES_PEER_HELLO_REQ,
-    MESSAGES_PEER_HELLO_ACK,
+    MESSAGES_PEER_HELLO_ACK, /* può essere usato anche */
+    /* per chiedere a un vicino se ha già calcolato una query */
     MESSAGES_REQ_DATA,
     MESSAGES_REPLY_DATA,
+    /* per iniziare un rastrellamento di entry */
     MESSAGES_FLOOD_FOR_ENTRIES,
     MESSAGES_REQ_ENTRIES
 };
@@ -372,6 +374,7 @@ struct hello_req
 
 enum messages_hello_status
 {
+    /* tutto regolare - si può proseguire con la fase di attività */
     MESSAGES_HELLO_OK,
     MESSAGES_HELLO_ERROR
 };
