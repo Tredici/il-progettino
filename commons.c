@@ -9,6 +9,9 @@
 
 #define MAX_ERR_L 256
 
+int min(int x, int y) { return x<y ? x : y; }
+int max(int x, int y) { return x>y ? x : y; }
+
 void errExit(const char *format, ...)
 {
     va_list args;
