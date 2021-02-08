@@ -108,6 +108,10 @@ struct peer_tcp
     struct peer_data data;
     /* socket per raggiungerlo */
     int sockfd;
+    /* stato della connessione */
+    enum peer_conn_status status;
+    /* istante di creazione - per evitare starvation */
+    time_t creation_time;
 };
 
 /** Cerca di instaurare una connessione
