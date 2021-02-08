@@ -1073,3 +1073,20 @@ int messages_send_hello_ack(
 
     return 0;
 }
+
+int messages_read_hello_ack_body(
+            int sockfd,
+            enum messages_hello_status* status
+            )
+{
+    struct hello_ack_body body;
+
+    if (status == NULL)
+        return -1;
+
+    if (recv(sockfd, (void*)&body, sizeof(body), MSG_DONTWAIT) != (ssize_t)sizeof(body))
+        return -1;
+
+    *status = ntohl(body.status);
+    return 0;
+}

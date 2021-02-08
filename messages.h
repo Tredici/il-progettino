@@ -926,4 +926,16 @@ int messages_send_hello_ack(
             enum messages_hello_status status
             );
 
+/** Cerca di leggere da un socket TCP
+ * il corpo di un messaggio di tipo
+ * MESSAGES_PEER_HELLO_ACK.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_read_hello_ack_body(
+            int sockfd,
+            enum messages_hello_status* status
+            );
+
 #endif
