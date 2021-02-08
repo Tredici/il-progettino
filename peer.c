@@ -17,6 +17,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #define ARGNAME "porta"
 
@@ -40,6 +42,8 @@ int main(int argc, char* argv[])
 
     int commandNumber = sizeof(commands)/sizeof(struct main_loop_command );
     int port;
+
+    printf("PROCESS ID [%lu]\n", (unsigned long)getpid());
 
     if (argc != 2 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)
         usageHelp(argv[0]);
