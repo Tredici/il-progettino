@@ -83,6 +83,21 @@ int TCPinit(int port)
     return 0;
 }
 
+enum peer_conn_status
+{
+    PCS_EMPTY = 0,  /* questa struttura struct peer_tcp è inutilizzata */
+    PCS_NEW,    /* il socket è nuovo - non si sa se funziona,
+                 * è stato creato dal peer corrente,
+                 * si aspetta un messaggio di hello_ack! */
+    PCS_WAITING,/* il socket è nuovo, è stato ottenuto mediante
+                 * una accept(2), si sta aspettando un messaggio
+                 * di tipo hello_req */
+    PCS_READY,  /* il socket funziona - possiamo inviare messaggi */
+    PCS_CLOSED, /* il socket è stato chiuso */
+    PCS_ERROR   /* qualcosa è fallito in una operazione sul socket
+                 * lo stato è da considerarsi inconsistente */
+};
+
 /** Struttura dati atta a contenere
  * le informazioni e il socket
  * per raggiungere un peer
