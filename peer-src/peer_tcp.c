@@ -135,6 +135,22 @@ static int connectToPeer(const struct peer_data* data)
     return sk;
 }
 
+/** Funzione ausiliaria che prova a leggere
+ * l'header di un messaggio "regolare".
+ * Restituisce -1 in caso di errore
+ * (quanto letto, se si è riusciti a
+ * leggere) e il tipo del messaggio
+ * in caso di successo.
+ */
+static int readMessageHeader(int sockFd, void* buffer)
+{
+    if (recv(sockFd, buffer, sizeof(struct messages_head), MSG_DONTWAIT) != (ssize_t)sizeof(struct messages_head))
+        return -1;
+
+    /* restituisce il tipo del messaggio */
+    return recognise_messages_type(buffer);
+}
+
 /** Variabili che permetto al thread di
  * ottenere le informazioni sui suoi
  * vicini */
