@@ -155,6 +155,101 @@ static void print_neighbours(const struct peer_data neighbours[], size_t length)
     }
 }
 
+/** Funzione ausiliaria che si occupa di gestire la ricezione
+ * e l'eventuale accettazione di una richiesta di connessione
+ * da parte di un vicino.
+ */
+static void acceptPeer(int listenFd,
+            struct peer_tcp peers[],
+            size_t* reachedNumber)
+{
+    struct sockaddr_storage ss;
+    socklen_t ssLen = sizeof(struct sockaddr_storage);
+    int newFd; /* nuovo socket */
+    char senderStr[32] = ""; /* indirizzo del mittente in formato stringa */
+    size_t i;
+    size_t usedSlots = *reachedNumber; /* numero di slot nell'array di peer occupati */
+    time_t currentTime; /* orario di ricezione della nuova richesta di connessione */
+    char timeAsString[32] = ""; /* per mettere l'orario in formato stringa */
+
+    /* accetterà un socket per volta */
+    newFd = accept(listenFd, (struct sockaddr*)&ss, &ssLen);
+    if (newFd == -1) /* problema nella listen */
+    {
+        unified_io_push(UNIFIED_IO_ERROR, "Unexpected error in accepting TCP connection");
+        return;
+    }
+    currentTime = time(NULL); /* segna l'orario di ricezione */
+    (void)ctime_r(&currentTime, timeAsString); /* trasforma l'orario in stringa */
+    timeAsString[strlen(timeAsString)-1] = '\0'; /* leva il newline terminale */
+    /* sembra andare bene */
+    if (sockaddr_as_string(senderStr, sizeof(senderStr), (struct sockaddr*)&ss, ssLen) == -1)
+        errExit("*** TCP:sockaddr_as_string ***\n");
+    unified_io_push(UNIFIED_IO_NORMAL, "Accepted tcp connection at [%s] from %s", timeAsString, senderStr);
+    /* in questa versione iniziale non cerca di vedere se c'è un messaggio in arrivo */
+    /* controlla se ci sia spazio per accettare la connessione */
+    for (i = 0; i != usedSlots; ++i)
+    {
+        switch (peers[i].status)
+        {
+        case PCS_EMPTY:
+        case PCS_CLOSED:
+        case PCS_ERROR:
+            /* si è trovato lo slot da utilizzare */
+            /* basta azzerarlo e siamo a posto */
+            memset(&peers[i], 0, sizeof(peers[i]));
+            goto endFor; /* deve terminare anche il for */
+
+        case PCS_NEW: /* si stava aspettando il messaggio di hello ack */
+        case PCS_WAITING: /* si stava aspettando un messaggio di hello req */
+            /* è scaduto un timeout, perciò possiamo recuperare uno slot? */
+            if (peers[i].creation_time + STARVATION_TIMEOUT >= currentTime)
+                continue; /* il socket non è ancora andato in starvation - va tutto bene */
+
+            /* invia un messaggio di timeout */
+            if (messages_send_hello_ack(peers[i].sockfd, MESSAGES_HELLO_TIMEOUT) == -1)
+                unified_io_push(UNIFIED_IO_ERROR, "Error occurred while sending timeout message!");
+            /* chiude il descrittore di file */
+            if (close(peers[i].sockfd) != 0)
+                unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket!");
+            /* azzera lo slot */
+            memset(&peers[i], 0, sizeof(peers[i]));
+            goto endFor;
+        }
+    }
+endFor:
+    if (i == MAX_TCP_CONNECTION) /* non c'è più spazio - bisogna rifiutare */
+    {
+        unified_io_push(UNIFIED_IO_ERROR, "Reached limit of tcp connections - must refuse!");
+        /* invia un messaggio di overflow e chiude */
+        unified_io_push(UNIFIED_IO_ERROR, "Sending message with status MESSAGES_HELLO_OVERFLOW");
+        if (messages_send_hello_ack(newFd, MESSAGES_HELLO_OVERFLOW) == -1)
+        {
+            unified_io_push(UNIFIED_IO_ERROR, "Unexpectet error while sending error message");
+        }
+        unified_io_push(UNIFIED_IO_ERROR, "Connection closed!");
+        if (close(newFd) != 0)
+            errExit("*** TCP:close ***\n");
+    }
+    else
+    {
+        if (i == usedSlots) /* richiede un nuovo slot */
+        {
+            unified_io_push(UNIFIED_IO_NORMAL, "New peer_tcp slot required!");
+            ++(*reachedNumber); /* Segna che il numero di slot utilizzati è cresciuto */
+        }
+        else /* può riciclare uno slot */
+        {
+            unified_io_push(UNIFIED_IO_NORMAL, "Reuse peer_tcp slot!");
+        }
+        /* azzera lo slot */
+        memset(&peers[i], 0, sizeof(peers[i]));
+        peers[i].sockfd = newFd; /* salva il fd del socket per dopo */
+        peers[i].status = PCS_WAITING; /* segnala che aspetta una richiesta di hello */
+        peers[i].creation_time = currentTime; /* segnala l'orario di ricezione */
+    }
+}
+
 /** Codice del thread TCP. Sarà attivato al
  * momento della connessione al network.
  */
