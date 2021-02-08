@@ -376,6 +376,11 @@ enum messages_hello_status
 {
     /* tutto regolare - si può proseguire con la fase di attività */
     MESSAGES_HELLO_OK,
+    /* non si ha ricevuto una richiesta d */
+    MESSAGES_HELLO_TIMEOUT,
+    /* segnala all'altro peer che non può accettare altre connessi */
+    MESSAGES_HELLO_OVERFLOW,
+    /* segnala che è avvenuto un errore irrecuperabile */
     MESSAGES_HELLO_ERROR
 };
 
