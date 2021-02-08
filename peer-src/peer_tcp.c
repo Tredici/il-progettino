@@ -29,6 +29,13 @@
  */
 #define MAX_TCP_CONNECTION 20
 
+/** Numero di secondi dopo i quali un socket con il
+ * quale è stato iniziato il processo di apertura
+ * di una connessione va scartato se questo non è
+ * stato completato
+ */
+#define STARVATION_TIMEOUT 5
+
 /** Flag che permette di riconoscere se
  * il thread TCP è già stato avviato.
  */
