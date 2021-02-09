@@ -1162,12 +1162,13 @@ int messages_send_detatch_message(
 
 int messages_send_empty_reply_data(
             int sockfd,
-            enum messages_reply_data_status status
+            enum messages_reply_data_status status,
+            struct query* query
             )
 {
     struct reply_data msg;
     /* lunghezza della parte da inviare */
-    const size_t lenght = offsetof(struct reply_data, body.query);
+    const size_t lenght = sizeof(msg);
 
     /* non ha senso un messaggio vuoto in caso di successo */
     if (status == MESSAGES_REPLY_DATA_OK)
@@ -1176,7 +1177,15 @@ int messages_send_empty_reply_data(
     /* prepara l'header */
     msg.head.type = htons(MESSAGES_REPLY_DATA);
     /* prepara il corpo */
-    msg.body.status = htonl(status);
+    msg.body.status = htonl(status); /* stato */
+    if (status == MESSAGES_REPLY_DATA_NOT_FOUND)
+    {
+        if (query == NULL)
+            return -1;
+        /* inserisce la query nel messaggio di risposta */
+        if (initNsQuery(&msg.body.answer.query, query) != 0)
+            return -1;
+    }
 
     /* invia solo la parte iniziale del messaggio */
     if (send(sockfd, (void*)&msg, lenght, 0) != (ssize_t)lenght)

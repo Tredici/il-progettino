@@ -1064,12 +1064,19 @@ int messages_send_detatch_message(
  * indicherà necessariamente uno stato di
  * errore.
  *
+ * Se il messaggio di errore è del tipo
+ * MESSAGES_REPLY_DATA_NOT_FOUND allora
+ * il parametro query non può essere NULL
+ * e la query viene inserita nel messaggio
+ * di risposta.
+ *
  * Restituisce 0 in caso di successo
  * e -1 in caso di errore.
  */
 int messages_send_empty_reply_data(
             int sockfd,
-            enum messages_reply_data_status status
+            enum messages_reply_data_status status,
+            struct query* query
             );
 
 
