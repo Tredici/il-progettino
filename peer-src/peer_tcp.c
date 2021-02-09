@@ -296,6 +296,53 @@ onError:
         unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket (%d)", sockfd);
 }
 
+/** Gestisce la ricezione di un messaggio
+ * e l'eventuale aggiornamento dello stato
+ * da parte di un socket
+ */
+static void handleNeighbour(struct peer_tcp* neighbour)
+{
+    /* buffer per contenere "messaggi brevi" */
+    char buffer[128];
+    /* posizione dalla quale si inizerà a contenere il corpo del messaggio */
+    char* body = &buffer[sizeof(struct messages_head)];
+    /* evita */
+    int sockfd = neighbour->sockfd;
+    enum messages_hello_status hello_ack_status;
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Event affected socket (%d)", sockfd);
+    switch (readMessageHeader(sockfd, (void*)buffer))
+    {
+    case -1:
+        /* si segna l'errore - il socket è ora invalidato */
+        neighbour->status = PCS_ERROR;
+        unified_io_push(UNIFIED_IO_ERROR, "Failed read data from socket (%d), maybe EOF reached?", sockfd);
+        unified_io_push(UNIFIED_IO_ERROR, "Closing socket (%d).", sockfd);
+        if (close(sockfd) != 0)
+            unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket (%d).", sockfd);
+        break;
+    case MESSAGES_PEER_HELLO_REQ:
+        /* messaggio di hello da parte di un peer più giovane */
+        unified_io_push(UNIFIED_IO_NORMAL, "Received [MESSAGES_PEER_HELLO_REQ] from (%d)", sockfd);
+        /* gestisce tutto */
+        handle_MESSAGES_PEER_HELLO_REQ(neighbour);
+        break;
+    case MESSAGES_PEER_HELLO_ACK:
+        unified_io_push(UNIFIED_IO_NORMAL, "Received [MESSAGES_PEER_HELLO_ACK] from (%d)", sockfd);
+        /* cerca di recuperare lo status */
+        if (messages_read_hello_ack_body(sockfd, &hello_ack_status) != -1)
+        {
+            /* il socket è andato, ciao! */
+            unified_io_push(UNIFIED_IO_ERROR, "Error while reading data from socket (%d)", sockfd);
+            unified_io_push(UNIFIED_IO_ERROR, "Closing socket (%d)", sockfd);
+            if (close(sockfd) != 0)
+                unified_io_push(UNIFIED_IO_ERROR, "Error closing socket (%d)", sockfd);
+            return; /* termina la funzione */
+        }
+        break;
+    }
+}
+
 /** Codice del thread TCP. Sarà attivato al
  * momento della connessione al network.
  */
