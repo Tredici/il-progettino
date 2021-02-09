@@ -397,6 +397,17 @@ enum messages_hello_status
     MESSAGES_HELLO_ERROR
 };
 
+/** Possibili stati inseribili
+ * in un messaggio di tipo
+ * MESSAGES_DETATCH.
+ */
+enum detatch_status
+{
+    /* status do default, non ha alcun
+     * significato particolare */
+    MESSAGES_DETATCH_OK
+};
+
 /** Struttura dei messaggi di tipo
  * MESSAGES_DETATCH.
  *
