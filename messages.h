@@ -1079,5 +1079,20 @@ int messages_send_empty_reply_data(
             struct query* query
             );
 
+/** Invia un messaggio di tipo
+ * MESSAGES_REPLY_DATA contenente la
+ * risposta alla query fornita.
+ *
+ * Lo stato del messaggio di risposta
+ * è automaticamente posto a
+ * MESSAGES_REPLY_DATA_OK.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_send_reply_data_answer(
+            int sockfd,
+            struct answer* answer
+            );
 
 #endif

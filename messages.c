@@ -1193,3 +1193,34 @@ int messages_send_empty_reply_data(
 
     return 0;
 }
+
+int messages_send_reply_data_answer(
+            int sockfd,
+            struct answer* answer
+            )
+{
+    struct reply_data msg;
+    struct iovec iov[2];
+    ssize_t total;
+
+    if (answer == NULL)
+        return -1;
+
+    memset(&msg, 0, sizeof(msg));
+    /* prepara la parte iniziale del messaggio - "maxi-header" */
+    msg.head.type = htons(MESSAGES_REPLY_DATA);
+    msg.body.status = htonl(MESSAGES_REPLY_DATA_OK);
+    iov[0].iov_base = &msg;
+    iov[0].iov_len = offsetof(struct reply_data, body.answer);
+
+    /* prepara la seconda parte del messaggio */
+    if (initNsAnswer((struct ns_answer**)&iov[1].iov_base, &iov[1].iov_len, answer) == -1)
+        return -1;
+
+    /* si prepara all'invio */
+    total = (ssize_t)iov[0].iov_len + (ssize_t)iov[1].iov_len;
+    if (writev(sockfd, iov, 2) != total)
+        return -1;
+
+    return 0;
+}
