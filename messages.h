@@ -396,9 +396,9 @@ struct reply_data
          * di errore
          */
         uint32_t status;
-        /** Query effettiva
+        /** Risposta alla query
          */
-        struct ns_query query;
+        struct ns_answer answer;
     } body __attribute__ ((packed));
 } __attribute__ ((packed));
 
