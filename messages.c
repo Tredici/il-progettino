@@ -1174,7 +1174,7 @@ int messages_send_empty_reply_data(
         return -1;
     memset(&msg, 0, sizeof(msg));
     /* prepara l'header */
-    msg.head.type = htons(MESSAGES_REQ_DATA);
+    msg.head.type = htons(MESSAGES_REPLY_DATA);
     /* prepara il corpo */
     msg.body.status = htonl(status);
 
