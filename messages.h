@@ -365,6 +365,43 @@ struct req_data
     } body __attribute__ ((packed));
 } __attribute__ ((packed));
 
+/** Enumerazione per definire
+ * delle costanti che indicano
+ * lo stato di un messaggio
+ * di tipo MESSAGES_REPLY_DATA.
+ */
+enum messages_reply_data_status
+{
+    /* Tutto a posto, la risposta è presente */
+    MESSAGES_REPLY_DATA_OK,
+    /* Il vicino non ha la risposta */
+    MESSAGES_REPLY_DATA_NOT_FOUND,
+    /* Un errore generico è avvenuto */
+    MESSAGES_REPLY_DATA_ERROR
+};
+
+/** Struttura che rappresenta il formato dei
+ * messaggi ti tipo MESSAGES_REPLY_DATA.
+ */
+struct reply_data
+{
+    /* header */
+    struct messages_head head;
+    /* body */
+    struct reply_data_body
+    {
+        /** flag che indica se la
+         * parte successiva è presente
+         * o meno e la eventuale causa
+         * di errore
+         */
+        uint32_t status;
+        /** Query effettiva
+         */
+        struct ns_query query;
+    } body __attribute__ ((packed));
+} __attribute__ ((packed));
+
 /** Formato dei messaggi di tipo
  * MESSAGES_PEER_HELLO_REQ.
  *
