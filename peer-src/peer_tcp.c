@@ -374,6 +374,7 @@ static void handle_MESSAGES_DETATCH(struct peer_tcp* neighbour)
     int sockfd = neighbour->sockfd;
     /* ATTENZIONE! Potrebbe dover gestire la fase di riconnessione */
 
+    neighbour->status = PCS_CLOSED;
     unified_io_push(UNIFIED_IO_NORMAL, "Closing socket (%d)", sockfd);
     if (close(sockfd) != 0)
         unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket (%d)", sockfd);
