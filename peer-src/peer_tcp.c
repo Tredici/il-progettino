@@ -686,6 +686,9 @@ static void* TCP(void* args)
             if (close(connFd) != 0)
                 unified_io_push(UNIFIED_IO_ERROR, "Unexpected error while closing socket (%d)", connFd);
             break;
+        default:
+            /* suppress warning */
+            break;
         }
     }
     unified_io_push(UNIFIED_IO_NORMAL, "Terminated TCP thread!");
