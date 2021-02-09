@@ -84,6 +84,9 @@ enum messages_types
     /* per la connessione */
     MESSAGES_PEER_HELLO_REQ,
     MESSAGES_PEER_HELLO_ACK, /* può essere usato anche */
+    /* messaggio per annunciare il distacco di un peer
+     * ai suoi vicini */
+    MESSAGES_DETATCH,
     /* per chiedere a un vicino se ha già calcolato una query */
     MESSAGES_REQ_DATA,
     MESSAGES_REPLY_DATA,
@@ -393,6 +396,28 @@ enum messages_hello_status
     /* segnala che è avvenuto un errore irrecuperabile */
     MESSAGES_HELLO_ERROR
 };
+
+/** Struttura dei messaggi di tipo
+ * MESSAGES_DETATCH.
+ *
+ * I messsaggi di questo tipo sono
+ * pensati per essere gli ultimi che
+ * un peer riceve dai suoi vicini.
+ * Dopo che un messaggio di questo
+ * tipo viene ricevuto il socket
+ * associato va considerato come
+ * chiuso.
+ */
+struct message_detatch
+{
+    /* header */
+    struct messages_head head;
+    /* body */
+    struct message_detatch_body
+    {
+        uint32_t status;
+    } body __attribute__ ((packed));
+} __attribute__ ((packed));
 
 /** Formato di un messaggio di tipo
  * MESSAGES_PEER_HELLO_ACK.
