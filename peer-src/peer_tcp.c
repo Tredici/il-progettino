@@ -353,6 +353,10 @@ static void handleNeighbour(struct peer_tcp* neighbour)
             return; /* termina la funzione */
         }
         break;
+    case MESSAGES_DETATCH:
+        unified_io_push(UNIFIED_IO_NORMAL, "Received [MESSAGES_DETATCH] from (%d)", sockfd);
+        handle_MESSAGES_DETATCH(neighbour);
+        break;
     }
 }
 
