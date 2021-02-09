@@ -472,14 +472,20 @@ static void handleNeighbour(struct peer_tcp* neighbour)
     case MESSAGES_PEER_HELLO_ACK:
         unified_io_push(UNIFIED_IO_NORMAL, "Received [MESSAGES_PEER_HELLO_ACK] from (%d)", sockfd);
         /* cerca di recuperare lo status */
-        if (messages_read_hello_ack_body(sockfd, &hello_ack_status) != -1)
+        if (messages_read_hello_ack_body(sockfd, &hello_ack_status) == -1)
         {
             /* il socket è andato, ciao! */
             unified_io_push(UNIFIED_IO_ERROR, "Error while reading data from socket (%d)", sockfd);
             unified_io_push(UNIFIED_IO_ERROR, "Closing socket (%d)", sockfd);
+            neighbour->status = PCS_ERROR;
             if (close(sockfd) != 0)
                 unified_io_push(UNIFIED_IO_ERROR, "Error closing socket (%d)", sockfd);
             return; /* termina la funzione */
+        }
+        else
+        {
+            neighbour->status = PCS_READY;
+            unified_io_push(UNIFIED_IO_NORMAL, "Successfully connected to socket (%d)", sockfd);
         }
         break;
     case MESSAGES_DETATCH:
