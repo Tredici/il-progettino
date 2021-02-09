@@ -282,7 +282,7 @@ static void* TCP(void* args)
     size_t reachedNumber = 0; /* totale peer raggiunti */
     /* per i tentativi di connessione */
     int connFd;
-    sigset_t toBlock, toTest, originalSigMask;
+    sigset_t toBlock, originalSigMask;
     /* copia per accettare le connessioni */
     int listeningSocketFd = tcpFd; /* per avere un alias con un nome utile */
     /* per il monitoraggio dei socket */
