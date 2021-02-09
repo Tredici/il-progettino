@@ -430,6 +430,10 @@ enum messages_hello_status
     MESSAGES_HELLO_TIMEOUT,
     /* segnala all'altro peer che non può accettare altre connessi */
     MESSAGES_HELLO_OVERFLOW,
+    /* segnala che il destinatario è sbagliato */
+    MESSAGES_HELLO_NOT_ME,
+    /* seganala che è avvenuto un errore nell'esecuzione del protocollo */
+    MESSAGES_HELLO_PROTOCOL_ERROR,
     /* segnala che è avvenuto un errore irrecuperabile */
     MESSAGES_HELLO_ERROR
 };
