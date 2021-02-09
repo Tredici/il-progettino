@@ -480,7 +480,6 @@ static void handleNeighbour(struct peer_tcp* neighbour)
             neighbour->status = PCS_ERROR;
             if (close(sockfd) != 0)
                 unified_io_push(UNIFIED_IO_ERROR, "Error closing socket (%d)", sockfd);
-            return; /* termina la funzione */
         }
         else
         {
