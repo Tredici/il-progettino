@@ -97,7 +97,7 @@ enum peer_conn_status
                  * una accept(2), si sta aspettando un messaggio
                  * di tipo hello_req */
     PCS_READY,  /* il socket funziona - possiamo inviare messaggi */
-    PCS_CLOSED, /* il socket è stato chiuso */
+    PCS_CLOSED, /* il socket è stato chiuso regolarmente */
     PCS_ERROR   /* qualcosa è fallito in una operazione sul socket
                  * lo stato è da considerarsi inconsistente */
 };
