@@ -1159,3 +1159,28 @@ int messages_send_detatch_message(
 
     return 0;
 }
+
+int messages_send_empty_reply_data(
+            int sockfd,
+            enum messages_reply_data_status status
+            )
+{
+    struct reply_data msg;
+    /* lunghezza della parte da inviare */
+    const size_t lenght = offsetof(struct reply_data, body.query);
+
+    /* non ha senso un messaggio vuoto in caso di successo */
+    if (status == MESSAGES_REPLY_DATA_OK)
+        return -1;
+    memset(&msg, 0, sizeof(msg));
+    /* prepara l'header */
+    msg.head.type = htons(MESSAGES_REQ_DATA);
+    /* prepara il corpo */
+    msg.body.status = htonl(status);
+
+    /* invia solo la parte iniziale del messaggio */
+    if (send(sockfd, (void*)&msg, lenght, 0) != (ssize_t)lenght)
+        return -1;
+
+    return 0;
+}

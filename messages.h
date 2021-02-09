@@ -1058,4 +1058,19 @@ int messages_send_detatch_message(
             enum detatch_status status
             );
 
+/** Permette di inviare un messaggio di tipo
+ * MESSAGES_REPLY_DATA vuoto, ovvero privo
+ * di contenuto oltre lo stato, il quale
+ * indicherà necessariamente uno stato di
+ * errore.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_send_empty_reply_data(
+            int sockfd,
+            enum messages_reply_data_status status
+            );
+
+
 #endif
