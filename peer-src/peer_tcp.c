@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200112L /* per pselect */
 
 #include "peer_tcp.h"
+#include "peer_entries_manager.h"
 #include "../socket_utils.h"
 #include "../thread_semaphore.h"
 #include <pthread.h>
@@ -309,6 +310,65 @@ static void handle_MESSAGES_DETATCH(struct peer_tcp* neighbour)
         unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket (%d)", sockfd);
 }
 
+/** Funzione ausiliaria per la gestione
+ * di messaggi di tipo MESSAGES_REQ_DATA.
+ */
+static void handle_MESSAGES_REQ_DATA(struct peer_tcp* neighbour)
+{
+    uint32_t authID; /* in realtà inutile */
+    struct query query; /* realmente usato */
+    int sockfd = neighbour->sockfd;
+    char queryStr[32] = "";
+    const struct answer* answer;
+
+    /* parsing del corpo della richiesta */
+    if (messages_read_req_data_body(sockfd, &authID, &query) != 0)
+    {
+        unified_io_push(UNIFIED_IO_ERROR, "Error occurred reading body of [MESSAGES_REQ_DATA] via socket (%d)", sockfd);
+        goto onError;
+    }
+    unified_io_push(UNIFIED_IO_NORMAL, "Received query from socke (%d)", sockfd);
+    /* controlla la validità della query */
+    if (checkQuery(&query) != 0)
+    {
+        unified_io_push(UNIFIED_IO_ERROR, "Malformed query received!");
+        /* invia una risposta con l'errore - il peer corrente non può rispondere */
+        if (messages_send_empty_reply_data(sockfd, MESSAGES_REPLY_DATA_ERROR, NULL) != 0)
+            goto onSend;
+
+        return;
+    }
+    /* la trasforma in formato stringa */
+    unified_io_push(UNIFIED_IO_NORMAL, "Received query: %s", stringifyQuery(&query, queryStr, sizeof(queryStr)));
+    /* ricerca */
+    answer = findCachedAnswer(&query);
+    /* risultato */
+    if (answer == NULL)
+    {
+        unified_io_push(UNIFIED_IO_NORMAL, "Answer NOT found!");
+        if (messages_send_empty_reply_data(sockfd, MESSAGES_REPLY_DATA_NOT_FOUND, &query) != 0)
+            goto onSend;
+    }
+    else
+    {
+        unified_io_push(UNIFIED_IO_NORMAL, "Answer found!");
+        if (messages_send_reply_data_answer(sockfd, answer) == -1)
+            goto onSend;
+    }
+
+    return;
+
+onSend:
+    unified_io_push(UNIFIED_IO_ERROR, "Error occurred while sending [MESSAGES_REPLY_DATA] via socket (%d)", sockfd);
+onError:
+    /* cambia lo stato */
+    neighbour->status = PCS_ERROR;
+    /* chiude il socket */
+    unified_io_push(UNIFIED_IO_ERROR, "Closing socket (%d)", sockfd);
+    if (close(sockfd) != 0)
+        unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket (%d)", sockfd);
+}
+
 /** Gestisce la ricezione di un messaggio
  * e l'eventuale aggiornamento dello stato
  * da parte di un socket
@@ -356,6 +416,10 @@ static void handleNeighbour(struct peer_tcp* neighbour)
     case MESSAGES_DETATCH:
         unified_io_push(UNIFIED_IO_NORMAL, "Received [MESSAGES_DETATCH] from (%d)", sockfd);
         handle_MESSAGES_DETATCH(neighbour);
+        break;
+    case MESSAGES_REQ_DATA:
+        unified_io_push(UNIFIED_IO_NORMAL, "Received [MESSAGES_REQ_DATA] from (%d)", sockfd);
+        handle_MESSAGES_REQ_DATA(neighbour);
         break;
     }
 }
