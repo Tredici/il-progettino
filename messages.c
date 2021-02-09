@@ -1118,3 +1118,23 @@ int messages_read_hello_ack_body(
     *status = ntohl(body.status);
     return 0;
 }
+
+int messages_send_detatch_message(
+            int sockfd,
+            enum detatch_status status
+            )
+{
+    struct message_detatch msg;
+
+    memset(&msg, 0, sizeof(msg));
+    /* prepara l'header */
+    msg.head.type = htons(MESSAGES_DETATCH);
+    /* prepara il corpo */
+    msg.body.status = htonl(status);
+
+    /* invia il messaggio */
+    if (send(sockfd, (void*)&msg, sizeof(msg), 0) != (ssize_t)sizeof(msg))
+        return -1;
+
+    return 0;
+}

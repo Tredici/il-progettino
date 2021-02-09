@@ -997,4 +997,16 @@ int messages_read_hello_ack_body(
             enum messages_hello_status* status
             );
 
+/** Invia un messaggio di tipo
+ * MESSAGES_DETATCH attraverso il
+ * socket fornito.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_send_detatch_message(
+            int sockfd,
+            enum detatch_status status
+            );
+
 #endif
