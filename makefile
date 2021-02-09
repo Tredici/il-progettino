@@ -7,8 +7,26 @@ LDLIBS=-lm
 #default:
 #	echo "Speficificare una regola"
 
-all: peer ds
+#costruisce ed esegue server e peer
+all: build
+	make run
 
+# compila e produce gli eseguibili di ds e peer
+build: peer ds
+
+#avvia ds e peer tutti nella stessa finestra - non aggiorna i sorgenti
+run:
+#comando che si occupa di lanciare una nuova sessione tmux,
+#dividere la finestra in 6 parti e lancia in ognuna di queste
+#un'istanza del server e 5 dei peer
+	tmux new-session -d -y 512 -x 64 "./ds 0" \;\
+    split-window "./peer 0" \;\
+    split-window "./peer 0" \;\
+    split-window "./peer 0" \;\
+    split-window "./peer 0" \;\
+    split-window "./peer 0" \;\
+    select-layout tiled \;\
+    attach
 
 #copiata dal .pdf di Abeni su make all'indirizzo:
 #	http://retis.santannapisa.it/luca/makefiles.pdf
