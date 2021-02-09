@@ -485,30 +485,26 @@ static void* TCP(void* args)
         if (connFd == -1)
         {
             unified_io_push(UNIFIED_IO_ERROR, "Connectiona attempt failed!");
-            goto onError;
+            //goto onError;
         }
-         /* invia il messaggio di HELLO */
-        if (messages_send_hello_req(connFd, peerID, neighbours[i].ID) == -1)
+        /* invia il messaggio di HELLO */
+        else if (messages_send_hello_req(connFd, peerID, peer_data_extract_ID(&neighbours[i])) == -1)
         {
             if (connFd != -1) /* gestisce il fallimento della seconda condizione*/
                 close(connFd);
             unified_io_push(UNIFIED_IO_ERROR, "Cannot send HELLO REQUEST!");
-            goto onError;
+            //goto onError;
         }
-        /* Successo! Aggiorna i dati del thread. */
-        unified_io_push(UNIFIED_IO_NORMAL, "Successfully connected!");
-        reachedPeers[i].data = neighbours[i];
-        reachedPeers[i].sockfd = connFd;
-        reachedPeers[i].status = PCS_NEW;
-        reachedPeers[i].creation_time = time(NULL);
-        ++reachedNumber;
-        continue;
-    /* gestione a parte degli errori */
-    onError:
-        for (j = 0; j!=i; ++j) /* chiusura dei vecchi socket */
-            close(reachedPeers[j].sockfd);
-        if (thread_semaphore_signal(ts, -1, NULL) == -1)
-            errExit("*** TCP ***\n");
+        else
+        {
+            /* Successo! Aggiorna i dati del thread. */
+            unified_io_push(UNIFIED_IO_NORMAL, "Successfully connected!");
+            reachedPeers[reachedNumber].data = neighbours[i];
+            reachedPeers[reachedNumber].sockfd = connFd;
+            reachedPeers[reachedNumber].status = PCS_NEW;
+            reachedPeers[reachedNumber].creation_time = time(NULL);
+            ++reachedNumber;
+        }
     }
 
     /* Ora è pronto */
@@ -529,11 +525,21 @@ static void* TCP(void* args)
         /* vicini - socket per i dati */
         for (i = 0; i != reachedNumber; ++i)
         {
-            /* aggiunge il socket a quelli da cui si possa leggere */
-            FD_SET(reachedPeers[i].sockfd, &readfd);
-            /* potrebbe capitare di gestire un errore */
-            FD_SET(reachedPeers[i].sockfd, &exceptionfd);
-            maxFdNumber = max(maxFdNumber, reachedPeers[i].sockfd);
+            switch (reachedPeers[i].status)
+            {
+            case PCS_NEW:
+            case PCS_WAITING:
+            case PCS_READY:
+                /* aggiunge il socket a quelli da cui si possa leggere */
+                FD_SET(reachedPeers[i].sockfd, &readfd);
+                /* potrebbe capitare di gestire un errore */
+                FD_SET(reachedPeers[i].sockfd, &exceptionfd);
+                maxFdNumber = max(maxFdNumber, reachedPeers[i].sockfd);
+                break;
+            default:
+                /* non lo considera */
+                break;
+            }
         }
         /* attesa sui messaggi e gestione della teminazione */
         errno = 0;
@@ -548,7 +554,31 @@ static void* TCP(void* args)
         if (res > 0) /* controlla che ci sia qualcosa ga gestire */
         {
             /* gestisce i vicini */
-            ;
+            for (i = 0; i != reachedNumber; ++i)
+            {
+                switch (reachedPeers[i].status)
+                {
+                case PCS_NEW:
+                case PCS_WAITING:
+                case PCS_READY:
+                    /* lettura */
+                    if (FD_ISSET(reachedPeers[i].sockfd, &readfd))
+                    {
+                        unified_io_push(UNIFIED_IO_NORMAL, "Read event on socket (%d)", reachedPeers[i].sockfd);
+                        handleNeighbour(&reachedPeers[i]);
+                    }
+                    /* gestisce eventuali errori */
+                    if (FD_ISSET(reachedPeers[i].sockfd, &exceptionfd))
+                    {
+                        unified_io_push(UNIFIED_IO_NORMAL, "Exceptional event on socket (%d)", reachedPeers[i].sockfd);
+                        handleNeighbourSocketException(&reachedPeers[i]);
+                    }
+                    break;
+                default:
+                    /* non lo considera */
+                    break;
+                }
+            }
             /* gestisce l'accettazione di nuovi peer */
             if (FD_ISSET(listeningSocketFd, &readfd))
             {
@@ -558,6 +588,7 @@ static void* TCP(void* args)
         }
     }
 
+    unified_io_push(UNIFIED_IO_NORMAL, "Terminating TCP thread...");
     /* chiusura delle connessioni, scambio e ricezione dei dati dei registri */
     for (i = 0; i != reachedNumber; ++i)
     {
@@ -568,16 +599,21 @@ static void* TCP(void* args)
         case PCS_WAITING:
             /* chiusura di un socket inattivo - non serve fare niente */
             if (close(connFd) != 0)
-                unified_io_push(UNIFIED_IO_ERROR, "Unexpected error while closing socket");
+                unified_io_push(UNIFIED_IO_ERROR, "Unexpected error while closing socket (%d)", connFd);
             break;
         case PCS_READY:
             /* chiusura di un socket già attivo, si avvisa l'altro */
+            unified_io_push(UNIFIED_IO_NORMAL, "Sending [MESSAGES_DETATCH] via socket (%d)", connFd);
+            if (messages_send_detatch_message(connFd, MESSAGES_DETATCH_OK) != 0)
+                unified_io_push(UNIFIED_IO_ERROR, "Unexpected error while sending [MESSAGES_DETATCH] via socket (%d)", connFd);
+            unified_io_push(UNIFIED_IO_NORMAL, "Closing socket (%d)", connFd);
             /* in questa versione non si inviano gli ultimi dati ai vicini */
             if (close(connFd) != 0)
-                unified_io_push(UNIFIED_IO_ERROR, "Unexpected error while closing socket");
+                unified_io_push(UNIFIED_IO_ERROR, "Unexpected error while closing socket (%d)", connFd);
             break;
         }
     }
+    unified_io_push(UNIFIED_IO_NORMAL, "Terminated TCP thread!");
 
     return NULL;
 }
