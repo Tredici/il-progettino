@@ -269,6 +269,33 @@ endFor:
     }
 }
 
+/** Funzione ausiliaria per gestire i messaggi
+ * di tipo
+ * MESSAGES_PEER_HELLO_REQ.
+ */
+static void handle_MESSAGES_PEER_HELLO_REQ(struct peer_tcp* neighbour)
+{
+    int sockfd = neighbour->sockfd;
+    uint32_t senderID; /* ID di chi ha inviato il messaggio */
+    uint32_t maybeME; /* ID che dovrebbe essere del peer corrente */
+
+    if (messages_read_hello_req_body(sockfd, &senderID, &maybeME) == -1)
+    {
+        unified_io_push(UNIFIED_IO_ERROR, "Error reading from socket (%d)", sockfd);
+        /* va al gestore dell'error */
+        goto onError;
+    }
+    unified_io_push(UNIFIED_IO_NORMAL, "In HELLO REQ: [senderID:%lu] [maybeME:%lu]", (unsigned long)senderID, (unsigned long)maybeME);
+
+    /* se arriva qui è andato tutto bene */
+    return;
+onError:
+    neighbour->status = PCS_ERROR;
+    unified_io_push(UNIFIED_IO_ERROR, "Closing socket (%d)", sockfd);
+    if (close(sockfd) != 0)
+        unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket (%d)", sockfd);
+}
+
 /** Codice del thread TCP. Sarà attivato al
  * momento della connessione al network.
  */
