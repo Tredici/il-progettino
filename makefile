@@ -28,6 +28,10 @@ run:
     select-layout tiled \;\
     attach
 
+#invoca il comando wc su tutti i file sorgenti scritti
+wc:
+	cat *.[hc] */*.[hc] | wc
+
 #copiata dal .pdf di Abeni su make all'indirizzo:
 #	http://retis.santannapisa.it/luca/makefiles.pdf
 #da man gcc si può leggere che l'argomento -MM fa
