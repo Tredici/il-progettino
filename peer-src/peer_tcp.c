@@ -235,6 +235,9 @@ static void acceptPeer(int listenFd,
             /* azzera lo slot */
             memset(&peers[i], 0, sizeof(peers[i]));
             goto endFor;
+        default:
+            /* suppress warnings */
+            break;
         }
     }
 endFor:
