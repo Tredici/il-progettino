@@ -1044,6 +1044,27 @@ int messages_make_req_data(
     return 0;
 }
 
+int messages_read_req_data_body(
+            int sockfd,
+            uint32_t* authID,
+            struct query* query)
+{
+    struct req_data_body body;
+
+    if (authID == NULL || query == NULL)
+        return -1;
+
+    if (recv(sockfd, (void*)&body, sizeof(body), MSG_DONTWAIT) != (ssize_t)sizeof(body))
+        return -1;
+
+    /* dovrebbe essere tutto ok */
+    if (readNsQuery(query, &body.query) != 0)
+        return -1;
+    *authID = ntohl(body.autorID);
+
+    return 0;
+}
+
 int messages_send_hello_req(int sockfd, uint32_t senderID, uint32_t receiverID)
 {
     /* non serve allocare memoria a parte in questo caso */
