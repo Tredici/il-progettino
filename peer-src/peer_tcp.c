@@ -282,6 +282,18 @@ static void handle_MESSAGES_PEER_HELLO_REQ(struct peer_tcp* neighbour)
     int sockfd = neighbour->sockfd;
     uint32_t senderID; /* ID di chi ha inviato il messaggio */
     uint32_t maybeME; /* ID che dovrebbe essere del peer corrente */
+    struct peer_data currentNeighbours[MAX_NEIGHBOUR_NUMBER];
+    size_t i, numCurrentNeighbours;
+
+    /* se il socket era in uno stato diverso da
+     * "PCS_WAITING" c'è un errore nel protocollo */
+    if (neighbour->status != PCS_WAITING)
+    {
+        unified_io_push(UNIFIED_IO_ERROR, "Error in protocol - wrong state of socket (%d)", sockfd);
+        if (messages_send_hello_ack(sockfd, MESSAGES_HELLO_PROTOCOL_ERROR) != 0)
+            unified_io_push(UNIFIED_IO_ERROR, "Error sending [MESSAGES_PEER_HELLO_ACK] via socket (%d)", sockfd);
+        goto onError;
+    }
 
     if (messages_read_hello_req_body(sockfd, &senderID, &maybeME) == -1)
     {
@@ -290,7 +302,61 @@ static void handle_MESSAGES_PEER_HELLO_REQ(struct peer_tcp* neighbour)
         goto onError;
     }
     unified_io_push(UNIFIED_IO_NORMAL, "In HELLO REQ: [senderID:%lu] [maybeME:%lu]", (unsigned long)senderID, (unsigned long)maybeME);
+    /* controlla che il suo ID sia corretto */
+    if (peerID != maybeME)
+    {
+        unified_io_push(UNIFIED_IO_ERROR, "I am NOT [maybeME:%lu], I am [PeerID:%ul]", (unsigned long)maybeME, (unsigned long)peerID);
+        if (messages_send_hello_ack(sockfd, MESSAGES_HELLO_NOT_ME) != 0)
+            unified_io_push(UNIFIED_IO_ERROR, "Error sending [MESSAGES_PEER_HELLO_ACK] via socket (%d)", sockfd);
+        goto onError;
+    }
+    /* siamo stati contattati da un più "giovane"? */
+    if (peerID > senderID)
+    {
+        unified_io_push(UNIFIED_IO_ERROR, "Protocolo error: [senderID:%lu] < [PeerID:%lu]", (unsigned long)senderID, (unsigned long)peerID);
+        if (messages_send_hello_ack(sockfd, MESSAGES_HELLO_PROTOCOL_ERROR) != 0)
+            unified_io_push(UNIFIED_IO_ERROR, "Error sending [MESSAGES_PEER_HELLO_ACK] via socket (%d)", sockfd);
+        goto onError;
+    }
+    /* checking current peers */
+    unified_io_push(UNIFIED_IO_NORMAL, "Contacting server for check...");
+    if (UDPcheck(currentNeighbours, &numCurrentNeighbours) == -1)
+    {
+        unified_io_push(UNIFIED_IO_ERROR, "Server has NOT responded!");
+        /* informa il mittente dell'errore */
+        if (messages_send_hello_ack(sockfd, MESSAGES_HELLO_ERROR) != 0)
+            unified_io_push(UNIFIED_IO_ERROR, "Error sending [MESSAGES_PEER_HELLO_ACK] via socket (%d)", sockfd);
+        goto onError;
+    }
+    unified_io_push(UNIFIED_IO_NORMAL, "Server has responded!");
+    /* controlla se nella risposta c'è l'ID del mittente */
+    for (i = 0; i != numCurrentNeighbours; ++i)
+    {
+        /* controlla tutti i vicini */
+        if (senderID == peer_data_extract_ID(&currentNeighbours[i]))
+        {
+            neighbour->data = currentNeighbours[i];
+            neighbour->status = PCS_READY;
+            goto onSuccess;
+        }
+    }
+    /* non ha trovato il vicino - lo informa dell'errore */
+    if (messages_send_hello_ack(sockfd, MESSAGES_HELLO_ERROR) != 0)
+        unified_io_push(UNIFIED_IO_ERROR, "Error sending [MESSAGES_PEER_HELLO_ACK] via socket (%d)", sockfd);
 
+    goto onError;
+
+    /* tutto sembra essere regolare */
+onSuccess:
+    unified_io_push(UNIFIED_IO_NORMAL, "Connection accepted!");
+    if (messages_send_hello_ack(sockfd, MESSAGES_HELLO_OK) != 0)
+    {
+        unified_io_push(UNIFIED_IO_ERROR, "Error sending [MESSAGES_PEER_HELLO_ACK] via socket (%d)", sockfd);
+        /* TODO : se fallisce bisogna ricontrollare i vicini */
+#pragma GCC warning "TODO: ricontrollare i vicini in caso di fallimento dell'accettazione di un vicino"
+        goto onError;
+    }
+    unified_io_push(UNIFIED_IO_NORMAL, "Ack sent!");
     /* se arriva qui è andato tutto bene */
     return;
 onError:
