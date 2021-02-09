@@ -343,6 +343,20 @@ static void handleNeighbour(struct peer_tcp* neighbour)
     }
 }
 
+/** Funzione ausiliaria che si occupa di gestire
+ * eventuali condizioni eccezionali coinvolgenti
+ * i socket tcp che dovrebbe connettere ai vicini
+ */
+static void handleNeighbourSocketException(struct peer_tcp* neighbour)
+{
+    int sockfd = neighbour->sockfd;
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Unexpect event on socket (%d)", sockfd);
+    unified_io_push(UNIFIED_IO_NORMAL, "Closing socket (%d)", sockfd);
+    if (close(sockfd) != 0)
+        unified_io_push(UNIFIED_IO_ERROR, "Error closing socket (%d)", sockfd);
+}
+
 /** Codice del thread TCP. Sarà attivato al
  * momento della connessione al network.
  */
