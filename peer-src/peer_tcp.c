@@ -514,7 +514,7 @@ static void* TCP(void* args)
 {
     struct thread_semaphore* ts;
     char buffer[128];
-    size_t i, j;
+    size_t i;
     /* struttura con i peer riconosciuti */
     struct peer_tcp reachedPeers[MAX_TCP_CONNECTION];
     size_t reachedNumber = 0; /* totale peer raggiunti */
