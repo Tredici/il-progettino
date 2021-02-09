@@ -152,6 +152,16 @@ struct peer_data* peer_data_init(struct peer_data*, uint32_t, uint16_t, const st
  */
 int peer_data_extract(const struct peer_data*, uint32_t*, uint16_t*, struct ns_host_addr*);
 
+/** Funzione che permette di estrarre con
+ * facilità il solo campo ID di una
+ * struttura struct peer_data, restituendolo
+ * in host order.
+ *
+ * Restituisce l'ID in caso di successo
+ * e 0 in caso di errore
+ */
+uint32_t peer_data_extract_ID(const struct peer_data*);
+
 /** Genera una stringa che rappresenta il
  * contenuto di un oggetto struct peer_data.
  * Se non viene fornito un buffer lo spazio

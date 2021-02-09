@@ -64,6 +64,16 @@ int peer_data_extract(
     return 0;
 }
 
+uint32_t peer_data_extract_ID(const struct peer_data* ptr)
+{
+    uint32_t ID;
+
+    if (peer_data_extract(ptr, &ID, NULL, NULL) == -1)
+        return 0;
+
+    return ID;
+}
+
 char* peer_data_as_string(const struct peer_data* pd, char* buffer, size_t bufLen)
 {
     char tmpBuf[64];
