@@ -296,6 +296,19 @@ onError:
         unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket (%d)", sockfd);
 }
 
+/** Funzione ausiliaria per gestire la ricezione
+ * di messaggi di tipo MESSAGES_DETATCH.
+ */
+static void handle_MESSAGES_DETATCH(struct peer_tcp* neighbour)
+{
+    int sockfd = neighbour->sockfd;
+    /* ATTENZIONE! Potrebbe dover gestire la fase di riconnessione */
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Closing socket (%d)", sockfd);
+    if (close(sockfd) != 0)
+        unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket (%d)", sockfd);
+}
+
 /** Gestisce la ricezione di un messaggio
  * e l'eventuale aggiornamento dello stato
  * da parte di un socket
