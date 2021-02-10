@@ -1,4 +1,4 @@
-CFLAGS=-Wall -g -pthread -D_RB_TREE_DEBUG -D_LIST_DEBUG -Wextra -lrt
+CFLAGS=-Wall -g -pthread -D_RB_TREE_DEBUG -D_LIST_DEBUG -Wextra -lrt -rdynamic
 CC=gcc
 # librerie che il linker dovrà richiamare
 # vedi: http://retis.santannapisa.it/luca/makefiles.pdf
