@@ -114,6 +114,23 @@ static void sendShutdownRequest(void)
         fatal("writing to command pipe");
 }
 
+/** Funzione ausiliaria che invia al
+ * thread TCP il comando di verificare
+ * il cambio della topologia della rete
+ * contattando il server e di procedere
+ * di conseguenza.
+ */
+static void sendCheckRequest(void)
+{
+    uint8_t tmpCmd = TCP_COMMAND_CHECK_PEER;
+
+    /* controlla che non abbia fatto disastri */
+    assert(sizeof(tmpCmd) == CMD_SIZE);
+
+    if (write(tcPipe_writeEnd, &tmpCmd, CMD_SIZE) != CMD_SIZE)
+        fatal("writing to command pipe");
+}
+
 int TCPinit(int port)
 {
     int sk;
