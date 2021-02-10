@@ -162,6 +162,7 @@ static size_t neighboursNumber; /* numero di vicini. */
 /** Funzione ausiliaria e per il testing che stampa
  * le informazioni su un elenco di peer.
  */
+__attribute__ ((unused))
 static void print_neighbours(const struct peer_data neighbours[], size_t length)
 {
     size_t i;
