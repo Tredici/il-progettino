@@ -683,7 +683,7 @@ static void* TCP(void* args)
         {
             if (errno == EINTR)
                 break;
-            errExit("*** TCP:pselect ***\n");
+            fatal("*** TCP:pselect ***");
         }
         unified_io_push(UNIFIED_IO_NORMAL, "TCP thread awoken!");
         if (res > 0) /* controlla che ci sia qualcosa ga gestire */
