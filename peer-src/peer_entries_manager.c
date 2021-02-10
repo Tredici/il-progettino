@@ -100,7 +100,6 @@ struct tm firstRegisterClosed(void)
 struct tm lastRegisterClosed(void)
 {
     struct tm date;
-    int zero;
 
     if (!started)
         memset(&date, 0, sizeof(struct tm));
