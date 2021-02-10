@@ -527,7 +527,7 @@ static int calcEntryQuery_helper(void* reg, void* que)
 {
     const struct e_register* R;
     const struct query* Q;
-    struct tm* date;
+    const struct tm* date;
     struct tm begin, end;
 
     R = (const struct e_register*)reg;
