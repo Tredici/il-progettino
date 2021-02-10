@@ -99,6 +99,21 @@ static int tcPipe_writeEnd;
  */
 static volatile int running;
 
+/** Funzione ausiliaria che invia al
+ * thread TCP il comando di spegnimento
+ * usando la pipe a disposizione.
+ */
+static void sendShutdownRequest(void)
+{
+    uint8_t tmpCmd = TCP_COMMAND_EXIT;
+
+    /* controlla che non abbia fatto disastri */
+    assert(sizeof(tmpCmd) == CMD_SIZE);
+
+    if (write(tcPipe_writeEnd, &tmpCmd, CMD_SIZE) != CMD_SIZE)
+        fatal("writing to command pipe");
+}
+
 int TCPinit(int port)
 {
     int sk;
