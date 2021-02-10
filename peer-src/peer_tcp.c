@@ -560,7 +560,6 @@ static void* TCP(void* args)
         if (connFd == -1)
         {
             unified_io_push(UNIFIED_IO_ERROR, "Connectiona attempt failed!");
-            //goto onError;
         }
         /* invia il messaggio di HELLO */
         else if (messages_send_hello_req(connFd, peerID, peer_data_extract_ID(&neighbours[i])) == -1)
@@ -568,7 +567,6 @@ static void* TCP(void* args)
             if (connFd != -1) /* gestisce il fallimento della seconda condizione*/
                 close(connFd);
             unified_io_push(UNIFIED_IO_ERROR, "Cannot send HELLO REQUEST!");
-            //goto onError;
         }
         else
         {
