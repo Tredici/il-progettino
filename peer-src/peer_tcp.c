@@ -1,4 +1,5 @@
 #define _POSIX_C_SOURCE 200112L /* per pselect */
+#define _GNU_SOURCE
 
 #include "peer_tcp.h"
 #include "peer_entries_manager.h"
@@ -14,6 +15,8 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <sys/select.h>
+#include <unistd.h>
+#include <assert.h>
 
 /** CONVENZIONE SUL COLLEGAMENTO TRA PEER:
  * dovrà essere sempre il peer con ID più
@@ -40,6 +43,12 @@
  */
 #define STARVATION_TIMEOUT 5
 
+/** Numero di byte che vengono
+ * scritti in nella pipe per
+ * trasferire un comando
+ */
+#define CMD_SIZE sizeof(uint8_t)
+
 /** Flag che permette di riconoscere se
  * il thread TCP è già stato avviato.
  */
@@ -54,6 +63,37 @@ static pthread_t TCP_tid;
  */
 static int tcpFd;
 
+/** Enumerazione che elenca tutti i
+ * possibili comandi riconosciuti dal
+ * thread TCP
+ */
+enum tcp_commands
+{
+    /** Il thread deve controllare se
+     * i vicini sono cambiati - ovvero
+     * se deve cercare di connettersi
+     * a qualche altro peer
+     */
+    TCP_COMMAND_CHECK_PEER,
+    /** Il thread deve stampare
+     * tutte le informazioni sui
+     * socket attivi che controlla
+     */
+    TCP_COMMAND_INFO,
+    /** Comanda al thread TCP di avviare
+     * la procedura di terminazione
+     */
+    TCP_COMMAND_EXIT
+};
+
+/** Pipe per passare in modo semplice dei
+ * comandi al thread UDP
+ */
+static int tcPipe[2];
+/* alias di comodo per evitare di fare confusione */
+static int tcPipe_readEnd;
+static int tcPipe_writeEnd;
+
 /** Flag che indica se il thread tcp
  * era stato avviato con successo.
  */
@@ -67,6 +107,12 @@ int TCPinit(int port)
     /* controlla che il sistema non sia già stato avviato */
     if (activated)
         return -1;
+
+    if (pipe2(tcPipe, O_NONBLOCK) != 0)
+        errExit("*** pipe! ***\n");
+
+    tcPipe_readEnd = tcPipe[0];
+    tcPipe_writeEnd = tcPipe[1];
 
     sk = initTCPSocket(port, MAX_TCP_CONNECTION);
     if (sk == -1)
@@ -739,6 +785,10 @@ int TCPclose(void)
     }
 
     if (close(tcpFd) != 0)
+        return -1;
+
+    /* chiude la pipe usata per mandare comandi al thread */
+    if (close(tcPipe[0]) != 0 || close(tcPipe[1]) != 0)
         return -1;
 
     tcpFd = 0;
