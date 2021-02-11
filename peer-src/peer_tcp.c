@@ -695,6 +695,114 @@ static void handleNeighbour(struct peer_tcp* neighbour)
     }
 }
 
+/** Funzione ausiliaria che interroga il server
+ * per individuare la presenza di eventuali nuovi
+ * vicini ed eventualmente avviare la procedura
+ * di connessione nei loro confronti.
+ */
+static void tryToReachNeighbours(
+            struct peer_tcp reachedPeers[],
+            size_t* reachedNumber
+            )
+{
+    char buffer[32];
+    struct peer_data currentNeighbours[MAX_NEIGHBOUR_NUMBER];
+    size_t i, j, numCurrentNeighbours, connNumber;
+    u_int32_t otherID;
+    struct peer_tcp* newSlot;
+    int newSock; /* socket per provare a connettersi */
+    time_t currentTime;
+
+    /* numero delle connessioni già presenti */
+    connNumber = *reachedNumber;
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Requesting discovery server about neighbours...");
+    if (UDPcheck(currentNeighbours, &numCurrentNeighbours) == -1)
+    {
+        unified_io_push(UNIFIED_IO_ERROR, "Cannot reach discovery server!");
+        sendCheckRequest(); /* bisognerebbe mettere un limite ai fallimenti */
+        return;
+    }
+    unified_io_push(UNIFIED_IO_NORMAL, "Discovery server has answered!");
+    /* stampa il risultato */
+    print_neighbours(currentNeighbours, numCurrentNeighbours);
+
+    /* sono stati ottenuti dei risultati */
+    for (i = 0; i != numCurrentNeighbours; ++i)
+    {
+        peer_data_as_string(&currentNeighbours[i], buffer, sizeof(buffer));
+        unified_io_push(UNIFIED_IO_NORMAL, "%d)handling-> %s", i, buffer);
+        otherID = peer_data_extract_ID(&currentNeighbours[i]);
+        /* ha ID più alto: sarà l'altro a dover iniziare la connessione */
+        if (otherID > peerID)
+        {
+            unified_io_push(UNIFIED_IO_NORMAL, "Skipped because of ID order");
+            continue;
+        }
+        /* controlla di non essere già connesso */
+        for (j = 0; j != connNumber; ++j)
+        {
+            /* questi sono gli unici casi in cui uno slot
+             * ha il campo ID valido */
+            if (reachedPeers[j].status != PCS_NEW
+                && reachedPeers[j].status != PCS_READY)
+                continue;
+            /* già trovato? */
+            if (otherID == peer_data_extract_ID(&reachedPeers[j].data))
+                break;
+        }
+        /* avevamo già gestito questo peer quindi non serve fare altro? */
+        if (j < connNumber) /* È stato trovato! Già gestito! */
+        {
+            unified_io_push(UNIFIED_IO_NORMAL, "Skipped because already handled");
+            continue;
+        }
+        /* questo vicino non è mai stato gestito */
+        /* prova a raggiungerlo */
+        unified_io_push(UNIFIED_IO_NORMAL, "Try connecting...");
+        newSock = connectToPeer(&currentNeighbours[i]);
+        /* controlla l'esito */
+        if (newSock == -1)
+        {
+            unified_io_push(UNIFIED_IO_ERROR, "Connection attempt failed!");
+            /* accoda un altro tentativo */
+            sendCheckRequest();
+            continue;
+        }
+        unified_io_push(UNIFIED_IO_NORMAL, "Successfully connected to %s", buffer);
+        /* cerca uno slot */
+        currentTime = time(NULL);
+        newSlot = findPeerSlot(reachedPeers, reachedNumber, currentTime);
+        /* aggiorna con la dimensione */
+        connNumber = *reachedNumber;
+        /* prova a contattare il candidato vicino */
+        newSlot->sockfd = newSock;
+        newSlot->status = PCS_NEW;
+        newSlot->creation_time = currentTime;
+        newSlot->data = currentNeighbours[i];
+    }
+    /* adesso cerca i precedenti vicini con i quali interrompere la
+     * connessione */
+    unified_io_push(UNIFIED_IO_NORMAL, "Searching peer to detatch...");
+    for (i = 0; i != connNumber; ++i)
+    {
+        /* il campo ID è valido? */
+        if (reachedPeers[i].status != PCS_NEW && reachedPeers[i].status != PCS_READY)
+            continue; /* ignora */
+        /* controlla l'ID */
+        otherID = peer_data_extract_ID(&reachedPeers[i].data);
+        /* lo cerca tra i vicini */
+        for (j = 0; j != numCurrentNeighbours; ++j)
+        {
+            if (otherID == peer_data_extract_ID(&currentNeighbours[j]))
+                continue; /* trovato - può ignorare */
+        }
+        /* la connessione va chiusa - gestisce la terminazione */
+        /* invia il messaggio di terminazione */
+        handlePeerDetach(&reachedPeers[i]);
+    }
+}
+
 /** Funzione ausiliaria che si occupa di gestire
  * eventuali condizioni eccezionali coinvolgenti
  * i socket tcp che dovrebbe connettere ai vicini
