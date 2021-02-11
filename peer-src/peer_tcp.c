@@ -275,6 +275,8 @@ static int handlePeerDetach(struct peer_tcp* peer)
         unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket!");
     /* azzera lo slot */
     memset(peer, 0, sizeof(*peer));
+
+    return 0;
 }
 
 /** Funzione ausiliaria che prova a leggere
