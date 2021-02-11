@@ -41,6 +41,19 @@ enum unified_io_mode
  */
 int unified_io_init();
 
+/** Associa al thread chiamante un
+ * nome che sarà mostrato tra []
+ * prima di ogni messaggio che proverà
+ * a stampare.
+ *
+ * NON deve essere mai utilizzata dal thread
+ * che attiva il sottosistema.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int unified_io_set_thread_name(const char*);
+
 /** Imposta il comportamento del
  * sottosistema di I/O, ovvero se
  * la scrittura dell'output deve essere

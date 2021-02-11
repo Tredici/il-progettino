@@ -9,11 +9,20 @@
 #include <errno.h>
 #include <stdarg.h>
 
+/** ID del thread che attiva il sottosistema
+ * di IO.
+ * Dovrebbe essere poi egli stesso a chiuderlo.
+ */
+static pthread_t io_controller;
+
 /** Struttura che sarà usata per conservare
  * i messaggi generati dai vari thread.
  */
 struct io_message
 {
+    /* id del thread che genera il messaggio */
+    pthread_t author;
+    char authorName[20];
     enum unified_io_type type;
     char* msg;
 };
@@ -31,6 +40,9 @@ static struct io_message* io_message_init(enum unified_io_type type, const char*
 
     /* più per tradizione che per necessità */
     memset(ans, 0, sizeof(struct io_message));
+    ans->author = pthread_self(); /* ID del thread corrente */
+    if (pthread_getname_np(ans->author, ans->authorName, sizeof(ans->authorName)) != 0)
+        ans->authorName[0] = '\0';
     ans->type = type;
     ans->msg = strdup(msg);
 
@@ -67,6 +79,29 @@ static void print_message(enum unified_io_type type, const char* msg)
     }
 }
 
+/** Wrapper per la funzione print_message
+ * che si occupa di gestire la stampa del
+ * messaggio passato.
+ */
+static void print_wrapper(const struct io_message* iom)
+{
+    /* verifica se stampare l'identificativo del thread
+     * ma lo fa solo se il thread che ha generato il
+     * messaggio non è quello che ha atttivato il sottosistema */
+    if (pthread_equal(io_controller, iom->author) == 0)
+    {
+        if (strlen(iom->authorName) > 0)
+        {
+            /* errore */
+            if (iom->type == UNIFIED_IO_ERROR)
+                fprintf(stderr, "[%s]", iom->authorName);
+            else /* "normale" */
+                fprintf(stdout, "[%s]", iom->authorName);
+        }
+    }
+    print_message(iom->type, iom->msg);
+}
+
 /** Coda per i messaggi che genereranno
  * i vari thread.
  */
@@ -93,6 +128,24 @@ int unified_io_init()
 
     queue_set_cleanup_f(Q, &free);
     message_queue = Q;
+
+    io_controller = pthread_self();
+
+    return 0;
+}
+
+int unified_io_set_thread_name(const char* name)
+{
+    pthread_t me = pthread_self();
+    int res;
+
+    /* controlla che non sia il chiamante */
+    if (pthread_equal(io_controller, me))
+        return -1;
+
+    res = pthread_setname_np(me, name);
+    if (res != 0)
+        return -1;
 
     return 0;
 }
@@ -180,7 +233,7 @@ int unified_io_push(enum unified_io_type type, const char* format, ...)
     }
     else /* altrimenti stampa direttamente */
     {
-        print_message(iom->type, iom->msg);
+        print_wrapper(iom);
         io_message_destroy(iom); /* libera la memoria */
     }
 
@@ -207,7 +260,7 @@ int unified_io_print(int flag)
         return -1;
     }
 
-    print_message(iom->type, iom->msg);
+    print_wrapper(iom);
     io_message_destroy(iom);
 
     return 0;
