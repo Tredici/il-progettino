@@ -526,8 +526,6 @@ static void handleNeighbour(struct peer_tcp* neighbour)
 {
     /* buffer per contenere "messaggi brevi" */
     char buffer[128];
-    /* posizione dalla quale si inizerà a contenere il corpo del messaggio */
-    char* body = &buffer[sizeof(struct messages_head)];
     /* evita */
     int sockfd = neighbour->sockfd;
     enum messages_hello_status hello_ack_status;
