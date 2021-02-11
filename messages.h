@@ -1096,7 +1096,7 @@ int messages_send_empty_reply_data(
  */
 int messages_send_reply_data_answer(
             int sockfd,
-            struct answer* answer
+            const struct answer* answer
             );
 
 #endif
