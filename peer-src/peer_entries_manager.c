@@ -2,6 +2,7 @@
 #define _GNU_SOURCE
 
 #include "peer_entries_manager.h"
+#include "peer_tcp.h" /* per contattare i vicini */
 #include "../thread_semaphore.h"
 #include "../unified_io.h"
 #include "../register.h"
@@ -561,6 +562,7 @@ struct answer* calcEntryQuery(const struct query* query)
 {
     struct list* l = NULL;
     struct answer* ans;
+    int reqResult; /* come è andata la richiesta hai vicini? */
 
     /* sistema avviato? */
     if (!started)
@@ -581,28 +583,53 @@ struct answer* calcEntryQuery(const struct query* query)
     else /* il risultato va calcolato */
     {
         unified_io_push(UNIFIED_IO_NORMAL, "CACHE MISS!");
-        l = list_select(REGISTERlist, &calcEntryQuery_helper, (void*)query);
-        if (l == NULL)
+
+        /* contatta i vicini per vedere se hanno già il risultato */
+        unified_io_push(UNIFIED_IO_NORMAL, "Sending query to neighbours...");
+
+        /* per evitare deadlock */
+        if (pthread_mutex_unlock(&REGISTERguard) != 0)
+            fatal("pthread_mutex_unlock");
+        /* se non si rilasciasse il mutex finirebbe per bloccarsi con l'altro thread */
+        reqResult = TCPreqData(query);
+        if (pthread_mutex_lock(&REGISTERguard) != 0)
+            fatal("pthread_mutex_lock");
+
+        if (reqResult == 0)
         {
-            if (pthread_mutex_unlock(&REGISTERguard) != 0)
-                errExit("*** calcEntryQuery:pthread_mutex_lock ***\n");
-            return NULL;
+            /* i vicini hanno risposto */
+            unified_io_push(UNIFIED_IO_NORMAL, "Answer received from neighbours!");
+            ans = findCachedAnswer(query);
+            if (ans == NULL)
+                fatal("Inconsistent state - findCachedAnswer");
+            /* a questo punto ha preso la risposta da un vicino */
         }
+        else
+        {
+            unified_io_push(UNIFIED_IO_NORMAL, "CALCULATING QUERY!");
 
-#ifndef NDEBUG
-/* a solo scopo di test - stampa le info su tutti i registri trovati */
-printf("Stampa dei registri scelti:\n");
-list_foreach(l, &register_print_helper);
-#endif
+            l = list_select(REGISTERlist, &calcEntryQuery_helper, (void*)query);
+            if (l == NULL)
+            {
+                if (pthread_mutex_unlock(&REGISTERguard) != 0)
+                    errExit("*** calcEntryQuery:pthread_mutex_lock ***\n");
+                return NULL;
+            }
 
-        if (calcAnswer(&ans, query, l) != 0)
-            errExit("*** calcEntryQuery:calcAnswer ***\n");
+            #ifndef NDEBUG
+            /* a solo scopo di test - stampa le info su tutti i registri trovati */
+            printf("Stampa dei registri scelti:\n");
+            list_foreach(l, &register_print_helper);
+            #endif
 
-        /** Salva il dato nella cache.
-         */
-        if (addAnswerToCache(query, ans) == -1)
-            errExit("*** calcEntryQuery:addAnswerToCache ***\n");
+            if (calcAnswer(&ans, query, l) != 0)
+                errExit("*** calcEntryQuery:calcAnswer ***\n");
 
+            /** Salva il dato nella cache.
+             */
+            if (addAnswerToCache(query, ans) == -1)
+                errExit("*** calcEntryQuery:addAnswerToCache ***\n");
+        }
     }
 
     /* FINE SEZIONE CRITICA */
