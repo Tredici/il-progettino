@@ -183,6 +183,10 @@ static void* entriesSubsystem(void* args)
     if (ts == NULL)
         errExit("*** ENTRIES ***\n");
 
+    /* firma da assegnare a tutti i messaggi del thread */
+    if (unified_io_set_thread_name("ENTRIES") != 0)
+        fatal("ENTRIES:unified_io_set_thread_name");
+
     /* fa ciò che serve per bloccare il segnale */
     if (sigemptyset(&toBlock) != 0
         || signal(TERM_SUBSYS_SIGNAL, &fakeHandler) == SIG_ERR

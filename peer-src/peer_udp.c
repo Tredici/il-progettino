@@ -671,6 +671,10 @@ static void* UDP(void* args)
     if (data == NULL)
         errExit("*** UDP ***\n");
 
+    /* firma da assegnare a tutti i messaggi del thread */
+    if (unified_io_set_thread_name("UDP") != 0)
+        fatal("UDP:unified_io_set_thread_name");
+
     /* INIZIO parte copiata dal ds */
     /* prepara l'handler per la terminazione del peer */
     memset(&toStop, 0, sizeof(struct sigaction));

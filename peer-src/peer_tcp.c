@@ -891,6 +891,10 @@ static void* TCP(void* args)
     /* Azzera per questioni di leggibilità. */
     memset(reachedPeers, 0, sizeof(reachedPeers));
 
+    /* firma da assegnare a tutti i messaggi del thread */
+    if (unified_io_set_thread_name("TCP") != 0)
+        fatal("TCP:unified_io_set_thread_name");
+
     /* si prepara a bloccare il segnale TERM_SUBSYS_SIGNAL */
     if (sigemptyset(&toBlock) == -1 || sigaddset(&toBlock, TERM_SUBSYS_SIGNAL) == -1
         || pthread_sigmask(SIG_BLOCK, &toBlock, &originalSigMask) != 0)
