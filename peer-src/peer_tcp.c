@@ -180,6 +180,31 @@ enum peer_conn_status
                  * lo stato è da considerarsi inconsistente */
 };
 
+/** Funzione ausiliaria che fornisce una stringa
+ * rappresentante lo stato della connessione.
+ */
+__attribute__ ((unused))
+const char* statusAsString(enum peer_conn_status status)
+{
+    switch (status)
+    {
+    case PCS_EMPTY:
+        return "PCS_EMPTY";
+    case PCS_NEW:
+        return "PCS_NEW";
+    case PCS_WAITING:
+        return "PCS_WAITING";
+    case PCS_READY:
+        return "PCS_READY";
+    case PCS_CLOSED:
+        return "PCS_CLOSED";
+    case PCS_ERROR:
+        return "PCS_ERROR";
+    default:
+        return NULL;
+    }
+}
+
 /** Struttura dati atta a contenere
  * le informazioni e il socket
  * per raggiungere un peer
