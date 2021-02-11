@@ -239,6 +239,44 @@ static int connectToPeer(const struct peer_data* data)
     return sk;
 }
 
+/** Funzione ausiliaria che si occupa di gestire
+ * la disconnessione da un peer.
+ * Gestisce tutti i casi possibili.
+ */
+static int handlePeerDetach(struct peer_tcp* peer)
+{
+    int sockfd = peer->sockfd;
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Closing connection using socket (%d)", sockfd);
+    unified_io_push(UNIFIED_IO_NORMAL, "Connection status: [%s]", statusAsString(peer->status));
+    switch (peer->status)
+    {
+    case PCS_READY:
+#pragma GCC warning "Pulire la coda dei messaggi"
+        /* messaggio di detatch */
+        unified_io_push(UNIFIED_IO_NORMAL, "Sending [MESSAGES_DETATCH] via socket (%d)", sockfd);
+        if (messages_send_detatch_message(sockfd, MESSAGES_DETATCH_OK) != 0)
+            unified_io_push(UNIFIED_IO_ERROR, "Unexpected error while sending [MESSAGES_DETATCH] via socket (%d)", sockfd);
+        break;
+
+    case PCS_NEW:
+    case PCS_WAITING:
+        unified_io_push(UNIFIED_IO_NORMAL, "Sending [MESSAGES_HELLO_NOT_ME] via socket (%d)", sockfd);
+        if (messages_send_hello_ack(sockfd, MESSAGES_HELLO_NOT_ME) == -1)
+            unified_io_push(UNIFIED_IO_ERROR, "Error occurred while sending [MESSAGES_HELLO_NOT_ME] message!");
+        break;
+
+    default:
+        fatal("unexpected status: %s", statusAsString(peer->status));
+    }
+    /* chiusura del socket */
+    unified_io_push(UNIFIED_IO_NORMAL, "Closing socket (%d)", sockfd);
+    if (close(sockfd) != 0)
+        unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket!");
+    /* azzera lo slot */
+    memset(peer, 0, sizeof(*peer));
+}
+
 /** Funzione ausiliaria che prova a leggere
  * l'header di un messaggio "regolare".
  * Restituisce -1 in caso di errore
