@@ -427,8 +427,6 @@ static void acceptPeer(int listenFd,
     socklen_t ssLen = sizeof(struct sockaddr_storage);
     int newFd; /* nuovo socket */
     char senderStr[32] = ""; /* indirizzo del mittente in formato stringa */
-    size_t i;
-    size_t usedSlots = *reachedNumber; /* numero di slot nell'array di peer occupati */
     time_t currentTime; /* orario di ricezione della nuova richesta di connessione */
     char timeAsString[32] = ""; /* per mettere l'orario in formato stringa */
     struct peer_tcp* slotToUse;
