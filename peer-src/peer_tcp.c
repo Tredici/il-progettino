@@ -279,38 +279,26 @@ static void print_neighbours(const struct peer_data neighbours[], size_t length)
     }
 }
 
-/** Funzione ausiliaria che si occupa di gestire la ricezione
- * e l'eventuale accettazione di una richiesta di connessione
- * da parte di un vicino.
+/** Funzione ausiliaria che ha il compito di ricavare
+ * uno slot da utilizzare dall'array di slot totali.
+ *
+ * Restituisce il puntatore al nuovo slot in caso di
+ * successo, crasha in caso di errore.
  */
-static void acceptPeer(int listenFd,
+static struct peer_tcp* findPeerSlot(
             struct peer_tcp peers[],
-            size_t* reachedNumber)
+            size_t* reachedNumber,
+            time_t currentTime
+            )
 {
-    struct sockaddr_storage ss;
-    socklen_t ssLen = sizeof(struct sockaddr_storage);
-    int newFd; /* nuovo socket */
-    char senderStr[32] = ""; /* indirizzo del mittente in formato stringa */
-    size_t i;
-    size_t usedSlots = *reachedNumber; /* numero di slot nell'array di peer occupati */
-    time_t currentTime; /* orario di ricezione della nuova richesta di connessione */
-    char timeAsString[32] = ""; /* per mettere l'orario in formato stringa */
+    struct peer_tcp* ans = NULL;
+    struct peer_tcp* tmp = NULL;
+    /* numero di slot nell'array di peer occupati */
+    size_t i, usedSlots;
+    time_t bestTime;
 
-    /* accetterà un socket per volta */
-    newFd = accept(listenFd, (struct sockaddr*)&ss, &ssLen);
-    if (newFd == -1) /* problema nella listen */
-    {
-        unified_io_push(UNIFIED_IO_ERROR, "Unexpected error in accepting TCP connection");
-        return;
-    }
-    currentTime = time(NULL); /* segna l'orario di ricezione */
-    (void)ctime_r(&currentTime, timeAsString); /* trasforma l'orario in stringa */
-    timeAsString[strlen(timeAsString)-1] = '\0'; /* leva il newline terminale */
-    /* sembra andare bene */
-    if (sockaddr_as_string(senderStr, sizeof(senderStr), (struct sockaddr*)&ss, ssLen) == -1)
-        errExit("*** TCP:sockaddr_as_string ***\n");
-    unified_io_push(UNIFIED_IO_NORMAL, "Accepted tcp connection at [%s] from %s", timeAsString, senderStr);
-    /* in questa versione iniziale non cerca di vedere se c'è un messaggio in arrivo */
+    usedSlots = *reachedNumber;
+
     /* controlla se ci sia spazio per accettare la connessione */
     for (i = 0; i != usedSlots; ++i)
     {
@@ -345,18 +333,27 @@ static void acceptPeer(int listenFd,
         }
     }
 endFor:
-    if (i == MAX_TCP_CONNECTION) /* non c'è più spazio - bisogna rifiutare */
+    if (i == MAX_TCP_CONNECTION)
     {
-        unified_io_push(UNIFIED_IO_ERROR, "Reached limit of tcp connections - must refuse!");
-        /* invia un messaggio di overflow e chiude */
-        unified_io_push(UNIFIED_IO_ERROR, "Sending message with status MESSAGES_HELLO_OVERFLOW");
-        if (messages_send_hello_ack(newFd, MESSAGES_HELLO_OVERFLOW) == -1)
+        /* orario più recente */
+        bestTime = time(NULL);
+        /* cerca uno slot da riciclare - nello stato PCS_WAITING perché
+         * sono gli unici che potrebbero essere farlocchi dato che quelli
+         * nello stato PCS_NEW sono creati dal peer corrente e ha senso
+         * siano affidabili - sceglierà lo slot più nuovo */
+        for (i = 0; i != MAX_TCP_CONNECTION; ++i)
         {
-            unified_io_push(UNIFIED_IO_ERROR, "Unexpectet error while sending error message");
+            if (peers[i].status == PCS_WAITING)
+            {
+                if (peers[i].creation_time < bestTime)
+                {
+                    /* trovato uno più vecchio */
+                    bestTime = peers[i].creation_time;
+                    tmp = &peers[i];
+                }
+            }
         }
-        unified_io_push(UNIFIED_IO_ERROR, "Connection closed!");
-        if (close(newFd) != 0)
-            errExit("*** TCP:close ***\n");
+        ans = tmp;
     }
     else
     {
@@ -369,11 +366,70 @@ endFor:
         {
             unified_io_push(UNIFIED_IO_NORMAL, "Reuse peer_tcp slot!");
         }
-        /* azzera lo slot */
-        memset(&peers[i], 0, sizeof(peers[i]));
-        peers[i].sockfd = newFd; /* salva il fd del socket per dopo */
-        peers[i].status = PCS_WAITING; /* segnala che aspetta una richiesta di hello */
-        peers[i].creation_time = currentTime; /* segnala l'orario di ricezione */
+        ans = &peers[i];
+    }
+    /* inconsistenza per come funziona il sottosistema */
+    if (ans == NULL)
+        fatal("findPeerSlot: ans == NULL");
+
+    /* azzera lo slot */
+    memset(ans, 0, sizeof(*ans));
+    return ans;
+}
+
+/** Funzione ausiliaria che si occupa di gestire la ricezione
+ * e l'eventuale accettazione di una richiesta di connessione
+ * da parte di un vicino.
+ */
+static void acceptPeer(int listenFd,
+            struct peer_tcp peers[],
+            size_t* reachedNumber)
+{
+    struct sockaddr_storage ss;
+    socklen_t ssLen = sizeof(struct sockaddr_storage);
+    int newFd; /* nuovo socket */
+    char senderStr[32] = ""; /* indirizzo del mittente in formato stringa */
+    size_t i;
+    size_t usedSlots = *reachedNumber; /* numero di slot nell'array di peer occupati */
+    time_t currentTime; /* orario di ricezione della nuova richesta di connessione */
+    char timeAsString[32] = ""; /* per mettere l'orario in formato stringa */
+    struct peer_tcp* slotToUse;
+
+    /* accetterà un socket per volta */
+    newFd = accept(listenFd, (struct sockaddr*)&ss, &ssLen);
+    if (newFd == -1) /* problema nella listen */
+    {
+        unified_io_push(UNIFIED_IO_ERROR, "Unexpected error in accepting TCP connection");
+        return;
+    }
+    currentTime = time(NULL); /* segna l'orario di ricezione */
+    (void)ctime_r(&currentTime, timeAsString); /* trasforma l'orario in stringa */
+    timeAsString[strlen(timeAsString)-1] = '\0'; /* leva il newline terminale */
+    /* sembra andare bene */
+    if (sockaddr_as_string(senderStr, sizeof(senderStr), (struct sockaddr*)&ss, ssLen) == -1)
+        errExit("*** TCP:sockaddr_as_string ***\n");
+    unified_io_push(UNIFIED_IO_NORMAL, "Accepted tcp connection at [%s] from %s", timeAsString, senderStr);
+    /* in questa versione iniziale non cerca di vedere se c'è un messaggio in arrivo */
+    slotToUse = findPeerSlot(peers, reachedNumber, currentTime);
+    /* questa nuova versione non fallisce mai, trova sempre uno slot */
+    if (slotToUse != NULL) /* dovrebbe essere sempre scelto */
+    {
+        slotToUse->sockfd = newFd; /* salva il fd del socket per dopo */
+        slotToUse->status = PCS_WAITING; /* segnala che aspetta una richiesta di hello */
+        slotToUse->creation_time = currentTime; /* segnala l'orario di ricezione */
+    }
+    else /* non c'è più spazio - bisogna rifiutare */
+    {
+        unified_io_push(UNIFIED_IO_ERROR, "Reached limit of tcp connections - must refuse!");
+        /* invia un messaggio di overflow e chiude */
+        unified_io_push(UNIFIED_IO_ERROR, "Sending message with status MESSAGES_HELLO_OVERFLOW");
+        if (messages_send_hello_ack(newFd, MESSAGES_HELLO_OVERFLOW) == -1)
+        {
+            unified_io_push(UNIFIED_IO_ERROR, "Unexpectet error while sending error message");
+        }
+        unified_io_push(UNIFIED_IO_ERROR, "Connection closed!");
+        if (close(newFd) != 0)
+            errExit("*** TCP:close ***\n");
     }
 }
 
