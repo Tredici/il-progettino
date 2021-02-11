@@ -56,7 +56,7 @@ static void print_message(enum unified_io_type type, const char* msg)
         break;
 
     case UNIFIED_IO_ERROR:
-        fprintf(stderr, "%s\n", msg);
+        fprintf(stderr, "\033[31m%s\n\033[0m", msg);
         break;
 
     case UNIFIED_IO_LIMIT:
