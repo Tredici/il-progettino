@@ -1089,9 +1089,8 @@ int TCPclose(void)
     if (running)
     {
         /* abbiamo un thread da fermare */
-        /* invia il segnale */
-        if (pthread_kill(TCP_tid, TERM_SUBSYS_SIGNAL) != 0)
-            errExit("*** TCPclose:pthread_kill ***\n");
+        /* invia il comando di EXIT */
+        sendShutdownRequest();
         /* esegue una join */
         if (pthread_join(TCP_tid, NULL) != 0)
             errExit("*** TCPclose:pthread_join ***\n");
