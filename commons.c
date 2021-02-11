@@ -28,9 +28,13 @@ void errExit(const char *format, ...)
     va_list args;
 
     fflush(stdout);
+    /* per stampare l'error in rosso */
+    fprintf(stderr, "\033[31m");
     va_start(args, format);
     vfprintf(stderr, format, args);
     va_end(args);
+    /* resetta lo status del terminale */
+    fprintf(stderr, "\033[0m");
 
     exit(EXIT_FAILURE);
 }
@@ -50,6 +54,7 @@ void fatal(const char *format, ...)
     tid = syscall(SYS_gettid);
 
     fflush(stdout);
+    fprintf(stderr, "\033[31m");
     fprintf(stderr, "fatal:\nmessage:\t");
     va_start(args, format);
     vfprintf(stderr, format, args);
@@ -74,6 +79,7 @@ void fatal(const char *format, ...)
 #endif
 
     fprintf(stderr, "Aborting...\n");
+    fprintf(stderr, "\033[0m");
     abort();
 }
 
