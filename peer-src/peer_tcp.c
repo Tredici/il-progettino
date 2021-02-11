@@ -817,6 +817,52 @@ static void handleNeighbourSocketException(struct peer_tcp* neighbour)
         unified_io_push(UNIFIED_IO_ERROR, "Error closing socket (%d)", sockfd);
 }
 
+/** Funzione autiliaria per la gestione dei
+ * comandi provenienti dalla pipe dei comandi.
+ *
+ * Restituisce -1 quando è richiesta la
+ * terminazione del thread TCP e 0 in
+ * tutti gli altri casi.
+ */
+static int handle_pipe_command(
+            int cmdPipe,
+            struct peer_tcp reachedPeers[],
+            size_t* reachedNumber
+            )
+{
+    uint8_t tmpCmd;
+    enum tcp_commands cmd;
+
+    /* controlla che non abbia fatto disastri */
+    assert(sizeof(tmpCmd) == CMD_SIZE);
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Handling pipe command...");
+    /* legge il comando */
+    if (read(cmdPipe, &tmpCmd, CMD_SIZE) != CMD_SIZE)
+        fatal("reading from command pipe");
+
+    cmd = tmpCmd;
+    /* gestisce i comandi ricevuti */
+    switch (cmd)
+    {
+    case TCP_COMMAND_EXIT:
+        /* il thread sistema deve terminare */
+        unified_io_push(UNIFIED_IO_NORMAL, "Cmd: TCP_COMMAND_EXIT");
+        return -1;
+
+    case TCP_COMMAND_CHECK_PEER:
+        unified_io_push(UNIFIED_IO_NORMAL, "Cmd: TCP_COMMAND_CHECK_PEER");
+        tryToReachNeighbours(reachedPeers, reachedNumber);
+        break;
+
+    default:
+        fatal("TCP - unknown command!");
+        break;
+    }
+
+    return 0;
+}
+
 /** Codice del thread TCP. Sarà attivato al
  * momento della connessione al network.
  */
