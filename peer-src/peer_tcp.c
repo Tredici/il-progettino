@@ -17,6 +17,7 @@
 #include <sys/select.h>
 #include <unistd.h>
 #include <assert.h>
+#include <sys/uio.h>
 
 /** CONVENZIONE SUL COLLEGAMENTO TRA PEER:
  * dovrà essere sempre il peer con ID più
@@ -49,6 +50,13 @@
  */
 #define CMD_SIZE sizeof(uint8_t)
 
+/** Tempo massimo che si aspetta
+ * prima di considerare fallita
+ * una richiesta di tipo REQ_DATA
+ * inviata ai propri vicini.
+ */
+#define QUERY_TIMEOUT 5
+
 /** Flag che permette di riconoscere se
  * il thread TCP è già stato avviato.
  */
@@ -80,6 +88,15 @@ enum tcp_commands
      * socket attivi che controlla
      */
     TCP_COMMAND_INFO,
+    /** Bisogna inviare ai vicini un
+     * messaggio di tipo MESSAGES_REQ_DATA
+     * e mettersi in attesa di una risposta.
+     * Un messaggio di questo tipo è sempre
+     * seguito a un oggetto di tipo query
+     * nella pipe che il thread dovrà
+     * prelevare e gestire.
+     */
+    TCP_COMMAND_QUERY,
     /** Comanda al thread TCP di avviare
      * la procedura di terminazione
      */
@@ -98,6 +115,38 @@ static int tcPipe_writeEnd;
  * era stato avviato con successo.
  */
 static volatile int running;
+
+/** Versione sperimentale della
+ * funzione, fallisce sempre.
+ * Serve a verificare che i vicini
+ * ricevano effettivamente il
+ * messaggio con la query.
+ */
+int TCPreqData(const struct query* query)
+{
+    struct iovec iov[2];
+    uint8_t tmpCmd = TCP_COMMAND_QUERY;
+
+    /* se non è attivo ha senso che si blocchi */
+    if (!running)
+        fatal("TCPreqData while TCP thread is not running!");
+
+    if (query == NULL)
+        return -1;
+
+    /* "header" del comando */
+    iov[0].iov_base = (void*)&tmpCmd;
+    iov[0].iov_len = CMD_SIZE;
+    /* "corpo" del comando */
+    iov[1].iov_base = (void*)query;
+    iov[1].iov_len = sizeof(*query);
+
+    /* scrive tutto nella pipe apposita */
+    if (writev(tcPipe_writeEnd, iov, 2) != (ssize_t)iov[0].iov_len + (ssize_t)iov[1].iov_len)
+        fatal("writing to command pipe");
+
+    return -1;
+}
 
 /** Funzione ausiliaria che invia al
  * thread TCP il comando di spegnimento
@@ -817,6 +866,36 @@ static void handleNeighbourSocketException(struct peer_tcp* neighbour)
         unified_io_push(UNIFIED_IO_ERROR, "Error closing socket (%d)", sockfd);
 }
 
+/** Funzione ausiliaria che avrà il compito
+ * di gestire la ricezione di comandi
+ * TCP_COMMAND_QUERY
+ */
+static void handle_TCP_COMMAND_QUERY(
+            int cmdPipe,
+            struct peer_tcp reachedPeers[],
+            size_t* reachedNumber
+            )
+{
+    /* query che si ha l'ordine di gestire */
+    struct query query;
+    const size_t qLen = sizeof(struct query);
+    /* per stampare la query ricevuta */
+    char buffer[64] = "";
+
+    /* legge la query dalla pipe */
+    if (read(tcPipe_readEnd, (void*)&query, qLen) != (ssize_t)qLen)
+        fatal("Error reading query from pipe");
+    /* controllo di integrità */
+    if(checkQuery(&query) != 0)
+        fatal("Malformed query received by TCP thread");
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Handling query: %s",
+        stringifyQuery(&query, buffer, sizeof(buffer)));
+
+#pragma GCC warning "TODO: completare la gestione delle query"
+    unified_io_push(UNIFIED_IO_ERROR, "TODO:finire il lavoro");
+}
+
 /** Funzione autiliaria per la gestione dei
  * comandi provenienti dalla pipe dei comandi.
  *
@@ -853,6 +932,11 @@ static int handle_pipe_command(
     case TCP_COMMAND_CHECK_PEER:
         unified_io_push(UNIFIED_IO_NORMAL, "Cmd: TCP_COMMAND_CHECK_PEER");
         tryToReachNeighbours(reachedPeers, reachedNumber);
+        break;
+
+    case TCP_COMMAND_QUERY:
+        unified_io_push(UNIFIED_IO_NORMAL, "Cmd: TCP_COMMAND_CHECK_PEER");
+        handle_TCP_COMMAND_QUERY(cmdPipe, reachedPeers, reachedNumber);
         break;
 
     default:

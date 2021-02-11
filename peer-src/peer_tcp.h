@@ -46,5 +46,16 @@ int TCPclose(void);
  */
 int TCPgetSocket(void);
 
+/** Invia ai vicini un messaggio di tipo
+ * REQ_DATA per chiedere loro se hanno
+ * già calcolato la query fornita.
+ *
+ * Se non si riceve una risposta entro 5
+ * secondi termina con un errore.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int TCPreqData(const struct query* query);
 
 #endif
