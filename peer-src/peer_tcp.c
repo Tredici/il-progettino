@@ -945,6 +945,9 @@ static void* TCP(void* args)
         /* in lettura: listener e vicini */
         FD_SET(listeningSocketFd, &readfd); /* socket da leggere */
         maxFdNumber = max(maxFdNumber, listeningSocketFd);
+        /* si pone anche in ascolto della pipe dei comandi */
+        FD_SET(tcPipe_readEnd, &readfd);
+        maxFdNumber = max(maxFdNumber, tcPipe_readEnd);
         /* vicini - socket per i dati */
         for (i = 0; i != reachedNumber; ++i)
         {
@@ -1001,6 +1004,14 @@ static void* TCP(void* args)
                     /* non lo considera */
                     break;
                 }
+            }
+            /* gestisce la ricezione di eventuali comandi */
+#pragma GCC warning "Gestire la pipe dei comandi"
+            if (FD_ISSET(tcPipe_readEnd, &readfd))
+            {
+                if (handle_pipe_command(tcPipe_readEnd,
+                    reachedPeers, &reachedNumber) == -1)
+                    break;
             }
             /* gestisce l'accettazione di nuovi peer */
             if (FD_ISSET(listeningSocketFd, &readfd))
