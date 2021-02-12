@@ -928,7 +928,7 @@ static void handle_MESSAGES_REPLY_DATA(struct peer_tcp* neighbour)
     char buffer[32]; /* per stampare la query ricevuta */
 
     /* protocollo REQ_DATA - fase RICEZIONE: (MESSAGES_REPLY_DATA) */
-    unified_io_push(UNIFIED_IO_NORMAL, "Reading body of [MESSAGES_REPLY_DATA] from socket (%s)...", neighbour->sockfd);
+    unified_io_push(UNIFIED_IO_NORMAL, "Reading body of [MESSAGES_REPLY_DATA] from socket (%d)...", neighbour->sockfd);
 
     /* sfrutta il fatto che la funzione restituisca lo
      * stato del messaggio ricevuto oppure -1 in caso
