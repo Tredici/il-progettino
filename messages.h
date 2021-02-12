@@ -983,6 +983,18 @@ int messages_make_req_data(
             uint32_t authID,
             const struct query* query);
 
+/** Invia un messaggio di tipo
+ * MESSAGES_REQ_DATA tramite il
+ * socket fornito.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_send_req_data(
+            int sockfd,
+            uint32_t authID,
+            const struct query* query);
+
 /** Legge da un socket tcp il corpo di
  * un messaggio di tipo MESSAGES_REQ_DATA
  * e ne fornisce il contenuto.

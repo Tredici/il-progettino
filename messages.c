@@ -1044,6 +1044,27 @@ int messages_make_req_data(
     return 0;
 }
 
+int messages_send_req_data(
+            int sockfd,
+            uint32_t authID,
+            const struct query* query)
+{
+    struct req_data* req;
+    size_t reqLen;
+
+    if (messages_make_req_data(&req, &reqLen, authID, query) == -1)
+        return -1;
+
+    if (send(sockfd, req, reqLen, 0) != (ssize_t)reqLen)
+    {
+        free((void*)req);
+        return -1;
+    }
+
+    free((void*)req);
+    return 0;
+}
+
 int messages_read_req_data_body(
             int sockfd,
             uint32_t* authID,
