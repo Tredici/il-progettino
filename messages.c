@@ -1241,6 +1241,15 @@ int messages_send_reply_data_answer(
     /* si prepara all'invio */
     total = (ssize_t)iov[0].iov_len + (ssize_t)iov[1].iov_len;
     if (writev(sockfd, iov, 2) != total)
+    {
+        free(iov[1].iov_base); /* libera il corpo della query */
+        return -1;
+    }
+
+    free(iov[1].iov_base); /* libera il corpo della query */
+    return 0;
+}
+
 int messages_read_reply_data_body(
             int sockfd,
             enum messages_reply_data_status* status,
