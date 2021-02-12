@@ -1111,4 +1111,43 @@ int messages_send_reply_data_answer(
             const struct answer* answer
             );
 
+/** Funzione che si occupa di leggere da un socket
+ * il corpo di un messaggio di tipo
+ * MESSAGES_REPLY_DATA.
+ *
+ * Fornisce lo stato presente nel messaggio e, se
+ * questo non indica un errore del tipo
+ * MESSAGES_REPLY_DATA_ERROR lavora anche sugli
+ * argomenti query e answer:
+ *  +MESSAGES_REPLY_DATA_NOT_FOUND:
+ *      *query != NULL:
+ *          dovrà essere poi fornita
+ *          a free; rappresenta la
+ *          query cui si era richiesta
+ *          la risposta
+ *      *answer == NULL:
+ *          non è stata ricevuta alcuna
+ *              risposta
+ *
+ *  +MESSAGES_REPLY_DATA_OK:
+ *      *query == *answer != NULL:
+ *          una risposta è stata
+ *          estratta dal messaggio
+ *          ricevuto, è stato allocato
+ *          lo spazio richiesto in
+ *          memoria dinamica e si è
+ *          pronti a caricarla nella
+ *          cache.
+ *
+ * Restituisce -1 in caso di errore e
+ * lo stato della risposta in caso di
+ * successo.
+ */
+int messages_read_reply_data_body(
+            int sockfd,
+            enum messages_reply_data_status* status,
+            struct query** query,
+            struct answer** answer
+            );
+
 #endif

@@ -1241,7 +1241,93 @@ int messages_send_reply_data_answer(
     /* si prepara all'invio */
     total = (ssize_t)iov[0].iov_len + (ssize_t)iov[1].iov_len;
     if (writev(sockfd, iov, 2) != total)
+int messages_read_reply_data_body(
+            int sockfd,
+            enum messages_reply_data_status* status,
+            struct query** query,
+            struct answer** answer
+            )
+{
+
+    /* stato della risposta */
+    enum messages_reply_data_status teStatus;
+    struct reply_data_body msgBody;
+    void* buffer; /* buffer ausiliario */
+    void* data; /* puntatore alla parte del buffer che terrà la parte variabile */
+    size_t length; /* lunghezza in byte della parte di lunghezza variabile */
+
+    if (status == NULL || query == NULL || answer == NULL)
         return -1;
 
-    return 0;
+    /** Prova a leggere il corpo del messaggio, sfrutta il fatto
+     * che il corpo del messaggio è sempre mandato intero */
+    if (recv(sockfd, (void*)&msgBody, sizeof(msgBody), MSG_DONTWAIT) != (ssize_t)sizeof(msgBody))
+        return -1;
+
+    /* stato della rispsota */
+    teStatus = ntohl(msgBody.status);
+    switch (teStatus)
+    {
+    case MESSAGES_REPLY_DATA_ERROR:
+        /* è andata male */
+        *answer = NULL;
+        *query = NULL;
+        break;
+    case MESSAGES_REPLY_DATA_NOT_FOUND:
+        /* nessuna risposta ma la query c'è */
+        /* prova ad allocare lo spazio per la risposta */
+        buffer = malloc(sizeof(struct query));
+        if (buffer == NULL)
+            return -1;
+        /* prova a leggere la query */
+        if (readNsQuery((struct query*)buffer, &msgBody.answer.query) != 0)
+        {
+            free(buffer);
+            return -1;
+        }
+        /* fornisce i puntatori alla chiamante */
+        *query = (struct query*)buffer;
+        *answer = NULL;
+        break;
+    case MESSAGES_REPLY_DATA_OK:
+        /* Ricevuta una risposta valida! */
+        /* byte nella parte di lunghezza variabile */
+        length = (size_t)ntohl(msgBody.answer.lenght)*sizeof(msgBody.answer.data[0]);
+        if (length == 0) /* questa parte non ha senso che sia 0 */
+            return -1;
+        /* alloca un buffer abbastanza grande per tenere tutti i dati */
+        buffer = malloc(sizeof(struct ns_answer) + length);
+        if (buffer == NULL)
+            return -1;
+        /* inserisce nel buffer la parte iniziale della risposta */
+        *(struct ns_answer*)buffer = msgBody.answer;
+        /* puntatore dove salvare la parte fissa della variabile */
+        data = &(((struct ns_answer*)buffer)->data[0]);
+        /* legge quello che serve */
+        if ((ssize_t)length == recv(sockfd, data, length, 0))
+        {
+            free(buffer);
+            return -1;
+        }
+        /* ottiene la risposta in un formato "valido" */
+        if (readNsAnswer(answer, buffer, sizeof(struct ns_answer) + length))
+        {
+            free(buffer);
+            return -1;
+        }
+        /* ora il buffer non serve più */
+        free(buffer);
+        /* prepara il puntatore alla risposta e ha finito
+         * soluzione "fantasiosa" dato che conosco il
+         * formato delle strutture struct answer */
+        *query = (struct query*)*answer;
+        break;
+    default:
+        /* stato non riconosciuto */
+        return -1;
+    }
+    /* fornisce lo stato al chiamante */
+    *status = teStatus;
+
+    return teStatus;
 }
