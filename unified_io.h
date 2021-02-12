@@ -59,8 +59,9 @@ int unified_io_set_thread_name(const char*);
  * la scrittura dell'output deve essere
  * sincrona oppure no.
  *
- * Restituisce 0 in caso di successo e
- * -1 in caso di errore
+ * Restituisce la modalità precedente in cui
+ * lavorava il sottosistema in caso di successo
+ * e -1 in caso di errore
  */
 int unified_io_set_mode(enum unified_io_mode);
 

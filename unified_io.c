@@ -152,12 +152,15 @@ int unified_io_set_thread_name(const char* name)
 
 int unified_io_set_mode(enum unified_io_mode new_mode)
 {
+    enum unified_io_mode old_mode;
+
     switch (new_mode)
     {
     case UNIFIED_IO_ASYNC_MODE:
     case UNIFIED_IO_SYNC_MODE:
         if (pthread_mutex_lock(&mutex) != 0)
             return -1;
+        old_mode = mode;
         mode = new_mode;
         /* si occupa di svuotare la coda */
         if (new_mode == UNIFIED_IO_SYNC_MODE)
@@ -175,7 +178,7 @@ int unified_io_set_mode(enum unified_io_mode new_mode)
         return -1;
     }
 
-    return 0;
+    return old_mode;
 }
 
 enum unified_io_mode unified_io_get_mode(void)
