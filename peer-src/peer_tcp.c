@@ -1270,7 +1270,7 @@ static int handle_pipe_command(
         break;
 
     case TCP_COMMAND_QUERY:
-        unified_io_push(UNIFIED_IO_NORMAL, "Cmd: TCP_COMMAND_CHECK_PEER");
+        unified_io_push(UNIFIED_IO_NORMAL, "Cmd: TCP_COMMAND_QUERY");
         handle_TCP_COMMAND_QUERY(cmdPipe, reachedPeers, reachedNumber);
         break;
 
