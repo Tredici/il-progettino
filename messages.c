@@ -1308,6 +1308,8 @@ int messages_read_reply_data_body(
         buffer = malloc(sizeof(struct ns_answer) + length);
         if (buffer == NULL)
             return -1;
+        /* azzera tutto per sicurezza */
+        memset(buffer, 0, sizeof(struct ns_answer) + length);
         /* inserisce nel buffer la parte iniziale della risposta */
         *(struct ns_answer*)buffer = msgBody.answer;
         /* puntatore dove salvare la parte fissa della variabile */
