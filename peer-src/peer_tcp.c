@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <sys/uio.h>
+#include <sys/time.h> /* per gettimeofday */
 
 /** CONVENZIONE SUL COLLEGAMENTO TRA PEER:
  * dovrà essere sempre il peer con ID più
@@ -116,6 +117,122 @@ static int tcPipe_writeEnd;
  */
 static volatile int running;
 
+/** Raccolta di strutture dati per gestire
+ * l'esecuzione del protocollo REQ_DATA.
+ *
+ *Descrizione del protocollo:
+ * Thread coinvolti:
+ *  +thread principale  - master
+ *  +thread tcp         - slave
+ * Precondizioni (all'inizio e dopo ogni esecuzione):
+ *  +REQ_DATAsocket:    vuoto
+ *  +REQ_DATAflag:      0
+ *  +REQ_DATAquery:     Inaffidabile
+ * Terminologia:
+ *  +mutex      ->  REQ_DATAmutex
+ *  +cond       ->  REQ_DATAcond
+ * Funzionamento:
+ *  INIZIAZIONE:    (thread principale)
+ *      1) il thread principale esegue tutti i controlli del caso
+ *          ed abortisce il tutto in caso di errore
+ *      2) acquisisce il mutex
+ *      3) inizalizza così le strtutture globali:
+ *          +REQ_DATAflag:      1
+ *          +REQ_DATAquery:     query fornita
+ *      4) invia al thread tcp il comando con la query da gestire
+ *      5) si mette in attesa sulla variabile di condizione
+ *          con timeout QUERY_TIMEOUT
+ *
+ *  SVOLGIMENTO:    (thread tcp)
+ *      1) riceve il comando di esecuzione del protocollo
+ *      2) acquisisce il mutex
+ *      3) verifica le condizioni - altrimenti rilascia il mutex
+ *          e smette di eseguire il protocollo:
+ *          +REQ_DATAflag:      1
+ *          +REQ_DATAquery:     query ricevuta insieme al comando
+ *      4) per ogni socket di connessione tcp nello stato
+ *          PCS_READY:
+ *          +invia tramite esso un messaggio di tipo
+ *              MESSAGES_REQ_DATA
+ *          +verifica che l'invio sia andato a buon fine:
+ *              a) successo:
+ *                  +aggiunge il descrittore di file all'insieme
+ *                      REQ_DATAsocket
+ *              b) fallimento:
+ *                  +va alla prossima iterazione
+ *          -se non trova nessun socket segnala la variabile di condizione
+ *      5) rilascia il mutex e termina questa fase del protocollo
+ *
+ *  RICEZIONE: (MESSAGES_REQ_DATA)      (thread tcp | altro processo)
+ *      1) Riconosce il mesaggio
+ *      2) Cerca una risposta nella cache
+ *          a)trovata:      la restituisce la risposta
+ *          b)non trovata:  fornisce una risposta vuota
+ *
+ *  RICEZIONE: (MESSAGES_REPLY_DATA)    (thread tcp)
+ *      1) verifica l'integrità del messaggio, altrimenti
+ *          abbandona questa fase del protocollo
+ *      2) aquisisce il mutex
+ *      3) verifica - altrimenti rilascia il mutex e termina
+ *          questa fase del protocollo - le seguenti condizioni:
+ *          +REQ_DATAflag:      1
+ *          +REQ_DATAsocket:    contiene il descrittore sorgente
+ *          +REQ_DATAquery:     coincida con quella trovata nel
+ *                                  messaggio.
+ *      4) Controlla che la risposta abbia un corpo:
+ *          a)sì:
+ *              +carica la risposta ottenuta nella cache
+ *              +imposta:
+ *                  -REQ_DATAflag:      0
+ *              +segnala la variabile di condizione
+ *          b)no:
+ *              +rimuove il descrittore del socket dall'insieme
+ *                  REQ_DATAsocket
+ *              +controlla che REQ_DATAsocket sia non vuoto
+ *                  -se vuoto: segnala la variabile di condizione
+ *      5) rilascia il mutex e termina questa fase del protocollo
+ *
+ *  CHIUSURA SOCKET:    (thread tcp)
+ *      1) controlla che lo stato del socket sia PCS_READY,
+ *          altrimenti termina
+ *      2) aquisisce il mutex
+ *      3) rimuove, se vi si trova, il descrittore di file
+ *          dall'insieme REQ_DATAsocket
+ *      4) rilascia il mutex e termina questa fase del protocollo
+ *
+ *  CONCLUSIONE:    (thread principale)
+ *      1) acquisisce il mutex - era bloccato sulla variabile di
+ *          condizione
+ *      2) verifica il valore di REQ_DATAflag:
+ *          +1:
+ *              timeout: nessuna risposta è giunta dai vicini.
+ *          +0:
+ *              successo: un vicino ci ha fornito la risposta!
+ *      3) rilascia il mutex e termina il protocollo
+ */
+static pthread_mutex_t REQ_DATAmutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t REQ_DATAcond = PTHREAD_COND_INITIALIZER;
+/* insieme dei socket socket coinvolti:
+ *  quando si avvia il protocollo si contattano tutti
+ *  i vicini (se non ce ne sono termina subito) e si
+ *  invia loro */
+static struct set* REQ_DATAsocket;
+/* se a 1 si sta aspettando */
+static volatile sig_atomic_t REQ_DATAflag;
+/* query richiesta */
+struct query REQ_DATAquery;
+
+/** Funzione ausiliaria che controlla che la
+ * query fornita sia al stessa che il thread
+ * principale ha inviato.
+ * Restituisce 0 in caso contrario, altrimenti
+ * un valore non nullo in caso di corrispondenza.
+ */
+static int REQ_DATAisThisQuery(const struct query* query)
+{
+    return hashQuery(&REQ_DATAquery) == hashQuery(query);
+}
+
 /** Versione sperimentale della
  * funzione, fallisce sempre.
  * Serve a verificare che i vicini
@@ -126,6 +243,12 @@ int TCPreqData(const struct query* query)
 {
     struct iovec iov[2];
     uint8_t tmpCmd = TCP_COMMAND_QUERY;
+    /* man pthread_cond_timedwait per capirne l'utilizzo */
+    struct timeval now;
+    struct timespec timeout;
+    int retcode;
+    /* per restituire il valore della funzione */
+    int ans = -1; /* di default si aspetta di fallire */
 
     /* se non è attivo ha senso che si blocchi */
     if (!running)
@@ -141,11 +264,49 @@ int TCPreqData(const struct query* query)
     iov[1].iov_base = (void*)query;
     iov[1].iov_len = sizeof(*query);
 
-    /* scrive tutto nella pipe apposita */
+    /* INIZIAZIONE protocollo REQ_DATA */
+    if (pthread_mutex_lock(&REQ_DATAmutex) != 0)
+        fatal("pthread_mutex_lock");
+    /* 3) variabili globali */
+    REQ_DATAflag = 1;
+    REQ_DATAquery = *query;
+
+    /* 4) scrive tutto nella pipe apposita */
     if (writev(tcPipe_writeEnd, iov, 2) != (ssize_t)iov[0].iov_len + (ssize_t)iov[1].iov_len)
         fatal("writing to command pipe");
 
-    return -1;
+    /* 5) attesa */
+    if (gettimeofday(&now, NULL) != 0)
+        fatal("gettimeofday");
+    timeout.tv_sec = now.tv_sec + QUERY_TIMEOUT;
+    timeout.tv_nsec = now.tv_usec * 1000;
+    retcode = 0;
+    while (REQ_DATAflag && retcode != ETIMEDOUT)
+    {
+         retcode = pthread_cond_timedwait(&REQ_DATAcond,
+                                    &REQ_DATAmutex, &timeout);
+    }
+    /* CONCLUSIONE protocollo REQ_DATA */
+    /* 2) controllo dell'esito */
+    set_clear(REQ_DATAsocket); /* svuota il set */
+    if (REQ_DATAflag)
+    {
+        /* nessuna risposta - timeout */
+        if (retcode != ETIMEDOUT) /* controlla anomalie */
+            fatal("pthread_cond_timedwait");
+        ans = -1; /* non necassario ma lasciato per leggibilità */
+    }
+    else /* la risposta è giunta */
+    {
+        ans = 0;
+    }
+    /* 3) rilascio e terminazione */
+    if (pthread_mutex_unlock(&REQ_DATAmutex) != 0)
+        fatal("pthread_mutex_unlock");
+
+    return ans;
+}
+
 }
 
 /** Funzione ausiliaria che invia al
@@ -188,6 +349,12 @@ int TCPinit(int port)
     /* controlla che il sistema non sia già stato avviato */
     if (activated)
         return -1;
+
+    /* prepara la struttura per gestire il protocollo
+     * REQ_DATA */
+    REQ_DATAsocket = set_init(NULL);
+    if (REQ_DATAsocket == NULL)
+        fatal("REQ_DATAsocket = set_init(NULL)");
 
     if (pipe2(tcPipe, O_NONBLOCK) != 0)
         errExit("*** pipe! ***\n");
@@ -625,6 +792,9 @@ static void handle_MESSAGES_DETATCH(struct peer_tcp* neighbour)
     unified_io_push(UNIFIED_IO_NORMAL, "Closing socket (%d)", sockfd);
     if (close(sockfd) != 0)
         unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket (%d)", sockfd);
+#pragma GCC warning "Pulire la coda dei messaggi"
+    /* ora bisogna controllare se ci sono nuovi vicini */
+    sendCheckRequest(); /* "self invoking" command */
 }
 
 /** Funzione ausiliaria per la gestione
@@ -644,7 +814,7 @@ static void handle_MESSAGES_REQ_DATA(struct peer_tcp* neighbour)
         unified_io_push(UNIFIED_IO_ERROR, "Error occurred reading body of [MESSAGES_REQ_DATA] via socket (%d)", sockfd);
         goto onError;
     }
-    unified_io_push(UNIFIED_IO_NORMAL, "Received query from socke (%d)", sockfd);
+    unified_io_push(UNIFIED_IO_NORMAL, "Received query from peer [%u] via socket (%d)", authID, sockfd);
     /* controlla la validità della query */
     if (checkQuery(&query) != 0)
     {
@@ -678,12 +848,127 @@ static void handle_MESSAGES_REQ_DATA(struct peer_tcp* neighbour)
 onSend:
     unified_io_push(UNIFIED_IO_ERROR, "Error occurred while sending [MESSAGES_REPLY_DATA] via socket (%d)", sockfd);
 onError:
+#pragma GCC warning "Usare una nuova funzione per chiudere i socket"
     /* cambia lo stato */
     neighbour->status = PCS_ERROR;
     /* chiude il socket */
     unified_io_push(UNIFIED_IO_ERROR, "Closing socket (%d)", sockfd);
     if (close(sockfd) != 0)
         unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket (%d)", sockfd);
+}
+
+/** Gestisce la parte del protocollo REQ_DATA
+ * che riguarda handle_MESSAGES_REPLY_DATA
+ */
+static void
+handle_MESSAGES_REPLY_DATA_protocol(
+            struct peer_tcp* neighbour,
+            struct query* query,
+            struct answer* answer)
+{
+    /* 2) prende il mutex */
+    if (pthread_mutex_lock(&REQ_DATAmutex) != 0)
+        fatal("pthread_mutex_lock");
+
+    /* 3) controllo delle condizioni */
+    if (REQ_DATAflag && set_has(REQ_DATAsocket, neighbour->sockfd) && REQ_DATAisThisQuery(query))
+    {
+        /* questa risposta era attesa */
+        /* rimuove il descrittore dall'insieme */
+        set_remove(REQ_DATAsocket, neighbour->sockfd);
+        if (answer != NULL)
+        {
+            /* abbiamo una risposta */
+            REQ_DATAflag = 0;
+            /* aggiunge la risposta alla cache */
+            addAnswerToCache(query, answer);
+            /* segnala la variabile di condizione */
+            pthread_cond_signal(&REQ_DATAcond);
+        }
+        else
+        {
+            if (set_size(REQ_DATAsocket) == 0)
+            {
+                /* non ci sono altri vicini che potrebbero rispondere */
+                pthread_cond_signal(&REQ_DATAcond);
+            }
+        }
+    }
+    else
+    {
+        /* rilascia le risorse */
+        free(query);
+        /* non serve controllare anche answer dato
+         * che se non è NULL è uguale ad answer */
+    }
+
+    /* 5) rilascia il mutex */
+    if (pthread_mutex_unlock(&REQ_DATAmutex) != 0)
+        fatal("pthread_mutex_unlock");
+}
+
+/** Funzione ausiliaria per gestire la
+ * ricezione di messaggi di tipo
+ * MESSAGES_REPLY_DATA,
+ */
+static void handle_MESSAGES_REPLY_DATA(struct peer_tcp* neighbour)
+{
+    enum messages_reply_data_status status;
+    struct query* query;
+    struct answer* answer;
+    char buffer[32]; /* per stampare la query ricevuta */
+
+    /* protocollo REQ_DATA - fase RICEZIONE: (MESSAGES_REPLY_DATA) */
+    unified_io_push(UNIFIED_IO_NORMAL, "Reading body of [MESSAGES_REPLY_DATA] from socket (%s)...", neighbour->sockfd);
+
+    /* sfrutta il fatto che la funzione restituisca lo
+     * stato del messaggio ricevuto oppure -1 in caso
+     * di errore */
+    switch (messages_read_reply_data_body(
+                neighbour->sockfd, &status, &query, &answer)
+            )
+    {
+    case MESSAGES_REPLY_DATA_ERROR:
+        /* il mittente ha avuto un problema ma la connessione riman stabile */
+        unified_io_push(UNIFIED_IO_ERROR, "Message status: MESSAGES_REPLY_DATA_ERROR");
+        break;
+
+    case MESSAGES_REPLY_DATA_NOT_FOUND:
+        /* il vicino non ha potuto rispondere */
+        unified_io_push(UNIFIED_IO_ERROR, "Message status: MESSAGES_REPLY_DATA_NOT_FOUND");
+        if (stringifyQuery(query, buffer, sizeof(buffer)) != NULL)
+            fatal("stringifyQuery");
+
+        unified_io_push(UNIFIED_IO_ERROR, "Peer [%u] did not send answer for query: %s",
+            peer_data_extract_ID(&neighbour->data), buffer);
+
+        /* gestione dei risultati */
+        handle_MESSAGES_REPLY_DATA_protocol(neighbour, query, answer);
+        break;
+
+    case MESSAGES_REPLY_DATA_OK:
+        /* il vicino ha fornito la risposta */
+        unified_io_push(UNIFIED_IO_NORMAL, "Message status: MESSAGES_REPLY_DATA_OK");
+        if (stringifyQuery(query, buffer, sizeof(buffer)) != NULL)
+            fatal("stringifyQuery");
+        unified_io_push(UNIFIED_IO_NORMAL, "Peer [%u] sent answer for query: %s",
+            peer_data_extract_ID(&neighbour->data), buffer);
+
+        /* gestione dei risultati */
+        handle_MESSAGES_REPLY_DATA_protocol(neighbour, query, answer);
+        break;
+
+    case -1:
+        /* errore che compromette la connessione */
+#pragma GCC warning "Usare una nuova funzione per chiudere i socket"
+        unified_io_push(UNIFIED_IO_ERROR, "Error occurred while reading MESSAGES_REPLY_DATA body");
+        return;
+
+    default:
+        fatal("Unknown status: messages_read_reply_data_body");
+        break;
+    }
+
 }
 
 /** Gestisce la ricezione di un messaggio
@@ -703,11 +988,13 @@ static void handleNeighbour(struct peer_tcp* neighbour)
     {
     case -1:
         /* si segna l'errore - il socket è ora invalidato */
+#pragma GCC warning "Pulire la coda dei messaggi"
         neighbour->status = PCS_ERROR;
         unified_io_push(UNIFIED_IO_ERROR, "Failed read data from socket (%d), maybe EOF reached?", sockfd);
         unified_io_push(UNIFIED_IO_ERROR, "Closing socket (%d).", sockfd);
         if (close(sockfd) != 0)
             unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket (%d).", sockfd);
+        sendCheckRequest(); /* "self invoking" command */
         break;
     case MESSAGES_PEER_HELLO_REQ:
         /* messaggio di hello da parte di un peer più giovane */
@@ -740,6 +1027,10 @@ static void handleNeighbour(struct peer_tcp* neighbour)
     case MESSAGES_REQ_DATA:
         unified_io_push(UNIFIED_IO_NORMAL, "Received [MESSAGES_REQ_DATA] from (%d)", sockfd);
         handle_MESSAGES_REQ_DATA(neighbour);
+        break;
+    case MESSAGES_REPLY_DATA:
+        unified_io_push(UNIFIED_IO_NORMAL, "Received [MESSAGES_REPLY_DATA] from (%d)", sockfd);
+        handle_MESSAGES_REPLY_DATA(neighbour);
         break;
     }
 }
@@ -881,6 +1172,10 @@ static void handle_TCP_COMMAND_QUERY(
     const size_t qLen = sizeof(struct query);
     /* per stampare la query ricevuta */
     char buffer[64] = "";
+    int i, limit;
+    int found;
+
+    /* SVOLGIMENTO protocollo REQ_DATA */
 
     /* legge la query dalla pipe */
     if (read(tcPipe_readEnd, (void*)&query, qLen) != (ssize_t)qLen)
@@ -892,8 +1187,48 @@ static void handle_TCP_COMMAND_QUERY(
     unified_io_push(UNIFIED_IO_NORMAL, "Handling query: %s",
         stringifyQuery(&query, buffer, sizeof(buffer)));
 
-#pragma GCC warning "TODO: completare la gestione delle query"
-    unified_io_push(UNIFIED_IO_ERROR, "TODO:finire il lavoro");
+    /* 2) acquisizione del mutex */
+    if (pthread_mutex_lock(&REQ_DATAmutex) != 0)
+        fatal("pthread_mutex_lock");
+
+    /* 3) controlla variabili */
+    if (REQ_DATAflag && REQ_DATAisThisQuery(&query))
+    {
+        /* 4) controlla tutti i socket posseduti */
+        unified_io_push(UNIFIED_IO_NORMAL, "REQ_DATA query matched!");
+        limit = (int)*reachedNumber;
+        found = 0; /* per verificare di avere almeno un invio */
+        for (i = 0; i < limit; ++i)
+        {
+            if (reachedPeers[i].status == PCS_READY)
+            {
+                unified_io_push(UNIFIED_IO_NORMAL, "Sending query to peer [%u] via socket (%d)",
+                    peer_data_extract_ID(&reachedPeers[i].data), reachedPeers[i].sockfd);
+                if (messages_send_req_data(reachedPeers[i].sockfd, peerID, &query) == -1)
+                {
+                    unified_io_push(UNIFIED_IO_ERROR, "No neighbours to ask quesy result!");
+#pragma GCC warning "TODO: manca la fase di pulizia!"
+                    continue; /* al prossimo socket! */
+                }
+                /* aggiunge il descrittore a quelli controllati */
+                if (set_add(REQ_DATAsocket, reachedPeers[i].sockfd) != 0)
+                    fatal("set_add");
+                found = 1; /* Ha trovato un vicino! */
+            }
+        }
+        if (!found)
+        {
+            unified_io_push(UNIFIED_IO_ERROR, "No neighbours to ask query result!");
+            pthread_cond_signal(&REQ_DATAcond);
+        }
+    }
+    else
+    {
+        unified_io_push(UNIFIED_IO_ERROR, "REQ_DATA query mismatch!");
+    }
+    /* 5) termina fase SVOLGIMENTO */
+    if (pthread_mutex_unlock(&REQ_DATAmutex) != 0)
+        fatal("pthread_mutex_unlock");
 }
 
 /** Funzione autiliaria per la gestione dei
@@ -1191,6 +1526,9 @@ int TCPclose(void)
     /* chiude la pipe usata per mandare comandi al thread */
     if (close(tcPipe[0]) != 0 || close(tcPipe[1]) != 0)
         return -1;
+
+    set_destroy(REQ_DATAsocket);
+    REQ_DATAsocket = NULL;
 
     tcpFd = 0;
     activated = 0;
