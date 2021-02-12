@@ -1029,7 +1029,7 @@ int messages_make_req_data(
         return -1;
 
     memset(ans, 0, sizeof(struct req_data));
-    ans->head.type = MESSAGES_REQ_DATA;
+    ans->head.type = htons(MESSAGES_REQ_DATA);
 
     ans->body.autorID = htonl(authID);
     if (initNsQuery(&ans->body.query, query) == -1)
