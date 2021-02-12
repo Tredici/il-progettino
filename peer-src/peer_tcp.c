@@ -307,6 +307,15 @@ int TCPreqData(const struct query* query)
     return ans;
 }
 
+/** Funzione ausiliaria che chiude il socket e svolge
+ * tutto il necessario cleanup e pulizia delle strutture
+ * dati globali - va invocata al posto di tutte le
+ * close(sockfd) presenti nel codice
+ */
+static void closeConnection(struct peer_tcp* conn)
+{
+#pragma GCC warning "TODO: agire sulle strtture dati presenti"
+    ;
 }
 
 /** Funzione ausiliaria che invia al
