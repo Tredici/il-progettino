@@ -805,7 +805,7 @@ static void handle_MESSAGES_REQ_DATA(struct peer_tcp* neighbour)
     uint32_t authID; /* in realtà inutile */
     struct query query; /* realmente usato */
     int sockfd = neighbour->sockfd;
-    char queryStr[32] = "";
+    char queryStr[48] = "";
     const struct answer* answer;
 
     /* parsing del corpo della richiesta */
