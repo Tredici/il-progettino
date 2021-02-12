@@ -60,6 +60,7 @@ int get(const char* args)
     struct query query;
     struct answer* ans;
     char strQuery[128];
+    enum unified_io_mode saved_mode;
 
     ret = sscanf(args, "%15s %15s %31s", aggr, type, period);
     if (ret < 2)
@@ -121,7 +122,11 @@ int get(const char* args)
     }
 
     printf("Calculating: %s\n", stringifyQuery(&query, strQuery, sizeof(strQuery)));
+    /* cambia la modalità di funzionamento del sottosistema di IO */
+    saved_mode = unified_io_set_mode(UNIFIED_IO_SYNC_MODE);
     ans = calcEntryQuery(&query);
+    /* la ripristina */
+    unified_io_set_mode(saved_mode);
     if (ans == NULL)
     {
         fprintf(stderr, "Impossibile rispondere alla query!\n");
