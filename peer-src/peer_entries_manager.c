@@ -622,7 +622,7 @@ struct answer* calcEntryQuery(const struct query* query)
     if (pthread_mutex_lock(&REGISTERguard) != 0)
         errExit("*** calcEntryQuery:pthread_mutex_lock ***\n");
 
-    ans = findCachedAnswer(query); /* cerca la soluzione nella cache */
+    ans = (struct answer*)findCachedAnswer(query); /* cerca la soluzione nella cache */
     if (ans != NULL) /* trovata! */
     {
         unified_io_push(UNIFIED_IO_NORMAL, "CACHE HIT!");
@@ -646,7 +646,7 @@ struct answer* calcEntryQuery(const struct query* query)
         {
             /* i vicini hanno risposto */
             unified_io_push(UNIFIED_IO_NORMAL, "Answer received from neighbours!");
-            ans = findCachedAnswer(query);
+            ans = (struct answer*)findCachedAnswer(query);
             if (ans == NULL)
                 fatal("Inconsistent state - findCachedAnswer");
             /* a questo punto ha preso la risposta da un vicino */
