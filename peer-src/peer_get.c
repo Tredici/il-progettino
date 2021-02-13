@@ -65,7 +65,7 @@ int get(const char* args)
     ret = sscanf(args, "%15s %15s %31s", aggr, type, period);
     if (ret < 2)
     {
-        fprintf(stderr, "Parametri invalidi!\n");
+        printError("Parametri invalidi!\n");
         return ERR_PARAMS;
     }
     /* controllo sul parametro aggregazione */
@@ -75,7 +75,7 @@ int get(const char* args)
         aggregation = AGGREGATION_DIFF;
     else
     {
-        fprintf(stderr, "Le aggregazioni possono "
+        printError("Le aggregazioni possono "
             "essere solo {totale|variazione}!\n");
         return ERR_PARAMS;
     }
@@ -86,8 +86,8 @@ int get(const char* args)
         query_type = NEW_CASE;
     else
     {
-        fprintf(stderr, "I tipi possono "
-            "essere solo {" ADD_SWAB "|" ADD_NEW_CASE "}!\n");
+        printError("I tipi possono essere solo {"
+            ADD_SWAB "|" ADD_NEW_CASE "}!\n");
         return ERR_PARAMS;
     }
 
@@ -96,7 +96,7 @@ int get(const char* args)
     {
         if (parsePeriod(period, &date_min, &date_max) != 0)
         {
-            fprintf(stderr, "Errore nel parsing delle date!\n");
+            printError("Errore nel parsing delle date!\n");
             return ERR_PARAMS;
         }
     }
@@ -108,7 +108,7 @@ int get(const char* args)
 
     if (time_date_cmp(&date_min, &date_max) > 0)
     {
-        fprintf(stderr, "La seconda data precede la prima!\n");
+        printError("La seconda data precede la prima!\n");
         return ERR_PARAMS;
     }
 
@@ -117,7 +117,7 @@ int get(const char* args)
 
     if (buildQuery(&query, aggregation, query_type, &date_min, &date_max) != 0)
     {
-        fprintf(stderr, "Qualcosa non va nella query!\n");
+        printError("Qualcosa non va nella query!\n");
         return ERR_FAIL;
     }
 
@@ -129,7 +129,7 @@ int get(const char* args)
     unified_io_set_mode(saved_mode);
     if (ans == NULL)
     {
-        fprintf(stderr, "Impossibile rispondere alla query!\n");
+        printError("Impossibile rispondere alla query!\n");
         return ERR_FAIL;
     }
     printf("Result:\n");
