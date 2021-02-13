@@ -1016,7 +1016,7 @@ static void handle_MESSAGES_REPLY_DATA(struct peer_tcp* neighbour)
     enum messages_reply_data_status status;
     struct query* query;
     struct answer* answer;
-    char buffer[32]; /* per stampare la query ricevuta */
+    char buffer[48]; /* per stampare la query ricevuta */
 
     /* protocollo REQ_DATA - fase RICEZIONE: (MESSAGES_REPLY_DATA) */
     unified_io_push(UNIFIED_IO_NORMAL, "Reading body of [MESSAGES_REPLY_DATA] from socket (%d)...", neighbour->sockfd);
@@ -1036,7 +1036,7 @@ static void handle_MESSAGES_REPLY_DATA(struct peer_tcp* neighbour)
     case MESSAGES_REPLY_DATA_NOT_FOUND:
         /* il vicino non ha potuto rispondere */
         unified_io_push(UNIFIED_IO_ERROR, "Message status: MESSAGES_REPLY_DATA_NOT_FOUND");
-        if (stringifyQuery(query, buffer, sizeof(buffer)) != NULL)
+        if (stringifyQuery(query, buffer, sizeof(buffer)) == NULL)
             fatal("stringifyQuery");
 
         unified_io_push(UNIFIED_IO_ERROR, "Peer [%u] did not send answer for query: %s",
@@ -1049,7 +1049,7 @@ static void handle_MESSAGES_REPLY_DATA(struct peer_tcp* neighbour)
     case MESSAGES_REPLY_DATA_OK:
         /* il vicino ha fornito la risposta */
         unified_io_push(UNIFIED_IO_NORMAL, "Message status: MESSAGES_REPLY_DATA_OK");
-        if (stringifyQuery(query, buffer, sizeof(buffer)) != NULL)
+        if (stringifyQuery(query, buffer, sizeof(buffer)) == NULL)
             fatal("stringifyQuery");
         unified_io_push(UNIFIED_IO_NORMAL, "Peer [%u] sent answer for query: %s",
             peer_data_extract_ID(&neighbour->data), buffer);
