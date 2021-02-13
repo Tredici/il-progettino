@@ -366,8 +366,45 @@ static void closeConnection_REQ_DATA(int sockfd)
  */
 static void closeConnection(struct peer_tcp* conn)
 {
+    if (conn == NULL)
+        fatal("closeConnection(NULL)");
 #pragma GCC warning "TODO: agire sulle strtture dati presenti"
     ;
+
+    unified_io_push(UNIFIED_IO_ERROR, "Status of socket (%d): %s",
+        conn->sockfd, statusAsString(conn->status));
+    switch (conn->status)
+    {
+    case PCS_EMPTY:
+        /* non ha senso */
+        unified_io_push(UNIFIED_IO_ERROR, "Closing socket in status [PCS_EMPTY] makes no sense!");
+        return;
+    case PCS_CLOSED:
+        /* già chiuso */
+        unified_io_push(UNIFIED_IO_ERROR, "Socket has been alread closed: status=[PCS_EMPTY]!");
+        return;
+
+    case PCS_READY: /* è stato bello */
+    case PCS_ERROR: /* successo un pasticcio */
+        /* il socket era aperto, potrebbe essere necessario
+         * operare su alcune strutture dati */
+        /* il socket era usato per una esecuzione del protocollo REQ_DATA? */
+        closeConnection_REQ_DATA(conn->sockfd);
+        break;
+
+    default:
+        /* stati PCS_NEW e PCS_WAITING: nulla da fare! */
+        break;
+    }
+
+    /* lo stato ora è chiuso */
+    conn->status = PCS_CLOSED;
+    /* chiusura del socket */
+    unified_io_push(UNIFIED_IO_NORMAL, "Trying to close socket (%d)", conn->sockfd);
+    if (close(conn->sockfd) != 0)
+        unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing close socket (%d)", conn->sockfd);
+    else
+        unified_io_push(UNIFIED_IO_NORMAL, "Succefully closed socket (%d)!", conn->sockfd);
 }
 
 /** Funzione ausiliaria che invia al
