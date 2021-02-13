@@ -449,16 +449,31 @@ int closeEntriesSubsystem(void)
 }
 
 /** Funzione ausiliaria per l'implementazione di
- * mergeRegisterContent che si occupa di verificare
+ * findRegisterByDate che si occupa di verificare
  * se la data associata al registro primo argomento
  * coincide con quella fornita come secondo argomento.
  */
-static int mergeRegisterContent_helper(void* elem, void* base)
+static int findRegisterByDate_helper(void* elem, void* base)
 {
     const struct e_register* R = (const struct e_register*)elem;
     const struct tm* date = (const struct tm*)base;
 
     return time_date_cmp(register_date(R), date) == 0;
+}
+
+/** Cerca il registro con la data fornita tra quelli
+ * posseduti dal peer corrente.
+ * Restituisce il puntatore al registro in caso di
+ * successo e NULL in caso di errore.
+ */
+static struct e_register* findRegisterByDate(const struct tm* date)
+{
+    const struct e_register* R;
+
+    if (list_find(REGISTERlist, (void**)&R, &findRegisterByDate_helper, (void*)date) != 0)
+        return NULL;
+
+    return R;
 }
 
 int mergeRegisterContent(const struct e_register* R)
@@ -479,7 +494,8 @@ int mergeRegisterContent(const struct e_register* R)
     if (pthread_mutex_lock(&REGISTERguard) != 0)
         fatal("pthread_mutex_lock");
 
-    if (list_find(REGISTERlist, (void**)&myReg, &mergeRegisterContent_helper, (void*)date) != 0)
+    myReg = findRegisterByDate(date);
+    if (myReg == NULL)
         ans = -1;
     else
     {
