@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 199309L
 #define _GNU_SOURCE
+#define NDEBUG /* per sopprimere la stampa dei dati sui registri trovati */
 
 #include "peer_entries_manager.h"
 #include "peer_tcp.h" /* per contattare i vicini */
