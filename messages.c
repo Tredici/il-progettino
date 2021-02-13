@@ -1315,7 +1315,7 @@ int messages_read_reply_data_body(
         /* puntatore dove salvare la parte fissa della variabile */
         data = &(((struct ns_answer*)buffer)->data[0]);
         /* legge quello che serve */
-        if ((ssize_t)length == recv(sockfd, data, length, 0))
+        if ((ssize_t)length != recv(sockfd, data, length, 0))
         {
             free(buffer);
             return -1;
