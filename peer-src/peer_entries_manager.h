@@ -60,6 +60,13 @@ int startEntriesSubsystem(int);
  */
 int closeEntriesSubsystem(void);
 
+/** Cerca nella lista di registri controllati
+ * dal sottosistema quello corrispondente al
+ * registro fornito e vi carica le entry presenti
+ * nell'argomento.
+ */
+int mergeRegisterContent(const struct e_register*);
+
 /** Aggiunge una copia dell'entry
  * fornita al registro con la data
  * corrente.

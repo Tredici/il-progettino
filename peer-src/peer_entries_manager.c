@@ -448,6 +448,52 @@ int closeEntriesSubsystem(void)
     return 0;
 }
 
+/** Funzione ausiliaria per l'implementazione di
+ * mergeRegisterContent che si occupa di verificare
+ * se la data associata al registro primo argomento
+ * coincide con quella fornita come secondo argomento.
+ */
+static int mergeRegisterContent_helper(void* elem, void* base)
+{
+    const struct e_register* R = (const struct e_register*)elem;
+    const struct tm* date = (const struct tm*)base;
+
+    return time_date_cmp(register_date(R), date) == 0;
+}
+
+int mergeRegisterContent(const struct e_register* R)
+{
+    /* registro posseduto dal peer */
+    struct e_register* myReg;
+    const struct tm* date;
+    int ans;
+
+    if (R == NULL)
+        return -1;
+
+    date = register_date(R);
+    if (date == NULL)
+        return -1;
+
+    /* sezione critica! */
+    if (pthread_mutex_lock(&REGISTERguard) != 0)
+        fatal("pthread_mutex_lock");
+
+    if (list_find(REGISTERlist, (void**)&myReg, &mergeRegisterContent_helper, (void*)date) != 0)
+        ans = -1;
+    else
+    {
+        ans = 0;
+        /* fonde i registri */
+        if (register_merge(myReg, R) == -1)
+            fatal("register_merge"); /* se fallisce è un disastro! */
+    }
+
+    if (pthread_mutex_unlock(&REGISTERguard) != 0)
+        fatal("pthread_mutex_unlock");
+
+    return ans;
+}
 
 int addEntryToCurrent(const struct entry* E)
 {
