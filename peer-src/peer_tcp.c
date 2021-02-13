@@ -1278,7 +1278,7 @@ static void handle_TCP_COMMAND_QUERY(
     /* SVOLGIMENTO protocollo REQ_DATA */
 
     /* legge la query dalla pipe */
-    if (read(tcPipe_readEnd, (void*)&query, qLen) != (ssize_t)qLen)
+    if (read(cmdPipe, (void*)&query, qLen) != (ssize_t)qLen)
         fatal("Error reading query from pipe");
     /* controllo di integrità */
     if(checkQuery(&query) != 0)
