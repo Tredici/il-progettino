@@ -322,6 +322,43 @@ int TCPreqData(const struct query* query)
     return ans;
 }
 
+/** Svolge le operazioni necessarie al protocollo
+ * REQ_DATA nel caso si debba chiudere il socket
+ * dato.
+ *
+ * Precondizioni:
+ *  prima di invocare questa funzione lo stato del
+ *  socket deve essere PCS_READY.
+ */
+static void closeConnection_REQ_DATA(int sockfd)
+{
+    /* fase CHIUSURA SOCKET del protocollo REQ_DATA */
+    /* 2) cattura il mutex */
+    if (pthread_mutex_lock(&REQ_DATAmutex) != 0)
+        fatal("pthread_mutex_lock");
+
+    /* 3) il socket era tra quelli utilizzati? */
+    if (set_has(REQ_DATAsocket, sockfd))
+    {
+        /* lo rimuove dall'insieme */
+        if (set_remove(REQ_DATAsocket, sockfd) == -1)
+            fatal("REQ_DATA: set_remove");
+        /* l'insieme è ora vuoto? */
+        if (set_size(REQ_DATAsocket) == 0)
+        {
+            unified_io_push(UNIFIED_IO_ERROR, "Closing last socket (%d) for REQ_DATA protocol", sockfd);
+            if (pthread_cond_signal(&REQ_DATAcond) != 0)
+                fatal("pthread_cond_signal");
+            /* andata male */
+            REQ_DATAno_peer = 1;
+        }
+    }
+
+    /* 4) rilascia il mutex */
+    if (pthread_mutex_unlock(&REQ_DATAmutex) != 0)
+        fatal("pthread_mutex_unlock");
+}
+
 /** Funzione ausiliaria che chiude il socket e svolge
  * tutto il necessario cleanup e pulizia delle strutture
  * dati globali - va invocata al posto di tutte le
