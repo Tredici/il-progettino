@@ -112,4 +112,23 @@ int addAnswerToCache(const struct query*, const struct answer*);
  */
 struct answer* calcEntryQuery(const struct query*);
 
+/** Cerca tra i registri posseduti dal peer
+ * quello con la data fornita e ne fornisce
+ * una rappresentazione in formato network
+ * safe pronta ad essere inviata via rete.
+ *
+ * Il tutto viene eseguito in maniera atomica
+ * e si fa ricorso a register_as_ns_array.
+ *
+ * L'insieme fornito permette di specificare
+ * tutte le signature che non è necessario
+ * includere nel buffer che sarà generato.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int getNsRegisterData(const struct tm* date,
+            struct ns_entry** buffer, size_t* bufLen,
+            const struct set* skip);
+
 #endif

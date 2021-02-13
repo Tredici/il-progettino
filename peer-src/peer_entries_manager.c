@@ -707,3 +707,32 @@ struct answer* calcEntryQuery(const struct query* query)
 
     return ans;
 }
+
+int getNsRegisterData(const struct tm* date,
+            struct ns_entry** buffer, size_t* bufLen,
+            const struct set* skip)
+{
+    const struct e_register* R;
+    int ans;
+
+    if (date == NULL || buffer == NULL || bufLen == NULL)
+        return -1;
+
+    /* sezione critica! */
+    if (pthread_mutex_lock(&REGISTERguard) != 0)
+        fatal("pthread_mutex_lock");
+
+    ans = 0;
+    R = findRegisterByDate(date);
+    if (R == NULL)
+    {
+        ans = -1;
+    }
+    else if (register_as_ns_array(R, buffer, bufLen, skip, NULL) == -1)
+            fatal("register_as_ns_array");
+
+    if (pthread_mutex_unlock(&REGISTERguard) != 0)
+        fatal("pthread_mutex_unlock");
+
+    return ans;
+}
