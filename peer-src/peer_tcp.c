@@ -128,6 +128,7 @@ static volatile int running;
  *  +REQ_DATAsocket:    vuoto
  *  +REQ_DATAflag:      0
  *  +REQ_DATAquery:     Inaffidabile
+ *  +REQ_DATAfound:     Inaffidabile
  * Terminologia:
  *  +mutex      ->  REQ_DATAmutex
  *  +cond       ->  REQ_DATAcond
@@ -139,6 +140,7 @@ static volatile int running;
  *      3) inizalizza così le strtutture globali:
  *          +REQ_DATAflag:      1
  *          +REQ_DATAquery:     query fornita
+ *          +REQ_DATAno_peer:   0
  *      4) invia al thread tcp il comando con la query da gestire
  *      5) si mette in attesa sulla variabile di condizione
  *          con timeout QUERY_TIMEOUT
@@ -160,7 +162,9 @@ static volatile int running;
  *                      REQ_DATAsocket
  *              b) fallimento:
  *                  +va alla prossima iterazione
- *          -se non trova nessun socket segnala la variabile di condizione
+ *          -se non trova nessun socket:
+ *              a) segnala la variabile di condizione
+ *              b) imposta REQ_DATAno_peer a 1
  *      5) rilascia il mutex e termina questa fase del protocollo
  *
  *  RICEZIONE: (MESSAGES_REQ_DATA)      (thread tcp | altro processo)
@@ -190,6 +194,7 @@ static volatile int running;
  *                  REQ_DATAsocket
  *              +controlla che REQ_DATAsocket sia non vuoto
  *                  -se vuoto: segnala la variabile di condizione
+ *                          e imposta REQ_DATAno_peer a 1
  *      5) rilascia il mutex e termina questa fase del protocollo
  *
  *  CHIUSURA SOCKET:    (thread tcp)
@@ -198,15 +203,20 @@ static volatile int running;
  *      2) aquisisce il mutex
  *      3) rimuove, se vi si trova, il descrittore di file
  *          dall'insieme REQ_DATAsocket
+ *          -a questo punto se l'insieme REQ_DATAsocket risulta voto:
+ *              +segnala la variabile di condizione
+ *              +imposta REQ_DATAno_peer a 1
  *      4) rilascia il mutex e termina questa fase del protocollo
  *
  *  CONCLUSIONE:    (thread principale)
  *      1) acquisisce il mutex - era bloccato sulla variabile di
  *          condizione
- *      2) verifica il valore di REQ_DATAflag:
- *          +1:
+ *      2) verifica i valori di REQ_DATAflag e REQ_DATAno_peer:
+ *          +1,0:
  *              timeout: nessuna risposta è giunta dai vicini.
- *          +0:
+ *          +1,1:
+ *              fallimento: nessun peer a cui chiedere la risposta
+ *          +0,?:
  *              successo: un vicino ci ha fornito la risposta!
  *      3) rilascia il mutex e termina il protocollo
  */
@@ -219,6 +229,8 @@ static pthread_cond_t REQ_DATAcond = PTHREAD_COND_INITIALIZER;
 static struct set* REQ_DATAsocket;
 /* se a 1 si sta aspettando */
 static volatile sig_atomic_t REQ_DATAflag;
+/* se a 1 significa che  */
+static volatile sig_atomic_t REQ_DATAno_peer;
 /* query richiesta */
 struct query REQ_DATAquery;
 
@@ -270,6 +282,7 @@ int TCPreqData(const struct query* query)
     /* 3) variabili globali */
     REQ_DATAflag = 1;
     REQ_DATAquery = *query;
+    REQ_DATAno_peer = 0;
 
     /* 4) scrive tutto nella pipe apposita */
     if (writev(tcPipe_writeEnd, iov, 2) != (ssize_t)iov[0].iov_len + (ssize_t)iov[1].iov_len)
@@ -281,7 +294,7 @@ int TCPreqData(const struct query* query)
     timeout.tv_sec = now.tv_sec + QUERY_TIMEOUT;
     timeout.tv_nsec = now.tv_usec * 1000;
     retcode = 0;
-    while (REQ_DATAflag && retcode != ETIMEDOUT)
+    while (REQ_DATAflag && retcode != ETIMEDOUT && !REQ_DATAno_peer)
     {
          retcode = pthread_cond_timedwait(&REQ_DATAcond,
                                     &REQ_DATAmutex, &timeout);
@@ -289,15 +302,17 @@ int TCPreqData(const struct query* query)
     /* CONCLUSIONE protocollo REQ_DATA */
     /* 2) controllo dell'esito */
     set_clear(REQ_DATAsocket); /* svuota il set */
-    if (REQ_DATAflag)
+    if (REQ_DATAflag || REQ_DATAno_peer)
     {
+        unified_io_push(UNIFIED_IO_ERROR, "No neighbour sent answer!");
         /* nessuna risposta - timeout */
-        if (retcode != ETIMEDOUT) /* controlla anomalie */
+        if (retcode != ETIMEDOUT && !REQ_DATAno_peer) /* controlla anomalie */
             fatal("pthread_cond_timedwait");
         ans = -1; /* non necassario ma lasciato per leggibilità */
     }
     else /* la risposta è giunta */
     {
+        unified_io_push(UNIFIED_IO_NORMAL, "Answer received!");
         ans = 0;
     }
     /* 3) rilascio e terminazione */
@@ -898,8 +913,10 @@ handle_MESSAGES_REPLY_DATA_protocol(
         {
             if (set_size(REQ_DATAsocket) == 0)
             {
+                unified_io_push(UNIFIED_IO_NORMAL, "No neighbour sent valid response");
                 /* non ci sono altri vicini che potrebbero rispondere */
                 pthread_cond_signal(&REQ_DATAcond);
+                REQ_DATAno_peer = 1;
             }
         }
     }
@@ -1229,6 +1246,7 @@ static void handle_TCP_COMMAND_QUERY(
         {
             unified_io_push(UNIFIED_IO_ERROR, "No neighbours to ask query result!");
             pthread_cond_signal(&REQ_DATAcond);
+            REQ_DATAno_peer = 1;
         }
     }
     else
