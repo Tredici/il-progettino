@@ -72,6 +72,10 @@ static pthread_t TCP_tid;
  */
 static int tcpFd;
 
+/** ID del peer corrente nel network
+ */
+static uint32_t peerID;
+
 /** Enumerazione che elenca tutti i
  * possibili comandi riconosciuti dal
  * thread TCP
@@ -612,7 +616,6 @@ static int readMessageHeader(int sockFd, void* buffer)
 /** Variabili che permetto al thread di
  * ottenere le informazioni sui suoi
  * vicini */
-static uint32_t peerID; /* ID nel netword */
 static struct peer_data neighbours[MAX_NEIGHBOUR_NUMBER]; /* dati sui vicini */
 static size_t neighboursNumber; /* numero di vicini. */
 
