@@ -39,6 +39,20 @@ void errExit(const char *format, ...)
     exit(EXIT_FAILURE);
 }
 
+void printError(const char *format, ...)
+{
+    va_list args;
+
+    fflush(stdout);
+    /* per stampare l'error in rosso */
+    fprintf(stderr, "\033[31m");
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    /* resetta lo status del terminale */
+    fprintf(stderr, "\033[0m");
+}
+
 void fatal(const char *format, ...)
 {
 #ifndef NDEBUG
