@@ -146,6 +146,22 @@ struct list* list_copy(const struct list*, void* (*)(void*));
  */
 struct list* list_select(const struct list*, int (*)(void*,void*), void*);
 
+/** Attraversa la lista alla ricerca del primo elemento
+ * che rispetta la condizione data.
+ *
+ * La condizione si ritiene soddifatta non appena la funzione
+ * fornita ritorna un valore positivo (la funzione dovrebbe
+ * restituire 0 se l'elemento valutato non è "d'interesse").
+ *
+ * Ad ogni iterazione la funzione passata ottiene come primo
+ * elemento un puntatore all'elemento corrente della lista e
+ * come secondo argomento l'ultimo argomento fornito alla
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int list_find(const struct list* l, void** res, int (*cond)(void*,void*), void* base);
+
 /** Aggiunge un elemento in testa alla lista
  */
 int list_prepend(struct list*, void*);

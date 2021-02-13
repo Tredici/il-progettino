@@ -352,6 +352,29 @@ struct list* list_select(const struct list* l, int (*cmp)(void*,void*), void* ba
     return ans;
 }
 
+int list_find(const struct list* l, void** res, int (*cond)(void*,void*), void* base)
+{
+    int test;
+    elem* iter;
+
+    /* controllo dei parametri */
+    if (l == NULL || cond == NULL)
+        return -1;
+
+    for (iter = l->first; iter != NULL; iter = iter->next)
+    {
+        test = cond(iter->val, base);
+        if (test > 0) /* Trovato? */
+        {
+            if (res != NULL) /* il chiamante aspettava un valore? */
+                *res = iter->val;
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
 int list_prepend(struct list* l, void* val)
 {
     elem* new_e;
