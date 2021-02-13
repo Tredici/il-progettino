@@ -104,6 +104,62 @@ enum tcp_commands
     TCP_COMMAND_EXIT
 };
 
+enum peer_conn_status
+{
+    PCS_EMPTY = 0,  /* questa struttura struct peer_tcp è inutilizzata */
+    PCS_NEW,    /* il socket è nuovo - non si sa se funziona,
+                 * è stato creato dal peer corrente,
+                 * si aspetta un messaggio di hello_ack! */
+    PCS_WAITING,/* il socket è nuovo, è stato ottenuto mediante
+                 * una accept(2), si sta aspettando un messaggio
+                 * di tipo hello_req */
+    PCS_READY,  /* il socket funziona - possiamo inviare messaggi */
+    PCS_CLOSED, /* il socket è stato chiuso regolarmente */
+    PCS_ERROR   /* qualcosa è fallito in una operazione sul socket
+                 * lo stato è da considerarsi inconsistente */
+};
+
+/** Funzione ausiliaria che fornisce una stringa
+ * rappresentante lo stato della connessione.
+ */
+__attribute__ ((unused))
+const char* statusAsString(enum peer_conn_status status)
+{
+    switch (status)
+    {
+    case PCS_EMPTY:
+        return "PCS_EMPTY";
+    case PCS_NEW:
+        return "PCS_NEW";
+    case PCS_WAITING:
+        return "PCS_WAITING";
+    case PCS_READY:
+        return "PCS_READY";
+    case PCS_CLOSED:
+        return "PCS_CLOSED";
+    case PCS_ERROR:
+        return "PCS_ERROR";
+    default:
+        return NULL;
+    }
+}
+
+/** Struttura dati atta a contenere
+ * le informazioni e il socket
+ * per raggiungere un peer
+ */
+struct peer_tcp
+{
+    /* informazioni sul vicino */
+    struct peer_data data;
+    /* socket per raggiungerlo */
+    int sockfd;
+    /* stato della connessione */
+    enum peer_conn_status status;
+    /* istante di creazione - per evitare starvation */
+    time_t creation_time;
+};
+
 /** Pipe per passare in modo semplice dei
  * comandi al thread UDP
  */
@@ -478,62 +534,6 @@ int TCPinit(int port)
 
     return 0;
 }
-
-enum peer_conn_status
-{
-    PCS_EMPTY = 0,  /* questa struttura struct peer_tcp è inutilizzata */
-    PCS_NEW,    /* il socket è nuovo - non si sa se funziona,
-                 * è stato creato dal peer corrente,
-                 * si aspetta un messaggio di hello_ack! */
-    PCS_WAITING,/* il socket è nuovo, è stato ottenuto mediante
-                 * una accept(2), si sta aspettando un messaggio
-                 * di tipo hello_req */
-    PCS_READY,  /* il socket funziona - possiamo inviare messaggi */
-    PCS_CLOSED, /* il socket è stato chiuso regolarmente */
-    PCS_ERROR   /* qualcosa è fallito in una operazione sul socket
-                 * lo stato è da considerarsi inconsistente */
-};
-
-/** Funzione ausiliaria che fornisce una stringa
- * rappresentante lo stato della connessione.
- */
-__attribute__ ((unused))
-const char* statusAsString(enum peer_conn_status status)
-{
-    switch (status)
-    {
-    case PCS_EMPTY:
-        return "PCS_EMPTY";
-    case PCS_NEW:
-        return "PCS_NEW";
-    case PCS_WAITING:
-        return "PCS_WAITING";
-    case PCS_READY:
-        return "PCS_READY";
-    case PCS_CLOSED:
-        return "PCS_CLOSED";
-    case PCS_ERROR:
-        return "PCS_ERROR";
-    default:
-        return NULL;
-    }
-}
-
-/** Struttura dati atta a contenere
- * le informazioni e il socket
- * per raggiungere un peer
- */
-struct peer_tcp
-{
-    /* informazioni sul vicino */
-    struct peer_data data;
-    /* socket per raggiungerlo */
-    int sockfd;
-    /* stato della connessione */
-    enum peer_conn_status status;
-    /* istante di creazione - per evitare starvation */
-    time_t creation_time;
-};
 
 /** Cerca di instaurare una connessione
  * TCP con il peer le cui informazioni
