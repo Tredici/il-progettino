@@ -131,4 +131,19 @@ int getNsRegisterData(const struct tm* date,
             struct ns_entry** buffer, size_t* bufLen,
             const struct set* skip);
 
+/** Cerca il registro corrispondente alla data
+ * fornita e restituisce un array di uint32_t
+ * contenente tutte le firme possedute dal
+ * registro trovato in HOST ORDER,
+ * pronto ad essere inviato in un messaggio
+ * di tipo MESSAGES_FLOOD_FOR_ENTRIES.
+ *
+ * Internamente fa uso di register_owned_signatures.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int getRegisterSignatures(const struct tm* date,
+            uint32_t** buffer, size_t* bufLen);
+
 #endif

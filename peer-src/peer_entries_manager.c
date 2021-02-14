@@ -761,3 +761,51 @@ int getNsRegisterData(const struct tm* date,
 
     return ans;
 }
+
+int getRegisterSignatures(const struct tm* date,
+            uint32_t** buffer, size_t* bufLen)
+{
+    const struct e_register* R;
+    int ans;
+    int* array;
+    uint32_t* tmp;
+    size_t i, tmpLen;
+
+    if (date == NULL || buffer == NULL || bufLen == NULL)
+        return -1;
+
+    /* sezione critica! */
+    if (pthread_mutex_lock(&REGISTERguard) != 0)
+        fatal("pthread_mutex_lock");
+
+    ans = 0;
+    R = findRegisterByDate(date);
+    if (R == NULL || register_owned_signatures(R, &array, &tmpLen) == -1)
+    {
+        ans = -1;
+    }
+
+    if (pthread_mutex_unlock(&REGISTERguard) != 0)
+        fatal("pthread_mutex_unlock");
+
+    /* passaggio dei dati se tutto è andato bene */
+    if (ans == 0)
+    {
+        tmp = calloc(tmpLen, sizeof(uint32_t));
+        if (tmp == NULL)
+        {
+            free(array);
+            return -1;
+        }
+        for (i = 0; i != tmpLen; ++i) /* converte l'array */
+        {
+            tmp[i] = (uint32_t)array[i];
+        }
+        free(array); /* libera il vecchio array */
+        /* passa i risultati */
+        *buffer = tmp;
+        *bufLen = tmpLen;
+    }
+
+    return ans;
+}
