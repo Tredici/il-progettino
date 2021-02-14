@@ -468,7 +468,7 @@ static int findRegisterByDate_helper(void* elem, void* base)
  */
 static struct e_register* findRegisterByDate(const struct tm* date)
 {
-    const struct e_register* R;
+    struct e_register* R;
 
     if (list_find(REGISTERlist, (void**)&R, &findRegisterByDate_helper, (void*)date) != 0)
         return NULL;
