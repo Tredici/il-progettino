@@ -1363,3 +1363,42 @@ int register_print(const struct e_register* R)
 
     return 0;
 }
+
+/** Struttura dati ausiliaria per implementare
+ * facilmente register_owned_signatures */
+struct ROS_data
+{
+    int* array;
+    size_t pos;
+};
+/** Funzione ausiliaria per implementare
+ * register_owned_signatures */
+static void register_owned_signatures_helper(long int signature, void* base)
+{
+    struct ROS_data* data = (struct ROS_data*)base;
+    data->array[data->pos++] = (int)signature;
+}
+
+int register_owned_signatures(
+            const struct e_register* R,
+            int** signatures, size_t* lenght)
+{
+    int* ans;
+    ssize_t ansLen;
+    struct ROS_data base;
+
+    if (R == NULL || signatures == NULL || lenght == NULL)
+        return -1;
+    ansLen = set_size(R->allSignature);
+    if (ansLen == (ssize_t)-1)
+        return -1;
+    ans = calloc((size_t)ansLen, sizeof(int));
+    if (ans == NULL)
+        return -1;
+    base.array = ans;   base.pos = 0;
+    set_accumulate(R->allSignature, &register_owned_signatures_helper, &base);
+
+    *signatures = ans;
+    *lenght = (size_t)ansLen;
+    return 0;
+}

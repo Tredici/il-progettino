@@ -453,4 +453,13 @@ struct e_register* register_from_ns_array(const struct tm*, const struct ns_entr
  */
 int register_print(const struct e_register*);
 
+/** Alloca e fornisce un array di interi
+ * elencante tutte le firme che il registro
+ * fornito possiede.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int register_owned_signatures(const struct e_register*, int **, size_t*);
+
 #endif
