@@ -621,6 +621,31 @@ static void register_print_helper(void* ptr)
 }
 #endif
 
+/** Funzione ausiliaria che si occupa di avviare un'esecuzione
+ * del protocollo
+ *
+ */
+static void startFlooding(void* el)
+{
+    char dateStr[16];
+    const struct e_register* R = (const struct e_register*)el;
+    const struct tm* date;
+
+    if (R == NULL)
+        fatal("startFlooding(NULL)");
+
+    /* se non è chiuso serve lavorare - altrimenti ignora */
+    if (register_is_closed(R) == 0)
+    {
+        date = register_date(R);
+        if (time_serialize_date(dateStr, date) == NULL)
+            fatal("time_serialize_date");
+        unified_io_push(UNIFIED_IO_NORMAL, "Starting flooding protocol for: %s", dateStr);
+        if (TCPstartFlooding(date) != 0)
+            fatal("TCPstartFlooding");
+    }
+}
+
 struct answer* calcEntryQuery(const struct query* query)
 {
     struct list* l = NULL;
