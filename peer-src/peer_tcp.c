@@ -1564,6 +1564,43 @@ static void handle_MESSAGES_REPLY_DATA(struct peer_tcp* neighbour)
 
 }
 
+/** Fa tutto quello che serve per gestire la ricezione
+ * di un messaggio di tipo MESSAGES_FLOOD_FOR_ENTRIES.
+ */
+static void handle_MESSAGES_FLOOD_FOR_ENTRIES(struct peer_tcp* neighbour)
+{
+    uint32_t authorID, reqID;
+    struct tm date;
+    uint32_t i, lenght;
+    uint32_t* signatures;
+    char dateStr[16];
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Reading body of [MESSAGES_FLOOD_FOR_ENTRIES] from socket (%d)...", neighbour->sockfd);
+
+    if (messages_read_flood_req_body(neighbour->sockfd, &authorID, &reqID,
+        &date, &lenght, &signatures) == -1)
+    {
+        /* è andata male */
+        unified_io_push(UNIFIED_IO_ERROR, "Error occurred while reading [MESSAGES_FLOOD_FOR_ENTRIES] body from socket (%d)...", neighbour->sockfd);
+        closeConnection(neighbour);
+        /* ricontrolla i vicini */
+        sendCheckRequest();
+        return;
+    }
+    /* stampa le info sulla richiesta ricevuta */
+    if (time_serialize_date(dateStr, &date) == NULL)
+        fatal("time_serialize_date");
+
+    /* informazioni generali sulla richiesta */
+    unified_io_push(UNIFIED_IO_NORMAL, "[MESSAGES_FLOOD_FOR_ENTRIES]: "
+        "[Auth:%lu][Req:%lu] %s", (unsigned long)authorID, (unsigned long)reqID, dateStr);
+    /* elenco firme già note */
+    unified_io_push(UNIFIED_IO_NORMAL, "\tSender own (%lu) signatures:", (unsigned long)lenght);
+    for (i = 0; i != lenght; ++i)
+        unified_io_push(UNIFIED_IO_NORMAL, "\t\t%ld) signature: [%ld]", (long)i, (long)signatures[i]);
+#pragma GCC warning "Salvare e propagare la richiesta se non è stata già ricevuta"
+}
+
 /** Gestisce la ricezione di un messaggio
  * e l'eventuale aggiornamento dello stato
  * da parte di un socket
@@ -1629,6 +1666,11 @@ static void handleNeighbour(struct peer_tcp* neighbour)
     case MESSAGES_REPLY_DATA:
         unified_io_push(UNIFIED_IO_NORMAL, "Received [MESSAGES_REPLY_DATA] from (%d)", sockfd);
         handle_MESSAGES_REPLY_DATA(neighbour);
+        break;
+    /* FLOODING protocol */
+    case MESSAGES_FLOOD_FOR_ENTRIES:
+        unified_io_push(UNIFIED_IO_NORMAL, "Received [MESSAGES_FLOOD_FOR_ENTRIES] from (%d)", sockfd);
+        handle_MESSAGES_FLOOD_FOR_ENTRIES(neighbour);
         break;
     }
 }
