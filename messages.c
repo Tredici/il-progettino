@@ -877,7 +877,7 @@ int messages_send_flood_req(
         authID, reqID, date, length, signatures) == -1)
         return -1;
 
-    if (send(sockFd, (void*)req, reqLen, 0) == (ssize_t)reqLen)
+    if (send(sockFd, (void*)req, reqLen, 0) != (ssize_t)reqLen)
     {
         free(req);
         return -1;
