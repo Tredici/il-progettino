@@ -965,6 +965,62 @@ int messages_get_flood_req_body(
     return 0;
 }
 
+int messages_read_flood_req_body(
+            int sockfd,
+            uint32_t* authID,
+            uint32_t* reqID,
+            struct tm* date,
+            uint32_t* sigNum,
+            uint32_t** signatures)
+{
+    struct flood_req_body body;
+    size_t bodyLen = sizeof(body);
+    struct ns_tm ns_date;
+
+    uint32_t* array = NULL;
+    uint32_t i, lenght;
+
+    /* integrità parametri */
+    if (authID == NULL || reqID == NULL ||
+        date == NULL || sigNum == NULL ||
+        signatures == NULL)
+        return -1;
+
+    /* per debugging */
+    if (recv(sockfd, (void*)&body, bodyLen, 0) != (ssize_t)bodyLen)
+        return -1;
+    /* lunhezza parte variabile */
+    lenght = ntohl(body.length);
+    if (lenght > 0)
+    {
+        /* alloca lo spazio necessario */
+        array = calloc(lenght, sizeof(uint32_t));
+        if (array == NULL) /* pasticcio! */
+            return -1;
+
+        /* legge la parte variabile */
+        if (recv(sockfd, (void*)&array, (size_t)lenght, 0) != (ssize_t)lenght)
+        {
+            return -1;
+        }
+        /* mette in host order */
+        for (i = 0; i != lenght; ++i)
+            array[i] = htonl(array[i]);
+    } /* altrimenti il corpo è vuoto */
+
+    /* passaggio della data */
+    ns_date = body.date; /* aggira il problema dell'allineamento */
+    if (time_read_ns_tm(date, &ns_date) != 0)
+        return -1;
+    /* copia dei dati */
+    *authID = ntohl(body.authorID);
+    *reqID = ntohl(body.reqID);
+    *signatures = array;
+    *sigNum = lenght;
+
+    return 0;
+}
+
 int messages_send_flood_ack(
             int sockFd,
             const struct flood_req* req,

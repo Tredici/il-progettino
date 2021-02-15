@@ -952,6 +952,25 @@ int messages_get_flood_req_body(
             uint32_t* length,
             uint32_t** signatures);
 
+/** Poiché alla fine è saltato
+ * fuori che i messaggi di tipo
+ * MESSAGES_FLOOD_FOR_ENTRIES vanno
+ * scambiati tramite socket tcp ho
+ * dovuto implementare questa funzione
+ * per leggere il corpo di uno di
+ * questi messaggi da un socket.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_read_flood_req_body(
+            int sockfd,
+            uint32_t* authID,
+            uint32_t* reqID,
+            struct tm* date,
+            uint32_t* length,
+            uint32_t** signatures);
+
 /** Genera e invia un messaggio di tipo
  * MESSAGES_REQ_ENTRIES in risposta al
  * messaggio di tipo MESSAGES_FLOOD_FOR_ENTRIES
