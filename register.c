@@ -1302,11 +1302,16 @@ int register_as_ns_array(
     list_accumulate(R->l, &as_assay_helper, &base);
     /* preparazione dei risultati */
     tmpArr = reallocarray(base.tmpArr, base.tmpLen, sizeof(struct ns_entry));
-    if (tmpArr == NULL) /* andata male */
+    if (tmpArr == NULL && base.tmpLen != 0) /* andata male */
     {
         free(base.tmpArr);
         free(S);
         return -1;
+    }
+    else if (base.tmpLen == 0)
+    {
+        free(tmpArr);
+        tmpArr = NULL;
     }
     /* passa ai risultati */
     *ns_array = tmpArr;
