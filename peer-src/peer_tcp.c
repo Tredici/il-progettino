@@ -491,7 +491,11 @@ FLOODINGdescriptor_newOther(
             uint32_t authID,
             uint32_t reqID,
             int originalFd, /* socket da cui la richiesta è giunta */
-            const struct tm* date)
+            const struct tm* date,
+            /* fime già note - SHALLOW COPY */
+            size_t numSignatures,
+            uint32_t* signatures
+            )
 {
     struct FLOODINGdescriptor* newDes;
     long int hash;
@@ -506,6 +510,8 @@ FLOODINGdescriptor_newOther(
     newDes->reqID = reqID;
     newDes->date = *date;
     newDes->mainSockFd = originalFd;
+    newDes->numSignatures = numSignatures;
+    newDes->signatures = signatures;
 
     hash = FLOODINGdescriptorHash(newDes); /* hash della richiesta */
 
