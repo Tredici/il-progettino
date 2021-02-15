@@ -1872,6 +1872,89 @@ static void handle_TCP_COMMAND_QUERY(
         fatal("pthread_mutex_unlock");
 }
 
+/** Funzione ausiliaria che si occupa di gestire
+ * la fase iniziare di una esecuzione del
+ * protocollo FLOODING
+ */
+static void handle_TCP_COMMAND_FLOODING(
+            int cmdPipe,
+            struct peer_tcp reachedPeers[],
+            size_t* reachedNumber
+            )
+{
+    long int floodingCmdHash; /* hash del descrittore da recuperare */
+    struct FLOODINGdescriptor* des;
+    char buffer[80];
+    size_t i, limit = *reachedNumber;
+    /* se alla fine vale 1 si è riusciti a trasmettere
+     * il messaggio a qualcuno e si aspetta il risultato,
+     * altrimenti si può considerare l'esecuzione del
+     * protocollo terminata */
+    int any = 0;
+    /* dati da usare nei messaggi MESSAGES_FLOOD_FOR_ENTRIES */
+    uint32_t* signatures;
+    size_t sigNumber, j;
+
+    /* legge l'ID del descrittore da recuperare */
+    if (read(cmdPipe, (void*)&floodingCmdHash, sizeof(long)) != (ssize_t)sizeof(long))
+        fatal("Error reading descriptor hash from pipe");
+
+    des = FLOODINGdescriptor_findByHash(floodingCmdHash);
+    if (des == NULL)
+        fatal("FLOODINGdescriptor_findByHash");
+
+    /* ottiene la stringa da stampare */
+    if (FLOODINGdescriptor_stringify(des, buffer, sizeof(buffer)) == NULL)
+        fatal("FLOODINGdescriptor_stringify");
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Handling: %s", buffer);
+
+    /* ricava l'elenco di firme già possedute */
+    if (getRegisterSignatures(&des->date, &signatures, &sigNumber) != 0)
+        fatal("getRegisterSignatures");
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Already owned signatures: %u", sigNumber);
+    for(j = 0; j != sigNumber; ++j)
+        unified_io_push(UNIFIED_IO_NORMAL, "\t%u) [%u]", j, signatures[j]);
+
+#pragma GCC warning "TODO: completa il lavoro"
+    /* cerca tutti i vicini */
+    for (i = 0; i != limit; ++i)
+    {
+        /* vicino attivo! */
+        if (reachedPeers[i].status == PCS_READY)
+        {
+            unified_io_push(UNIFIED_IO_NORMAL, "Sending [MESSAGES_FLOOD_FOR_ENTRIES]"
+                " via socket (%d)", reachedPeers[i].sockfd);
+            /* invia il messaggio */
+            if (messages_send_flood_req(reachedPeers[i].sockfd,
+                    des->authorID, des->reqID,
+                    &des->date, sigNumber, signatures
+                ) == -1)
+            {
+                /* gestisce l'eventuale fallimento */
+                unified_io_push(UNIFIED_IO_ERROR, "Sending failed - closing connection");
+                closeConnection(&reachedPeers[i]);
+                /* ricontrolla i vicini */
+                sendCheckRequest();
+            }
+            else
+            {
+                any |= 1;   /* accendiamo il flag */
+                if (set_add(reachedPeers[i].FLOODINGsend, floodingCmdHash) == -1)
+                    fatal("set_add");
+            }
+        }
+    }
+    /* se non si è riuscito a inviare niente a nessuno */
+    if (!any)
+    {
+        unified_io_push(UNIFIED_IO_NORMAL, "No neighbours to send [MESSAGES_FLOOD_FOR_ENTRIES]");
+        /* distrugge il descrittore e libera spazio */
+        FLOODINGdescriptor_remove(des);
+    }
+}
+
 /** Funzione autiliaria per la gestione dei
  * comandi provenienti dalla pipe dei comandi.
  *
@@ -1913,6 +1996,11 @@ static int handle_pipe_command(
     case TCP_COMMAND_QUERY:
         unified_io_push(UNIFIED_IO_NORMAL, "Cmd: TCP_COMMAND_QUERY");
         handle_TCP_COMMAND_QUERY(cmdPipe, reachedPeers, reachedNumber);
+        break;
+
+    case TCP_COMMAND_FLOODING:
+        unified_io_push(UNIFIED_IO_NORMAL, "Cmd: TCP_COMMAND_FLOODING");
+        handle_TCP_COMMAND_FLOODING(cmdPipe, reachedPeers, reachedNumber);
         break;
 
     default:
