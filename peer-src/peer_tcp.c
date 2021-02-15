@@ -2310,7 +2310,7 @@ static void handle_TCP_COMMAND_PROPAGATE(
     if (!any)
     {
         unified_io_push(UNIFIED_IO_NORMAL, "No neighbours to propagate query!");
-        send_TCP_COMMAND_CLOSE_FLOODING(hash);
+        send_TCP_COMMAND_SEND_FLOOD_RESPONSE(hash);
     }
 }
 
