@@ -823,6 +823,7 @@ int messages_make_flood_req(
     struct flood_req* ans;
     size_t ansLen;
     size_t i;
+    struct ns_tm ns_date;
 
     if (req == NULL || reqLen == NULL || date == NULL || (!length ^ !signatures))
         return -1;
@@ -842,11 +843,12 @@ int messages_make_flood_req(
     /* inizializza il corpo */
     ans->body.authorID = htonl(authID);
     ans->body.reqID = htonl(reqID);
-    if (time_init_ns_tm(&ans->body.date, date) == -1)
+    if (time_init_ns_tm(&ns_date, date) == -1)
     {
         free(ans);
         return -1;
     }
+    ans->body.date = ns_date; /* aggira il problema dell'allineamento */
     ans->body.length = htonl(length);
     for (i = 0; i != length; ++i) /* Riempie la "coda" */
         ans->body.signatures[i] = htonl(signatures[i]);
@@ -923,6 +925,7 @@ int messages_get_flood_req_body(
 {
     uint32_t* arr;
     uint32_t i, tot;
+    struct ns_tm ns_date;
 
     if (req == NULL || (length == NULL && signatures != NULL))
         return -1;
@@ -954,7 +957,10 @@ int messages_get_flood_req_body(
         *reqID = ntohl(req->body.reqID);
 
     if (date != NULL)
-        time_read_ns_tm(date, &req->body.date);
+    {
+        ns_date = req->body.date;
+        time_read_ns_tm(date, &ns_date);
+    }
 
     return 0;
 }
@@ -1020,6 +1026,7 @@ int messages_make_req_data(
             const struct query* query)
 {
     struct req_data* ans;
+    struct ns_query ns_query;
 
     if (req == NULL || reqLen == NULL || query == NULL)
         return -1;
@@ -1032,11 +1039,12 @@ int messages_make_req_data(
     ans->head.type = htons(MESSAGES_REQ_DATA);
 
     ans->body.autorID = htonl(authID);
-    if (initNsQuery(&ans->body.query, query) == -1)
+    if (initNsQuery(&ns_query, query) == -1)
     {
         free(ans);
         return -1;
     }
+    ans->body.query = ns_query; /* aggira il problema dell'allineamento dei puntatori */
 
     *req = ans;
     *reqLen = sizeof(struct req_data);
@@ -1190,6 +1198,7 @@ int messages_send_empty_reply_data(
     struct reply_data msg;
     /* lunghezza della parte da inviare */
     const size_t lenght = sizeof(msg);
+    struct ns_query ns_query;
 
     /* non ha senso un messaggio vuoto in caso di successo */
     if (status == MESSAGES_REPLY_DATA_OK)
@@ -1204,8 +1213,9 @@ int messages_send_empty_reply_data(
         if (query == NULL)
             return -1;
         /* inserisce la query nel messaggio di risposta */
-        if (initNsQuery(&msg.body.answer.query, query) != 0)
+        if (initNsQuery(&ns_query, query) != 0)
             return -1;
+        msg.body.answer.query = ns_query;
     }
 
     /* invia solo la parte iniziale del messaggio */
