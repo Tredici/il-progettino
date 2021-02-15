@@ -215,6 +215,27 @@ struct peer_tcp
     struct set* FLOODINGsend;
 };
 
+/* Funzione ausiliaria per ottenere un set a partire da un
+ * array di uint32_t. Il set andrà poi distrutto opportunamente.
+ */
+struct set* make_set_from_uint32_t(uint32_t* array, size_t arrLen)
+{
+    struct set* ans;
+    size_t i;
+
+    ans = set_init(NULL);
+    if (ans == NULL)
+        fatal("set_init");
+
+    for (i = 0; i != arrLen; ++i)
+    {
+        if (set_add(ans, array[i]) != 0)
+            fatal("set_add");
+    }
+
+    return ans;
+}
+
 /** Pipe per passare in modo semplice dei
  * comandi al thread UDP
  */
