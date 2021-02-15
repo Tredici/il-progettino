@@ -1022,56 +1022,49 @@ int messages_read_flood_req_body(
     return 0;
 }
 
-int messages_send_flood_ack(
-            int sockFd,
-            const struct flood_req* req,
-            const struct e_register* R,
-            const struct set* skip)
+int messages_send_flood_ack(int sockFd,
+            uint32_t authID,
+            uint32_t reqID,
+            const struct tm* date,
+            struct ns_entry* entries,
+            size_t lenght)
 {
-    struct flood_ack* ack;
-    struct ns_entry* entryList;
-    size_t entryLen;
+    struct flood_ack msg;
+    const size_t msgLen = sizeof(msg);
     struct iovec iov[2];
+    /* problema dell'allineamento */
+    struct ns_tm ns_date;
 
     /* l'array in coda ha dimensione 0? */
-    assert(sizeof(struct flood_ack) != offsetof(struct flood_ack, body.entry));
-    if (sockFd < 0 || req == NULL)
+    assert(sizeof(struct flood_ack) == offsetof(struct flood_ack, body.entry));
+    /* controllo dei parametri */
+    if (sockFd < 0 || date == NULL || (!entries^!lenght))
         return -1;
 
-    if (register_as_ns_array(R, &entryList, &entryLen, skip, NULL) == -1)
+    /* prepara il messaggio */
+    memset(&msg, 0, msgLen);
+    /* testa */
+    msg.head.type = htons(MESSAGES_REQ_ENTRIES);
+    /* corpo */
+    msg.body.authorID = htonl(authID);
+    msg.body.reqID = htonl(reqID);
+    /* problema dell'allineamento */
+    if (time_init_ns_tm(&ns_date, date) != 0)
         return -1;
-    iov[1].iov_base = entryList;
-    iov[1].iov_len = entryLen * sizeof(struct ns_entry);
+    msg.body.date = ns_date;
+    /* attacca la parte variabile */
+    msg.body.length = htonl(lenght);
 
-    ack = malloc(sizeof(struct flood_ack));
-    if (ack == NULL)
-    {
-        free(entryList);
-        return -1;
-    }
-    iov[0].iov_base = ack;
+    /* per caricare il corpo */
+    iov[0].iov_base = (void*)&msg;
     iov[0].iov_len = sizeof(struct flood_ack);
+    /* per la parte variabile */
+    iov[1].iov_base = (void*)entries;
+    iov[1].iov_len = lenght * sizeof(struct ns_entry);
 
-    /* prepara l'header */
-    memset(ack, 0, sizeof(struct flood_ack));
-    ack->head.type = htonl(MESSAGES_REQ_ENTRIES);
-    /* il corpo - parte copiata */
-    ack->body.authorID = req->body.authorID;
-    ack->body.reqID = req->body.reqID;
-    ack->body.date = req->body.date;
-    /* il corpo - parte nuova */
-    ack->body.length = htonl(entryLen);
-
-    /* invia i messaggi */
-    if(writev(sockFd, iov, 2) != (ssize_t)(iov[0].iov_len + iov[1].iov_len))
-    {
-        free(ack);
-        free(entryList);
+    /* puà inviare il messaggio */
+    if (writev(sockFd, iov, 2) != (ssize_t)(iov[0].iov_len+iov[1].iov_len))
         return -1;
-    }
-
-    free(ack);
-    free(entryList);
 
     return 0;
 }

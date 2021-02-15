@@ -984,9 +984,11 @@ int messages_read_flood_req_body(
  * e -1 in caso di errore.
  */
 int messages_send_flood_ack(int sockFd,
-            const struct flood_req*,
-            const struct e_register*,
-            const struct set*);
+            uint32_t authID,
+            uint32_t reqID,
+            const struct tm* date,
+            struct ns_entry* entries,
+            size_t lenght);
 
 /** Invia un messaggio di tipo MESSAGES_REQ_ENTRIES
  * vuoto.
