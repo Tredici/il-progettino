@@ -1001,6 +1001,7 @@ int messages_read_flood_req_body(
         /* legge la parte variabile */
         if (recv(sockfd, (void*)&array, (size_t)lenght*sizeof(uint32_t), 0) != (ssize_t)(lenght*sizeof(uint32_t)))
         {
+            free(array);
             return -1;
         }
         /* mette in host order */
