@@ -2307,6 +2307,12 @@ static void handle_TCP_COMMAND_PROPAGATE(
             {
                 /* successo! */
                 any = 1;
+                /* associa l'hash della richiesta al descrittore */
+                if (set_add(reachedPeers[i].FLOODINGsend, hash) != 0)
+                    fatal("set_add");
+                /* aggiunge il fd tra quelli dai quali si aspetta una risposta al messaggio */
+                if (set_add(des->socketSet, reachedPeers[i].sockfd) != 0)
+                    fatal("set_add");
                 unified_io_push(UNIFIED_IO_NORMAL, "Message successfully sent!");
             }
         }
