@@ -838,7 +838,7 @@ int messages_make_flood_req(
     memset(ans, 0, ansLen);
 
     /* inizializza l'intestazione */
-    ans->head.type = htons(MESSAGES_BOOT_ACK);
+    ans->head.type = htons(MESSAGES_FLOOD_FOR_ENTRIES);
 
     /* inizializza il corpo */
     ans->body.authorID = htonl(authID);
