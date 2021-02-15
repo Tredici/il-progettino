@@ -1006,7 +1006,7 @@ int messages_read_flood_req_body(
         }
         /* mette in host order */
         for (i = 0; i != lenght; ++i)
-            array[i] = htonl(array[i]);
+            array[i] = ntohl(array[i]);
     } /* altrimenti il corpo è vuoto */
 
     /* passaggio della data */
