@@ -121,7 +121,7 @@ enum tcp_commands
      * protocollo sono state ricevute o le
      * connessioni sono saltate.
      */
-    TCP_COMMAND_SEND_FLOOD_REQ,
+    TCP_COMMAND_SEND_FLOOD_RESPONSE,
     /** La connessione attraverso la quale si sarebbe
      * dovuto inviare il messaggio di risposta del
      * protocollo è saltata, pertanto bisogna
