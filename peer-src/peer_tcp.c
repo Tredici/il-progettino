@@ -2223,7 +2223,11 @@ static void handle_TCP_COMMAND_FLOODING(
             {
                 unified_io_push(UNIFIED_IO_ERROR, "Message successfully sent!");
                 any |= 1;   /* accendiamo il flag */
+                /* da questo socket si aspetta una risposta per questa query */
                 if (set_add(reachedPeers[i].FLOODINGsend, floodingCmdHash) == -1)
+                    fatal("set_add");
+                /* associa il socket all'insieme di quelli da cui si aspetta una risposta */
+                if (set_add(des->socketSet, reachedPeers[i].sockfd) != 0)
                     fatal("set_add");
             }
         }
