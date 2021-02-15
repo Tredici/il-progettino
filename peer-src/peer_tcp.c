@@ -2237,6 +2237,83 @@ static void handle_TCP_COMMAND_FLOODING(
     }
 }
 
+/** Funzione ausiliaria che si occuperà di gestire la fase di propagazione
+ * del protocollo FLOODING e che sarà eseguita in seguito alla ricezione di
+ * un comando TCP_COMMAND_PROPAGATE.
+ * Proverà a inviare a tutti i peer vicini - chiaramente diversi dal mittente
+ * la "query FLOODING" ricevuta.
+ */
+static void handle_TCP_COMMAND_PROPAGATE(
+            int cmdPipe,
+            struct peer_tcp reachedPeers[],
+            size_t* reachedNumber
+            )
+{
+    long int hash; /* hash del descrittore da recuperare */
+    struct FLOODINGdescriptor* des;
+    char buffer[80];
+    size_t i, limit = *reachedNumber;
+    /* Se alla fine vale 1 significa che si ha trovato qualcui a cui inviare il messaggio */
+    int any = 0;
+
+    /* legge l'hash della richiesta */
+    if (read(cmdPipe, (void*)&hash, sizeof(long)) != (ssize_t)sizeof(long))
+        fatal("Error reading descriptor hash from pipe");
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Handling: [hash:%ld]", hash);
+    unified_io_push(UNIFIED_IO_NORMAL, "Searching descriptor...");
+
+    des = FLOODINGdescriptor_findByHash(hash);
+    if (des == NULL)
+    {
+        unified_io_push(UNIFIED_IO_NORMAL, "Descriptor NOT FOUND! Maybe sender has been closed?");
+        return;
+    }
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Descriptor found!");    /* ottiene la stringa da stampare */
+    if (FLOODINGdescriptor_stringify(des, buffer, sizeof(buffer)) == NULL)
+        fatal("FLOODINGdescriptor_stringify");
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Propagating: %s", buffer);
+
+    for (i = 0; i != limit; ++i)
+    {
+        if (reachedPeers[i].status == PCS_READY)
+        {
+            /* candidato vicino? */
+            if (reachedPeers[i].sockfd == des->mainSockFd) /* salta il mittente */
+                continue;
+
+            unified_io_push(UNIFIED_IO_NORMAL, "Sending [MESSAGES_FLOOD_FOR_ENTRIES]"
+                " via socket (%d)", reachedPeers[i].sockfd);
+            /* prova a inviare il messaggio */
+            if (messages_send_flood_req(reachedPeers[i].sockfd,
+                    des->authorID, des->reqID, &des->date,
+                    des->numSignatures, des->signatures
+                ) == -1)
+            {
+                /* ciao... */
+                unified_io_push(UNIFIED_IO_ERROR, "ERROR: error occurred while "
+                    "propagating FLOODING request via socket (%d)", reachedPeers[i].sockfd);
+                /* avvia la procedura di ripristino della connessione */
+                closeConnection(&reachedPeers[i]);
+                sendCheckRequest();
+            }
+            else
+            {
+                /* successo! */
+                any = 1;
+                unified_io_push(UNIFIED_IO_NORMAL, "Message successfully sent!");
+            }
+        }
+    }
+    if (!any)
+    {
+        unified_io_push(UNIFIED_IO_NORMAL, "No neighbours to propagate query!");
+        send_TCP_COMMAND_CLOSE_FLOODING(hash);
+    }
+}
+
 /** In seguito alla ricezione di un comando TCP_COMMAND_SEND_FLOOD_RESPONSE
  * invia al socket mittente una risposta per il protocollo FLOODING.
  */
@@ -2375,6 +2452,11 @@ static int handle_pipe_command(
     case TCP_COMMAND_FLOODING:
         unified_io_push(UNIFIED_IO_NORMAL, "Cmd: TCP_COMMAND_FLOODING");
         handle_TCP_COMMAND_FLOODING(cmdPipe, reachedPeers, reachedNumber);
+        break;
+
+    case TCP_COMMAND_PROPAGATE:
+        unified_io_push(UNIFIED_IO_NORMAL, "Cmd: TCP_COMMAND_PROPAGATE");
+        handle_TCP_COMMAND_PROPAGATE(cmdPipe, reachedPeers, reachedNumber);
         break;
 
     case TCP_COMMAND_SEND_FLOOD_RESPONSE:
