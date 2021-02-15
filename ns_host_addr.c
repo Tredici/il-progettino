@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <stdio.h>
+#include <unistd.h>
 
 /** Due funzioni ausiliarie per scambiare in modo
  * sicuro via rete il formato degli indirizzi che
@@ -257,4 +258,40 @@ int ns_host_addr_send(int socketfd, const void* buffer, size_t len, int flag, co
         return -1;
 
     return 0;
+}
+
+int connect_to_ns_host_addr(const struct ns_host_addr* ns_addr)
+{
+    struct sockaddr_storage ss;
+    socklen_t ssLen;
+    int sk;
+
+    if (ns_addr == NULL)
+        return -1;
+
+    /* cerca di inizializzare le strutture dati per connettersi */
+    if (sockaddr_from_ns_host_addr((struct sockaddr*)&ss, &ssLen, ns_addr) != 0)
+        return -1;
+
+    switch (ns_host_addr_get_ip_family(ns_addr))
+    {
+    case AF_INET: /* IPv4 */
+        sk = socket(AF_INET, SOCK_STREAM, 0);
+        break;
+    case AF_INET6: /* IPv6 */
+        sk = socket(AF_INET6, SOCK_STREAM, 0);
+        break;
+    default:
+        return -1;
+    }
+    /* controlla che il socket sia stato creato correttamente */
+    if (sk == -1)
+        return -1;
+    /* cerca di connettersi */
+    if (connect(sk, (struct sockaddr*)&ss, ssLen) != 0)
+    {
+        close(sk);
+        return -1;
+    }
+    return sk;
 }

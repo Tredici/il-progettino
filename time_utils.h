@@ -6,9 +6,40 @@
 #define TIME_UTILS
 
 #include <time.h>
+#include <arpa/inet.h>
+
+/** Struttura che permette di rappresentare
+ * un oggetto di tipo struct tm in maniera
+ * "network safe"
+ */
+struct ns_tm
+{
+    uint16_t year;
+    uint8_t month;
+    uint8_t day;
+};
+
+/** Inizializza un oggetto di tipo struct ns_tm
+ * con il contenuto di un oggetto struct tm.
+ *
+ * Restituisce 0 in caso di
+ * successo e -1 in caso di
+ * errore.
+ */
+int time_init_ns_tm(struct ns_tm*, const struct tm*);
+
+/** Inizializza un oggetto di tipo struct tm
+ * con il contenuto di un oggetto struct ns_tm.
+ *
+ * Restituisce 0 in caso di
+ * successo e -1 in caso di
+ * errore.
+ */
+int time_read_ns_tm(struct tm*, const struct ns_tm*);
 
 /** Inizalizza e fornisce una struct tm
- * con data e orario correnti.
+ * con data e orario correnti in accordo
+ * con la locale (timezone) dell'utente.
  */
 struct tm time_date_now(void);
 
@@ -79,6 +110,18 @@ int time_date_diff(const struct tm*, const struct tm*);
  */
 struct tm time_date_add(const struct tm*, int);
 
+/** Svolge un ruolo simile a quello di
+ * time_date_add sottraendo (in senso algebrico, +-)
+ * tanti giorni quanti quelli specificati all'oggetto
+ * struct tm fornito. Equivale a una chiamata a
+ * time_date_add con il segno del secondo argomento
+ * invertito.
+ *
+ * In caso di errore (argomento NULL) fornisce una
+ * struttura tutti i cui campi sono stati azzerati.
+ */
+struct tm time_date_sub(const struct tm*, int);
+
 /** Incrementa, dopo aver isolato solo i
  * campi relativi a una data, la data
  * fornita di tanti giorni quanti sono
@@ -102,5 +145,29 @@ struct tm* time_date_inc(struct tm*, int);
  * NULL.
  */
 struct tm* time_date_dec(struct tm*, int);
+
+/** Estrae un oggetto data da una stringa.
+ * Formato atteso:
+ *  dd:mm:yyyy
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ * In caso di errore non modifica
+ * l'oggetto puntato da date.
+ */
+int time_parse_date(const char* str, struct tm* date);
+
+/** Converte oggetto data in una stringa
+ * nel formato:
+ *  dd:mm:yyyy
+ *
+ * Il buffer fornito deve avere dimensione
+ * almeno pari a 11 (al più dieci caratteri
+ * per la data più uno per il carattere '\0').
+ *
+ * Restituisce il puntatore al buffer in
+ * caso di successo e NULL in caso di errore.
+ */
+char* time_serialize_date(char* str, const struct tm* date);
 
 #endif

@@ -134,6 +134,34 @@ struct list* list_reduce(const struct list*, void* (*)(void*,void*), void (*)(vo
  */
 struct list* list_copy(const struct list*, void* (*)(void*));
 
+/** Crea una nuova lista contenente una shallow
+ * copy di tutti gli elementi della lista originale
+ * che rispettano una data condizione, ovvero che
+ * se "confrontati" con l'oggetto fornito mediante
+ * la funzione data questa restituisce un valore
+ * positivo.
+ *
+ * Restituisce il puntatore alla nuova lista in
+ * caso di successo e NULL in caso di errore.
+ */
+struct list* list_select(const struct list*, int (*)(void*,void*), void*);
+
+/** Attraversa la lista alla ricerca del primo elemento
+ * che rispetta la condizione data.
+ *
+ * La condizione si ritiene soddifatta non appena la funzione
+ * fornita ritorna un valore positivo (la funzione dovrebbe
+ * restituire 0 se l'elemento valutato non è "d'interesse").
+ *
+ * Ad ogni iterazione la funzione passata ottiene come primo
+ * elemento un puntatore all'elemento corrente della lista e
+ * come secondo argomento l'ultimo argomento fornito alla
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int list_find(const struct list* l, void** res, int (*cond)(void*,void*), void* base);
+
 /** Aggiunge un elemento in testa alla lista
  */
 int list_prepend(struct list*, void*);
@@ -155,8 +183,8 @@ int list_append(struct list*, void*);
  * In caso di lista vuota impostano
  * errno a ENODATA.
  */
-int list_first(struct list*, void**);
-int list_last(struct list*, void**);
+int list_first(const struct list*, void**);
+int list_last(const struct list*, void**);
 
 #ifdef _LIST_DEBUG
 /* Stampa il contenuto di una lista considerando

@@ -1,15 +1,36 @@
-CFLAGS=-Wall -g -pthread -D_RB_TREE_DEBUG -D_LIST_DEBUG -Wextra -lrt
+CFLAGS=-Wall -g -pthread -D_RB_TREE_DEBUG -D_LIST_DEBUG -Wextra -lrt -rdynamic
 CC=gcc
 # librerie che il linker dovrà richiamare
 # vedi: http://retis.santannapisa.it/luca/makefiles.pdf
 LDLIBS=-lm
 
-default:
-	echo "Speficificare una regola"
+#default:
+#	echo "Speficificare una regola"
 
-all: peer
-	./peer
+#costruisce ed esegue server e peer
+all: build
+	make run
 
+# compila e produce gli eseguibili di ds e peer
+build: peer ds
+
+#avvia ds e peer tutti nella stessa finestra - non aggiorna i sorgenti
+run:
+#comando che si occupa di lanciare una nuova sessione tmux,
+#dividere la finestra in 6 parti e lancia in ognuna di queste
+#un'istanza del server e 5 dei peer
+	tmux new-session -d -y 512 -x 64 "./ds 0; sleep 5" \;\
+    split-window "./peer 0; sleep 5" \;\
+    split-window "./peer 0; sleep 5" \;\
+    split-window "./peer 0; sleep 5" \;\
+    split-window "./peer 0; sleep 5" \;\
+    split-window "./peer 0; sleep 5" \;\
+    select-layout tiled \;\
+    attach
+
+#invoca il comando wc su tutti i file sorgenti scritti
+wc:
+	cat *.[hc] */*.[hc] | wc
 
 #copiata dal .pdf di Abeni su make all'indirizzo:
 #	http://retis.santannapisa.it/luca/makefiles.pdf
@@ -38,7 +59,7 @@ ds_esc.o: ds-src/ds_esc.c ds-src/ds_esc.h
 ds_showneighbours.o: ds-src/ds_showneighbours.c ds-src/ds_showneighbours.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-DSDEPS = ds_esc.o ds_udp.o ds_peers.o ds_showpeers.o ds_showneighbours.o
+DSDEPS = ds_esc.o ds_udp.o ds_peers.o ds_showpeers.o ds_showneighbours.o peer_query.o
 
 
 # file esclusivi dei peer
@@ -51,6 +72,9 @@ peer_udp.o: peer-src/peer_udp.c  peer-src/peer_udp.h
 peer_add.o: peer-src/peer_add.c  peer-src/peer_add.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+peer_get.o: peer-src/peer_get.c  peer-src/peer_get.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 peer_stop.o: peer-src/peer_stop.c peer-src/peer_stop.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
@@ -60,7 +84,10 @@ peer_tcp.o: peer-src/peer_tcp.c peer-src/peer_tcp.h
 peer_entries_manager.o: peer-src/peer_entries_manager.c peer-src/peer_entries_manager.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-PEERDEPS = peer_stop.o peer_add.o peer_udp.o peer_start.o peer_entries_manager.o peer_tcp.o
+peer_query.o: peer-src/peer_query.c peer-src/peer_query.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+PEERDEPS = peer_stop.o peer_add.o peer_udp.o peer_start.o peer_entries_manager.o peer_tcp.o peer_get.o peer_query.o
 
 # file per tutti
 list.o: 			list.h list.c

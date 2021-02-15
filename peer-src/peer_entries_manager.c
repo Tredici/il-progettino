@@ -1,13 +1,16 @@
 #define _POSIX_C_SOURCE 199309L
 #define _GNU_SOURCE
+#define NDEBUG /* per sopprimere la stampa dei dati sui registri trovati */
 
 #include "peer_entries_manager.h"
+#include "peer_tcp.h" /* per contattare i vicini */
 #include "../thread_semaphore.h"
 #include "../unified_io.h"
 #include "../register.h"
 #include "../list.h"
 #include "../commons.h"
 #include "../time_utils.h"
+#include "../rb_tree.h"
 #include <pthread.h>
 #include <time.h>
 #include <signal.h>
@@ -15,6 +18,8 @@
 #include <string.h>
 #include <poll.h>
 #include <errno.h>
+#include <fcntl.h>
+
 /* syscall specifica di linux, vediamo come va */
 #include <sys/timerfd.h>
 
@@ -24,26 +29,18 @@
  */
 #define TERM_SUBSYS_SIGNAL SIGQUIT
 
-/** Indica l'anno più remoto per cui il sistema
- * garantirà di tenere un registro per ogni suo
- * giorno.
- *
- * In pratica vi saranno registri per tutti i
- * giorni a partire dal primo gennaio dell'anno
- * indicato da questa macro fino alla data
- * corrente.
- */
-#define INFERIOR_YEAR 2020
-
 /** Variabile di riferimento per definire
  * l'ultima data.
  */
 static struct tm lowerDate;
 
+/* flag che indica se il sottosistema è stato avviato */
+static sig_atomic_t started;
+
 /** MUTEX a guardia delle operazioni
  * sui registri.
  */
-static pthread_mutex_t REGISTERguard = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t REGISTERguard = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 /** Lista dei registri a disposizione
  * del peer corrente.
  * In testa v'è quello corrispondente
@@ -56,6 +53,25 @@ static struct list* REGISTERlist;
  */
 static struct tm HEADdate;
 
+/** Cache con le risposte alle query
+ * già calcolate.
+ * I dati salvati vengono mantenuti
+ * inalterati fino alla chiusura
+ * del sottosistema e possono essere
+ * letti contemporaneamente da più
+ * thread senza problemi.
+ *
+ * È una sorta di mappa del tipo
+ * map<hash(query), answer>
+ */
+static struct rb_tree* ANSWERcache;
+
+/** funzione di cleanup per l'albero */
+static void ANSWERcleanup(void* ptr)
+{
+    freeAnswer((struct answer*)ptr);
+}
+
 /** Identifica il peer quando si tratta
  * di salvare il contenuto dei registri
  * in dei file.
@@ -64,6 +80,43 @@ static struct tm HEADdate;
  * processo da riga di comando.
  */
 static int peerIDentifier;
+
+struct tm firstRegisterClosed(void)
+{
+    struct tm date;
+
+    if (!started)
+        memset(&date, 0, sizeof(struct tm));
+    else
+    {
+        if (pthread_mutex_lock(&REGISTERguard) != 0)
+            abort();
+        date = lowerDate;
+        if (pthread_mutex_unlock(&REGISTERguard) != 0)
+            abort();
+    }
+
+    return date;
+}
+
+struct tm lastRegisterClosed(void)
+{
+    struct tm date;
+
+    if (!started)
+        memset(&date, 0, sizeof(struct tm));
+    else
+    {
+        if (pthread_mutex_lock(&REGISTERguard) != 0)
+            abort();
+        date = HEADdate;
+        if (pthread_mutex_unlock(&REGISTERguard) != 0)
+            abort();
+        time_date_dec(&date, 1);
+    }
+
+    return date;
+}
 
 /* handler farlocco */
 static void fakeHandler(int x) {(void)x;}
@@ -125,10 +178,16 @@ static void* entriesSubsystem(void* args)
     struct pollfd pollFd;
     /* test valore di ritorno */
     int err;
+    /* per svuotare il timerFd - vedi man timerfd_create */
+    unsigned long long int expTime;
 
     ts = thread_semaphore_form_args(args);
     if (ts == NULL)
         errExit("*** ENTRIES ***\n");
+
+    /* firma da assegnare a tutti i messaggi del thread */
+    if (unified_io_set_thread_name("ENTRIES") != 0)
+        fatal("ENTRIES:unified_io_set_thread_name");
 
     /* fa ciò che serve per bloccare il segnale */
     if (sigemptyset(&toBlock) != 0
@@ -143,6 +202,13 @@ static void* entriesSubsystem(void* args)
     if (timerFd == -1)
         if (thread_semaphore_signal(ts, -1, NULL) == -1)
             errExit("*** ENTRIES ***\n");
+
+    if (fcntl(timerFd, F_SETFL, O_NONBLOCK) != 0)
+    {
+        close(timerFd);
+        if (thread_semaphore_signal(ts, -1, NULL) == -1)
+            errExit("*** ENTRIES ***\n");
+    }
 
     /* dalle 18 di oggi ogni 24 ore */
     memset(&start, 0, sizeof(start));
@@ -179,6 +245,10 @@ static void* entriesSubsystem(void* args)
                 break;
             errExit("*** ENTRIES:ppoll ***\n");
         }
+        unified_io_push(UNIFIED_IO_NORMAL, "Timer has fired!");
+        /* svuota il fd */
+        while (read(timerFd, &expTime, sizeof(expTime)) > 0 );
+
         /* nuova testa per l'elemento */
         newListHead(); /* se fallisce termina */
     }
@@ -193,13 +263,26 @@ static void* entriesSubsystem(void* args)
 static void healp_cleaner(void* ptr)
 {
     struct e_register* R;
+    char filename[64];
+
     /* non serve fare nulla */
     if (ptr == NULL)
         return;
 
     R = (struct e_register*)ptr;
     /* salva il contenuto del registro su file */
-    register_flush(R, 0);
+    switch (register_flush(R, 0))
+    {
+    case -1:
+        errExit("*** ENTRY:register_flush ***");
+        break;
+    case 0: /* non fa nulla */
+        break;
+    default: /* Ha aggiornato un file! */
+        register_filename(R, filename, sizeof(filename));
+        unified_io_push(UNIFIED_IO_NORMAL, "Updated file \"%s\"", filename);
+        break;
+    }
     /* distrugge il registro */
     register_destroy(R);
 }
@@ -225,6 +308,8 @@ static int init_REGISTERlist(int defaultSignature)
     struct tm tail_date;
     /* Per il logging */
     char dateStart[32], dateEnd[32];
+    /* per stampare se viene letto un file */
+    char filename[64];
 
     /* creiamo la lista */
     test_list = list_init(NULL);
@@ -250,6 +335,11 @@ static int init_REGISTERlist(int defaultSignature)
         list_destroy(test_list);
         return -1;
     }
+    else if (register_size(head) > 0) /* caricati dei dati di file? */
+    {
+        register_filename(head, filename, sizeof(filename));
+        unified_io_push(UNIFIED_IO_NORMAL, "Loaded file \"%s\"", filename);
+    }
 
     /* prende la data */
     test_date = *register_date(head);
@@ -269,6 +359,11 @@ static int init_REGISTERlist(int defaultSignature)
 
             list_destroy(test_list);
             return -1;
+        }
+        else if (register_size(tail) > 0) /* caricati dei dati di file? */
+        {
+            register_filename(tail, filename, sizeof(filename));
+            unified_io_push(UNIFIED_IO_NORMAL, "Loaded file \"%s\"", filename);
         }
     }
 
@@ -291,9 +386,6 @@ static int init_REGISTERlist(int defaultSignature)
  */
 static pthread_t REGISTER_tid;
 
-/* flag che indica se il sottosistema è stato avviato */
-static sig_atomic_t started;
-
 int startEntriesSubsystem(int port)
 {
     /* non si può avviare due volte */
@@ -306,13 +398,27 @@ int startEntriesSubsystem(int port)
     /* inizializza la variabile globale limite inferiore */
     lowerDate = time_date_init(INFERIOR_YEAR, 1, 1);
 
+    ANSWERcache = rb_tree_init(NULL);
+    if (ANSWERcache == NULL)
+        return -1;
+    /* imposta la funzione di cleanup ler l'albero */
+    rb_tree_set_cleanup_f(ANSWERcache, &ANSWERcleanup);
+
     /* crea i registri */
     if (init_REGISTERlist(port) != 0)
+    {
+        rb_tree_destroy(ANSWERcache);
+        ANSWERcache = NULL;
         return -1;
+    }
 
     /* avvia il subsystem */
     if (start_long_life_thread(&REGISTER_tid, &entriesSubsystem, NULL, NULL) == -1)
+    {
+        rb_tree_destroy(ANSWERcache);
+        ANSWERcache = NULL;
         return -1;
+    }
 
     /* accende il flag */
     started = 1;
@@ -334,12 +440,76 @@ int closeEntriesSubsystem(void)
 
     /* flush di tutti i registri rimasti aperti */
     list_destroy(REGISTERlist);
+    /* distrugge la cache delle risposte */
+    rb_tree_destroy(ANSWERcache);
 
     started = 0;
 
     return 0;
 }
 
+/** Funzione ausiliaria per l'implementazione di
+ * findRegisterByDate che si occupa di verificare
+ * se la data associata al registro primo argomento
+ * coincide con quella fornita come secondo argomento.
+ */
+static int findRegisterByDate_helper(void* elem, void* base)
+{
+    const struct e_register* R = (const struct e_register*)elem;
+    const struct tm* date = (const struct tm*)base;
+
+    return time_date_cmp(register_date(R), date) == 0;
+}
+
+/** Cerca il registro con la data fornita tra quelli
+ * posseduti dal peer corrente.
+ * Restituisce il puntatore al registro in caso di
+ * successo e NULL in caso di errore.
+ */
+static struct e_register* findRegisterByDate(const struct tm* date)
+{
+    struct e_register* R;
+
+    if (list_find(REGISTERlist, (void**)&R, &findRegisterByDate_helper, (void*)date) != 0)
+        return NULL;
+
+    return R;
+}
+
+int mergeRegisterContent(const struct e_register* R)
+{
+    /* registro posseduto dal peer */
+    struct e_register* myReg;
+    const struct tm* date;
+    int ans;
+
+    if (R == NULL)
+        return -1;
+
+    date = register_date(R);
+    if (date == NULL)
+        return -1;
+
+    /* sezione critica! */
+    if (pthread_mutex_lock(&REGISTERguard) != 0)
+        fatal("pthread_mutex_lock");
+
+    myReg = findRegisterByDate(date);
+    if (myReg == NULL)
+        ans = -1;
+    else
+    {
+        ans = 0;
+        /* fonde i registri */
+        if (register_merge(myReg, R) == -1)
+            fatal("register_merge"); /* se fallisce è un disastro! */
+    }
+
+    if (pthread_mutex_unlock(&REGISTERguard) != 0)
+        fatal("pthread_mutex_unlock");
+
+    return ans;
+}
 
 int addEntryToCurrent(const struct entry* E)
 {
@@ -370,4 +540,281 @@ int addEntryToCurrent(const struct entry* E)
         return -1;
 
     return 0;
+}
+
+const struct answer* findCachedAnswer(const struct query* Q)
+{
+    const struct answer* ans;
+    long int hash;
+
+    if (!started || checkQuery(Q) != 0)
+        return NULL;
+
+    hash = hashQuery(Q);
+    if (pthread_mutex_lock(&REGISTERguard) != 0)
+        errExit("*** findCachedAnswer:pthread_mutex_lock ***\n");
+
+    if (rb_tree_get(ANSWERcache, hash, (void**)&ans) == -1)
+    {
+        if (pthread_mutex_unlock(&REGISTERguard) != 0)
+            errExit("*** findCachedAnswer:pthread_mutex_lock ***\n");
+        return NULL;
+    }
+
+    if (pthread_mutex_unlock(&REGISTERguard) != 0)
+        errExit("*** findCachedAnswer:pthread_mutex_lock ***\n");
+
+    return ans;
+}
+
+int addAnswerToCache(const struct query* Q, const struct answer* A)
+{
+    long int hash;
+
+    if (!started || checkQuery(Q) != 0 || A == NULL)
+        return -1;
+
+    hash = hashQuery(Q);
+    if (pthread_mutex_lock(&REGISTERguard) != 0)
+        errExit("*** addAnswerToCache:pthread_mutex_lock ***\n");
+
+    if (rb_tree_set(ANSWERcache, hash, (void*)A) == -1)
+    {
+        if (pthread_mutex_unlock(&REGISTERguard) != 0)
+            errExit("*** addAnswerToCache:pthread_mutex_lock ***\n");
+        return -1;
+    }
+
+    if (pthread_mutex_unlock(&REGISTERguard) != 0)
+        errExit("*** addAnswerToCache:pthread_mutex_lock ***\n");
+
+    return 0;
+}
+
+static int calcEntryQuery_helper(void* reg, void* que)
+{
+    const struct e_register* R;
+    const struct query* Q;
+    const struct tm* date;
+    struct tm begin, end;
+
+    R = (const struct e_register*)reg;
+    Q = (const struct query*)que;
+
+    date = register_date(R);
+    if (date == NULL)
+        errExit("*** DISASTRO:calcEntryQuery_helper ***\n");
+
+    if (readQuery(Q, NULL, NULL, &begin, &end) == -1)
+        errExit("*** DISASTRO:calcEntryQuery_helper ***\n");
+
+    return !(time_date_cmp(date, &begin) < 0 || time_date_cmp(date, &end) > 0);
+}
+
+#ifndef NDEBUG
+/* a solo scopo di test - permette di aggirare le restrizioni
+ * sui cast di puntatori a funzione */
+static void register_print_helper(void* ptr)
+{
+    if (register_print((const struct e_register*)ptr) != 0)
+        errExit("*** DEBUG:calcEntryQuery ***\n");
+}
+#endif
+
+/** Funzione ausiliaria che si occupa di avviare un'esecuzione
+ * del protocollo
+ *
+ */
+static void startFlooding(void* el)
+{
+    char dateStr[16];
+    const struct e_register* R = (const struct e_register*)el;
+    const struct tm* date;
+
+    if (R == NULL)
+        fatal("startFlooding(NULL)");
+
+    /* se non è chiuso serve lavorare - altrimenti ignora */
+    if (register_is_closed(R) == 0)
+    {
+        date = register_date(R);
+        if (time_serialize_date(dateStr, date) == NULL)
+            fatal("time_serialize_date");
+        unified_io_push(UNIFIED_IO_NORMAL, "Starting flooding protocol for: %s", dateStr);
+        if (TCPstartFlooding(date) != 0)
+            fatal("TCPstartFlooding");
+    }
+}
+
+struct answer* calcEntryQuery(const struct query* query)
+{
+    struct list* l = NULL;
+    struct answer* ans;
+    int reqResult; /* come è andata la richiesta hai vicini? */
+
+    /* sistema avviato? */
+    if (!started)
+        return NULL;
+
+    if (checkQuery(query) != 0)
+        return NULL;
+
+    /* INIZIO SEZIONE CRITICA */
+    if (pthread_mutex_lock(&REGISTERguard) != 0)
+        errExit("*** calcEntryQuery:pthread_mutex_lock ***\n");
+
+    ans = (struct answer*)findCachedAnswer(query); /* cerca la soluzione nella cache */
+    if (ans != NULL) /* trovata! */
+    {
+        unified_io_push(UNIFIED_IO_NORMAL, "CACHE HIT!");
+    }
+    else /* il risultato va calcolato */
+    {
+        unified_io_push(UNIFIED_IO_NORMAL, "CACHE MISS!");
+
+        /* contatta i vicini per vedere se hanno già il risultato */
+        unified_io_push(UNIFIED_IO_NORMAL, "Sending query to neighbours...");
+
+        /* per evitare deadlock */
+        if (pthread_mutex_unlock(&REGISTERguard) != 0)
+            fatal("pthread_mutex_unlock");
+        /* se non si rilasciasse il mutex finirebbe per bloccarsi con l'altro thread */
+        reqResult = TCPreqData(query);
+        if (pthread_mutex_lock(&REGISTERguard) != 0)
+            fatal("pthread_mutex_lock");
+
+        if (reqResult == 0)
+        {
+            /* i vicini hanno risposto */
+            unified_io_push(UNIFIED_IO_NORMAL, "Answer received from neighbours!");
+            ans = (struct answer*)findCachedAnswer(query);
+            if (ans == NULL)
+                fatal("Inconsistent state - findCachedAnswer");
+            /* a questo punto ha preso la risposta da un vicino */
+        }
+        else
+        {
+            unified_io_push(UNIFIED_IO_NORMAL, "CALCULATING QUERY!");
+
+            l = list_select(REGISTERlist, &calcEntryQuery_helper, (void*)query);
+            if (l == NULL)
+            {
+                if (pthread_mutex_unlock(&REGISTERguard) != 0)
+                    errExit("*** calcEntryQuery:pthread_mutex_lock ***\n");
+                return NULL;
+            }
+
+            #ifndef NDEBUG
+            /* a solo scopo di test - stampa le info su tutti i registri trovati */
+            printf("Stampa dei registri scelti:\n");
+            list_foreach(l, &register_print_helper);
+            #endif
+            if (pthread_mutex_unlock(&REGISTERguard) != 0)
+                fatal("pthread_mutex_unlock");
+            unified_io_push(UNIFIED_IO_NORMAL, "Starting FLOODING protocol...");
+            /* serve sbloccare il mutex */
+            list_foreach(l, &startFlooding);
+            unified_io_push(UNIFIED_IO_NORMAL, "Wait for FLOODING termination...");
+            (void)TCPendFlooding();
+            if (pthread_mutex_lock(&REGISTERguard) != 0)
+                fatal("pthread_mutex_lock");
+
+            if (calcAnswer(&ans, query, l) != 0)
+                errExit("*** calcEntryQuery:calcAnswer ***\n");
+
+            /** Salva il dato nella cache.
+             */
+            if (addAnswerToCache(query, ans) == -1)
+                errExit("*** calcEntryQuery:addAnswerToCache ***\n");
+        }
+    }
+
+    /* FINE SEZIONE CRITICA */
+    if (pthread_mutex_unlock(&REGISTERguard) != 0)
+        errExit("*** calcEntryQuery:pthread_mutex_lock ***\n");
+
+    /* libera la memoria richiesta - non ha effetti collaterali
+    * sui registri quindi non è un'operazione che necessita di
+    * essere protetta da dei mutex */
+    if (l != NULL)
+        list_destroy(l);
+
+    return ans;
+}
+
+int getNsRegisterData(const struct tm* date,
+            struct ns_entry** buffer, size_t* bufLen,
+            const struct set* skip)
+{
+    const struct e_register* R;
+    int ans;
+
+    if (date == NULL || buffer == NULL || bufLen == NULL)
+        return -1;
+
+    /* sezione critica! */
+    if (pthread_mutex_lock(&REGISTERguard) != 0)
+        fatal("pthread_mutex_lock");
+
+    ans = 0;
+    R = findRegisterByDate(date);
+    if (R == NULL)
+    {
+        ans = -1;
+    }
+    else if (register_as_ns_array(R, buffer, bufLen, skip, NULL) == -1)
+            fatal("register_as_ns_array");
+
+    if (pthread_mutex_unlock(&REGISTERguard) != 0)
+        fatal("pthread_mutex_unlock");
+
+    return ans;
+}
+
+int getRegisterSignatures(const struct tm* date,
+            uint32_t** buffer, size_t* bufLen)
+{
+    const struct e_register* R;
+    int ans;
+    int* array;
+    uint32_t* tmp;
+    size_t i, tmpLen;
+
+    if (date == NULL || buffer == NULL || bufLen == NULL)
+        return -1;
+
+    /* sezione critica! */
+    if (pthread_mutex_lock(&REGISTERguard) != 0)
+        fatal("pthread_mutex_lock");
+
+    ans = 0;
+    R = findRegisterByDate(date);
+    if (R == NULL || register_owned_signatures(R, &array, &tmpLen) == -1)
+    {
+        ans = -1;
+    }
+
+    if (pthread_mutex_unlock(&REGISTERguard) != 0)
+        fatal("pthread_mutex_unlock");
+
+    /* passaggio dei dati se tutto è andato bene */
+    if (ans == 0)
+    {
+        tmp = calloc(tmpLen, sizeof(uint32_t));
+        if (tmp == NULL)
+        {
+            free(array);
+            return -1;
+        }
+        for (i = 0; i != tmpLen; ++i) /* converte l'array */
+        {
+            tmp[i] = (uint32_t)array[i];
+        }
+        free(array); /* libera il vecchio array */
+        /* passa i risultati */
+        *buffer = tmp;
+        *bufLen = tmpLen;
+    }
+
+    return ans;
 }

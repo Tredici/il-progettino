@@ -1,24 +1,100 @@
+#define _GNU_SOURCE
+
 #include "commons.h"
 #include <stdio.h>
 #include <stdarg.h> /* per un numero variabile di argomenti */
 #include <stdlib.h>
 #include <termios.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <errno.h>
 #include <poll.h>
+#include <string.h>
+#include <sys/syscall.h>
+#include <signal.h>
+
+#ifndef NDEBUG
+#include <execinfo.h> /* per backtrace */
+#endif
 
 #define MAX_ERR_L 256
+#define MAX_CALL_DEPTH 256
+
+int min(int x, int y) { return x<y ? x : y; }
+int max(int x, int y) { return x>y ? x : y; }
 
 void errExit(const char *format, ...)
 {
     va_list args;
 
     fflush(stdout);
+    /* per stampare l'error in rosso */
+    fprintf(stderr, "\033[31m");
     va_start(args, format);
     vfprintf(stderr, format, args);
     va_end(args);
+    /* resetta lo status del terminale */
+    fprintf(stderr, "\033[0m");
 
     exit(EXIT_FAILURE);
+}
+
+void printError(const char *format, ...)
+{
+    va_list args;
+
+    fflush(stdout);
+    /* per stampare l'error in rosso */
+    fprintf(stderr, "\033[31m");
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    /* resetta lo status del terminale */
+    fprintf(stderr, "\033[0m");
+}
+
+void fatal(const char *format, ...)
+{
+#ifndef NDEBUG
+    void* btCalls[MAX_CALL_DEPTH] = {};
+    int btLen;
+    char errStr[64];
+#endif
+    va_list args;
+    int errCpy = errno;
+    pid_t tid;
+
+    /* man syscall(2) - EXAMPLE - Linux specific */
+    tid = syscall(SYS_gettid);
+
+    fflush(stdout);
+    fprintf(stderr, "\033[31m");
+    fprintf(stderr, "fatal:\nmessage:\t");
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    fprintf(stderr, "\n");
+    (void)strerror_r(errCpy, errStr, sizeof(errStr));
+    fprintf(stderr, "errno = (%d): %s\n", errCpy, errStr);
+    fprintf(stderr, "tid = (%ld);\npid = (%ld);\nppid = (%ld)\n",
+        (long)tid, (long)getpid(), (long)getppid());
+
+    fprintf(stderr, "gid = (%ld);\nsid = (%ld);\n",
+        (long)getgid(), (long)getsid(0));
+
+
+#ifndef NDEBUG
+    fprintf(stderr, "Backtrace:\n");
+    btLen = backtrace(btCalls, MAX_CALL_DEPTH);
+    fprintf(stderr, "backtrace() returned %d adddresses\n", btLen);
+    fflush(stderr);
+    /* mette in output */
+    backtrace_symbols_fd(btCalls, (size_t)btLen, STDERR_FILENO);
+#endif
+
+    fprintf(stderr, "Aborting...\n");
+    fprintf(stderr, "\033[0m");
+    abort();
 }
 
 /** Vagamente ispirata a ttySetCbreak

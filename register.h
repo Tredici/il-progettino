@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include "time_utils.h"
+#include "set.h"
 
 /** Spazio massimo necessario per
  * serializzare un'entry
@@ -28,6 +30,35 @@ enum entry_type
 struct e_register;
 
 struct entry;
+
+/** Struttura dati che permette di
+ * rappresentare il contenuto di
+ * un oggetto struct entry in
+ * maniera network safe.
+ */
+struct ns_entry
+{
+    struct ns_tm date;
+    uint32_t type;
+    uint32_t totale;
+    uint32_t signature;
+};
+
+/** Inizializza un oggetto struct ns_entry
+ * con il contenuto di un oggetto struct entry.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int ns_entry_from_entry(struct ns_entry*, const struct entry*);
+
+/** Inizializza un oggetto struct ns_entry
+ * con il contenuto di un oggetto struct entry.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int entry_from_ns_entry(struct entry*, const struct ns_entry*);
 
 /** La struttura testuale di un entry
  * sarà:
@@ -379,5 +410,56 @@ int register_close(struct e_register*);
  * Restituisce -1 in caso di errore.
  */
 int register_is_closed(const struct e_register*);
+
+/** Permette di trasformare un register in un
+ * array di strutture "struct ns_entry" usando
+ * tutte le entry del register la cui firma
+ * non è presente nel set fornito, oppure
+ * usandole tutte se questo è NULL.
+ * Opzionalmente restituisce un nuovo set
+ * contenente tutte le firme delle entry
+ * selezionate.
+ *
+ * Se la lunghezza dell'array allocato è 0.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int register_as_ns_array(const struct e_register*, struct ns_entry**, size_t*, const struct set*, struct set**);
+
+/** Inizializza e riempie un oggetto di
+ * tipo "struct e_register" con i dati
+ * presenti nell'array di oggetti
+ * struct ns_entry fornito.
+ *
+ * Se la lunghezza dell'array è maggiore
+ * di 0 è un errore fornire NULL al posto
+ * dell'array, altrimenti il parametro
+ * viene ignorato.
+ *
+ * Restituisce il nuovo registro in caso
+ * di successo oppure NULL in caso di
+ * errore.
+ */
+struct e_register* register_from_ns_array(const struct tm*, const struct ns_entry*, size_t);
+
+/** Stampa su stdout tutto il contenuto del
+ * registro fornito.
+ *
+ * Utile per il debugging.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int register_print(const struct e_register*);
+
+/** Alloca e fornisce un array di interi
+ * elencante tutte le firme che il registro
+ * fornito possiede.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int register_owned_signatures(const struct e_register*, int **, size_t*);
 
 #endif

@@ -5,6 +5,9 @@
 #include <sys/socket.h>
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
+#include <stddef.h>
+#include <sys/uio.h>
 
 /** ATTENZIONE:
  * dato che in questo file andrò
@@ -59,6 +62,16 @@ int peer_data_extract(
         *ns_addr = ptr->ns_addr;
 
     return 0;
+}
+
+uint32_t peer_data_extract_ID(const struct peer_data* ptr)
+{
+    uint32_t ID;
+
+    if (peer_data_extract(ptr, &ID, NULL, NULL) == -1)
+        return 0;
+
+    return ID;
 }
 
 char* peer_data_as_string(const struct peer_data* pd, char* buffer, size_t bufLen)
@@ -796,4 +809,691 @@ int messages_get_check_ack_body(
     }
 
     return 0;
+}
+
+int messages_make_flood_req(
+            struct flood_req** req,
+            size_t* reqLen,
+            uint32_t authID,
+            uint32_t reqID,
+            const struct tm* date,
+            uint32_t length,
+            uint32_t* signatures)
+{
+    struct flood_req* ans;
+    size_t ansLen;
+    size_t i;
+    struct ns_tm ns_date;
+
+    if (req == NULL || reqLen == NULL || date == NULL || (!length ^ !signatures))
+        return -1;
+
+    /* controllo che l'array di dimensione 0
+     * abbia dimensione 0 */
+    assert(sizeof(struct flood_req) == offsetof(struct flood_req, body.signatures));
+    ansLen = sizeof(struct flood_req) + length*sizeof(uint32_t);
+    ans = malloc(ansLen);
+    if (ans == NULL)
+        return -1;
+    memset(ans, 0, ansLen);
+
+    /* inizializza l'intestazione */
+    ans->head.type = htons(MESSAGES_FLOOD_FOR_ENTRIES);
+
+    /* inizializza il corpo */
+    ans->body.authorID = htonl(authID);
+    ans->body.reqID = htonl(reqID);
+    if (time_init_ns_tm(&ns_date, date) == -1)
+    {
+        free(ans);
+        return -1;
+    }
+    ans->body.date = ns_date; /* aggira il problema dell'allineamento */
+    ans->body.length = htonl(length);
+    for (i = 0; i != length; ++i) /* Riempie la "coda" */
+        ans->body.signatures[i] = htonl(signatures[i]);
+
+    *req = ans;
+    *reqLen = ansLen;
+
+    return 0;
+}
+
+int messages_send_flood_req(
+            int sockFd,
+            uint32_t authID,
+            uint32_t reqID,
+            const struct tm* date,
+            uint32_t length,
+            uint32_t* signatures)
+{
+    struct flood_req* req;
+    size_t reqLen;
+
+    if (sockFd < 0)
+        return -1;
+
+    if (messages_make_flood_req(&req, &reqLen,
+        authID, reqID, date, length, signatures) == -1)
+        return -1;
+
+    if (send(sockFd, (void*)req, reqLen, 0) != (ssize_t)reqLen)
+    {
+        free(req);
+        return -1;
+    }
+
+    free(req);
+    return 0;
+}
+
+int messages_check_flood_req(
+            const void* buffer,
+            size_t bufLen)
+{
+    const struct flood_req* req;
+
+    /* controllo che l'array di dimensione 0
+     * abbia dimensione 0 */
+    assert(sizeof(struct flood_req) == offsetof(struct flood_req, body.signatures));
+
+    /* controllo sulla validità dei parametri;
+     * attenzione al fatto che questi messaggi
+     * abbiano dimensione variabile */
+    if (buffer == NULL || bufLen < sizeof(struct flood_req))
+        return -1;
+
+    req = (const struct flood_req*)buffer;
+    /* controllo dell'header */
+    if (req->head.sentinel != 0 || req->head.type != htons(MESSAGES_BOOT_ACK))
+        return -1;
+
+    /* controlla il corpo */
+    if (bufLen - offsetof(struct flood_req, body.signatures) != ntohl(req->body.length))
+        return -1;
+
+    return 0;
+}
+
+int messages_get_flood_req_body(
+            const struct flood_req* req,
+            uint32_t* authID,
+            uint32_t* reqID,
+            struct tm* date,
+            uint32_t* length,
+            uint32_t** signatures)
+{
+    uint32_t* arr;
+    uint32_t i, tot;
+    struct ns_tm ns_date;
+
+    if (req == NULL || (length == NULL && signatures != NULL))
+        return -1;
+
+    /* valutazione campo per campo */
+    if (signatures != NULL)
+    {
+        tot = ntohl(req->body.length);
+        if (tot != 0)
+        {
+            arr = calloc(tot, sizeof(uint32_t));
+            if (arr == NULL)
+                return -1;
+            for (i = 0; i != tot; ++i)
+                arr[i] = ntohl(req->body.signatures[i]);
+            *signatures = arr;
+        }
+        else
+            *signatures = NULL;
+        *length = tot;
+    }
+    else if (length != NULL)
+        *length = ntohl(req->body.length);
+
+    if (authID != NULL)
+        *authID = ntohl(req->body.authorID);
+
+    if (reqID != NULL)
+        *reqID = ntohl(req->body.reqID);
+
+    if (date != NULL)
+    {
+        ns_date = req->body.date;
+        time_read_ns_tm(date, &ns_date);
+    }
+
+    return 0;
+}
+
+int messages_read_flood_req_body(
+            int sockfd,
+            uint32_t* authID,
+            uint32_t* reqID,
+            struct tm* date,
+            uint32_t* sigNum,
+            uint32_t** signatures)
+{
+    struct flood_req_body body;
+    size_t bodyLen = sizeof(body);
+    struct ns_tm ns_date;
+
+    uint32_t* array = NULL;
+    uint32_t i, lenght;
+
+    /* integrità parametri */
+    if (authID == NULL || reqID == NULL ||
+        date == NULL || sigNum == NULL ||
+        signatures == NULL)
+        return -1;
+
+    /* per debugging */
+    if (recv(sockfd, (void*)&body, bodyLen, 0) != (ssize_t)bodyLen)
+        return -1;
+    /* lunhezza parte variabile */
+    lenght = ntohl(body.length);
+    if (lenght > 0)
+    {
+        /* alloca lo spazio necessario */
+        array = calloc(lenght, sizeof(uint32_t));
+        if (array == NULL) /* pasticcio! */
+            return -1;
+
+        /* legge la parte variabile */
+        if (recv(sockfd, (void*)array, (size_t)lenght*sizeof(uint32_t), 0) != (ssize_t)(lenght*sizeof(uint32_t)))
+        {
+            free(array);
+            return -1;
+        }
+        /* mette in host order */
+        for (i = 0; i != lenght; ++i)
+            array[i] = ntohl(array[i]);
+    } /* altrimenti il corpo è vuoto */
+
+    /* passaggio della data */
+    ns_date = body.date; /* aggira il problema dell'allineamento */
+    if (time_read_ns_tm(date, &ns_date) != 0)
+        return -1;
+    /* copia dei dati */
+    *authID = ntohl(body.authorID);
+    *reqID = ntohl(body.reqID);
+    *signatures = array;
+    *sigNum = lenght;
+
+    return 0;
+}
+
+int messages_send_flood_ack(int sockFd,
+            uint32_t authID,
+            uint32_t reqID,
+            const struct tm* date,
+            struct ns_entry* entries,
+            size_t lenght)
+{
+    struct flood_ack msg;
+    const size_t msgLen = sizeof(msg);
+    struct iovec iov[2];
+    /* problema dell'allineamento */
+    struct ns_tm ns_date;
+
+    /* l'array in coda ha dimensione 0? */
+    assert(sizeof(struct flood_ack) == offsetof(struct flood_ack, body.entry));
+    /* controllo dei parametri */
+    if (sockFd < 0 || date == NULL || (!entries^!lenght))
+        return -1;
+
+    /* prepara il messaggio */
+    memset(&msg, 0, msgLen);
+    /* testa */
+    msg.head.type = htons(MESSAGES_REQ_ENTRIES);
+    /* corpo */
+    msg.body.authorID = htonl(authID);
+    msg.body.reqID = htonl(reqID);
+    /* problema dell'allineamento */
+    if (time_init_ns_tm(&ns_date, date) != 0)
+        return -1;
+    msg.body.date = ns_date;
+    /* attacca la parte variabile */
+    msg.body.length = htonl(lenght);
+
+    /* per caricare il corpo */
+    iov[0].iov_base = (void*)&msg;
+    iov[0].iov_len = sizeof(struct flood_ack);
+    /* per la parte variabile */
+    iov[1].iov_base = (void*)entries;
+    iov[1].iov_len = lenght * sizeof(struct ns_entry);
+
+    /* puà inviare il messaggio */
+    if (writev(sockFd, iov, 2) != (ssize_t)(iov[0].iov_len+iov[1].iov_len))
+        return -1;
+
+    return 0;
+}
+
+int messages_send_empty_flood_ack(
+            int sockFd,
+            uint32_t authID,
+            uint32_t reqID,
+            const struct tm* date)
+{
+    struct flood_ack msg;
+    const size_t msgLen = sizeof(msg);
+    /* problema dell'allineamento */
+    struct ns_tm ns_date;
+
+    /* controllo parametry */
+    if (date == NULL)
+        return -1;
+
+    /* prepara il messaggio */
+    memset(&msg, 0, msgLen);
+    /* testa */
+    msg.head.type = htons(MESSAGES_REQ_ENTRIES);
+    /* corpo */
+    msg.body.authorID = htonl(authID);
+    msg.body.reqID = htonl(reqID);
+    /* problema dell'allineamento */
+    if (time_init_ns_tm(&ns_date, date) != 0)
+        return -1;
+    msg.body.date = ns_date;
+    /* lenght è già a 0 perciò non ci sono problemi */
+
+    /* puà inviare il messaggio */
+    if (send(sockFd, (void*)&msg, msgLen, 0) != (ssize_t)msgLen)
+        return -1;
+
+    return 0;
+}
+
+int messages_read_flood_ack_body(
+            int sockFd,
+            uint32_t* authorID,
+            uint32_t* reqID,
+            struct tm* date,
+            struct e_register** R
+            )
+{
+    struct flood_ack_body body;
+    size_t bodyLen = sizeof(body), entriesLen;
+    struct ns_tm ns_date;
+    struct tm tmpDate;
+    /* per la parte variabile */
+    uint32_t lenght;
+    struct ns_entry* entries;
+    struct e_register* tmpReg = NULL;
+
+    /* controlla i parametri */
+    if (authorID == NULL || reqID == NULL || R == NULL)
+        return -1;
+
+    /* legge il corpo */
+    if (recv(sockFd, (void*)&body, bodyLen, MSG_DONTWAIT) != (ssize_t)bodyLen)
+        return -1;
+
+    /* accede alla data */
+    ns_date = body.date;
+    /* aggira il problema dell'allineamento */
+    if (time_read_ns_tm(&tmpDate, &ns_date) != 0)
+        return -1;
+
+    lenght = ntohl(body.length);
+    if (lenght > 0)
+    {
+        entriesLen = lenght*sizeof(struct ns_entry);
+        entries = calloc(lenght, sizeof(struct ns_entry));
+        if (entries == NULL)
+            return -1;
+        if (recv(sockFd, (void*)entries, entriesLen, 0) != (ssize_t)entriesLen)
+           return -1;
+        tmpReg = register_from_ns_array(&tmpDate, entries, lenght);
+        if (tmpReg == NULL)
+        {
+            free(entries);
+            return -1;
+        }
+        free(entries);
+    }
+
+    /* passaggio dei dati */
+    *authorID = ntohl(body.authorID);
+    *reqID = ntohl(body.reqID);
+    /* passaggio della data */
+    if (date != NULL)
+        *date = tmpDate;
+    *R = tmpReg;
+
+    return 0;
+}
+
+int messages_make_req_data(
+            struct req_data** req,
+            size_t* reqLen,
+            uint32_t authID,
+            const struct query* query)
+{
+    struct req_data* ans;
+    struct ns_query ns_query;
+
+    if (req == NULL || reqLen == NULL || query == NULL)
+        return -1;
+
+    ans = malloc(sizeof(struct req_data));
+    if (ans == NULL)
+        return -1;
+
+    memset(ans, 0, sizeof(struct req_data));
+    ans->head.type = htons(MESSAGES_REQ_DATA);
+
+    ans->body.autorID = htonl(authID);
+    if (initNsQuery(&ns_query, query) == -1)
+    {
+        free(ans);
+        return -1;
+    }
+    ans->body.query = ns_query; /* aggira il problema dell'allineamento dei puntatori */
+
+    *req = ans;
+    *reqLen = sizeof(struct req_data);
+
+    return 0;
+}
+
+int messages_send_req_data(
+            int sockfd,
+            uint32_t authID,
+            const struct query* query)
+{
+    struct req_data* req;
+    size_t reqLen;
+
+    if (messages_make_req_data(&req, &reqLen, authID, query) == -1)
+        return -1;
+
+    if (send(sockfd, req, reqLen, 0) != (ssize_t)reqLen)
+    {
+        free((void*)req);
+        return -1;
+    }
+
+    free((void*)req);
+    return 0;
+}
+
+int messages_read_req_data_body(
+            int sockfd,
+            uint32_t* authID,
+            struct query* query)
+{
+    struct req_data_body body;
+
+    if (authID == NULL || query == NULL)
+        return -1;
+
+    if (recv(sockfd, (void*)&body, sizeof(body), MSG_DONTWAIT) != (ssize_t)sizeof(body))
+        return -1;
+
+    /* dovrebbe essere tutto ok */
+    if (readNsQuery(query, &body.query) != 0)
+        return -1;
+    *authID = ntohl(body.autorID);
+
+    return 0;
+}
+
+int messages_send_hello_req(int sockfd, uint32_t senderID, uint32_t receiverID)
+{
+    /* non serve allocare memoria a parte in questo caso */
+    struct hello_req msg;
+
+    memset(&msg, 0, sizeof(struct hello_req));
+    /* inizializza l'header */
+    msg.head.type = htons(MESSAGES_PEER_HELLO_REQ);
+    /* inizializza il corpo del messaggio */
+    msg.body.authID = htonl(senderID);
+    msg.body.destID = htonl(receiverID);
+
+    /* ora lo invia */
+    if (send(sockfd, (void*)&msg, sizeof(struct hello_req), 0) != (ssize_t)sizeof(struct hello_req))
+        return -1;
+
+    return 0;
+}
+
+int messages_read_hello_req_body(
+            int sockfd,
+            uint32_t* senderID,
+            uint32_t* receiverID)
+{
+    struct hello_req_body body;
+
+    if (senderID == NULL || receiverID == NULL)
+        return -1;
+
+    if (recv(sockfd, (void*)&body, sizeof(body), MSG_DONTWAIT) != (ssize_t)sizeof(body))
+        return -1;
+
+    *senderID = ntohl(body.authID);
+    *receiverID = ntohl(body.destID);
+    return 0;
+}
+
+int messages_send_hello_ack(
+            int sockfd,
+            enum messages_hello_status status
+            )
+{
+    /* non serve allocare memoria a parte in questo caso */
+    struct hello_ack msg;
+
+    memset(&msg, 0, sizeof(struct hello_ack));
+    /* inizializza l'header */
+    msg.head.type = htons(MESSAGES_PEER_HELLO_ACK);
+    /* inizializza il corpo del messaggio */
+    msg.body.status = htonl(status);
+
+    /* ora lo invia */
+    if (send(sockfd, (void*)&msg, sizeof(struct hello_ack), 0) != (ssize_t)sizeof(struct hello_ack))
+        return -1;
+
+    return 0;
+}
+
+int messages_read_hello_ack_body(
+            int sockfd,
+            enum messages_hello_status* status
+            )
+{
+    struct hello_ack_body body;
+
+    if (status == NULL)
+        return -1;
+
+    if (recv(sockfd, (void*)&body, sizeof(body), MSG_DONTWAIT) != (ssize_t)sizeof(body))
+        return -1;
+
+    *status = ntohl(body.status);
+    return 0;
+}
+
+int messages_send_detatch_message(
+            int sockfd,
+            enum detatch_status status
+            )
+{
+    struct message_detatch msg;
+
+    memset(&msg, 0, sizeof(msg));
+    /* prepara l'header */
+    msg.head.type = htons(MESSAGES_DETATCH);
+    /* prepara il corpo */
+    msg.body.status = htonl(status);
+
+    /* invia il messaggio */
+    if (send(sockfd, (void*)&msg, sizeof(msg), 0) != (ssize_t)sizeof(msg))
+        return -1;
+
+    return 0;
+}
+
+int messages_send_empty_reply_data(
+            int sockfd,
+            enum messages_reply_data_status status,
+            struct query* query
+            )
+{
+    struct reply_data msg;
+    /* lunghezza della parte da inviare */
+    const size_t lenght = sizeof(msg);
+    struct ns_query ns_query;
+
+    /* non ha senso un messaggio vuoto in caso di successo */
+    if (status == MESSAGES_REPLY_DATA_OK)
+        return -1;
+    memset(&msg, 0, sizeof(msg));
+    /* prepara l'header */
+    msg.head.type = htons(MESSAGES_REPLY_DATA);
+    /* prepara il corpo */
+    msg.body.status = htonl(status); /* stato */
+    if (status == MESSAGES_REPLY_DATA_NOT_FOUND)
+    {
+        if (query == NULL)
+            return -1;
+        /* inserisce la query nel messaggio di risposta */
+        if (initNsQuery(&ns_query, query) != 0)
+            return -1;
+        msg.body.answer.query = ns_query;
+    }
+
+    /* invia solo la parte iniziale del messaggio */
+    if (send(sockfd, (void*)&msg, lenght, 0) != (ssize_t)lenght)
+        return -1;
+
+    return 0;
+}
+
+int messages_send_reply_data_answer(
+            int sockfd,
+            const struct answer* answer
+            )
+{
+    struct reply_data msg;
+    struct iovec iov[2];
+    ssize_t total;
+
+    if (answer == NULL)
+        return -1;
+
+    memset(&msg, 0, sizeof(msg));
+    /* prepara la parte iniziale del messaggio - "maxi-header" */
+    msg.head.type = htons(MESSAGES_REPLY_DATA);
+    msg.body.status = htonl(MESSAGES_REPLY_DATA_OK);
+    iov[0].iov_base = &msg;
+    iov[0].iov_len = offsetof(struct reply_data, body.answer);
+
+    /* prepara la seconda parte del messaggio */
+    if (initNsAnswer((struct ns_answer**)&iov[1].iov_base, &iov[1].iov_len, answer) == -1)
+        return -1;
+
+    /* si prepara all'invio */
+    total = (ssize_t)iov[0].iov_len + (ssize_t)iov[1].iov_len;
+    if (writev(sockfd, iov, 2) != total)
+    {
+        free(iov[1].iov_base); /* libera il corpo della query */
+        return -1;
+    }
+
+    free(iov[1].iov_base); /* libera il corpo della query */
+    return 0;
+}
+
+int messages_read_reply_data_body(
+            int sockfd,
+            enum messages_reply_data_status* status,
+            struct query** query,
+            struct answer** answer
+            )
+{
+
+    /* stato della risposta */
+    enum messages_reply_data_status teStatus;
+    struct reply_data_body msgBody;
+    void* buffer; /* buffer ausiliario */
+    void* data; /* puntatore alla parte del buffer che terrà la parte variabile */
+    size_t length; /* lunghezza in byte della parte di lunghezza variabile */
+
+    if (status == NULL || query == NULL || answer == NULL)
+        return -1;
+
+    /** Prova a leggere il corpo del messaggio, sfrutta il fatto
+     * che il corpo del messaggio è sempre mandato intero */
+    if (recv(sockfd, (void*)&msgBody, sizeof(msgBody), MSG_DONTWAIT) != (ssize_t)sizeof(msgBody))
+        return -1;
+
+    /* stato della rispsota */
+    teStatus = ntohl(msgBody.status);
+    switch (teStatus)
+    {
+    case MESSAGES_REPLY_DATA_ERROR:
+        /* è andata male */
+        *answer = NULL;
+        *query = NULL;
+        break;
+    case MESSAGES_REPLY_DATA_NOT_FOUND:
+        /* nessuna risposta ma la query c'è */
+        /* prova ad allocare lo spazio per la risposta */
+        buffer = malloc(sizeof(struct query));
+        if (buffer == NULL)
+            return -1;
+        /* prova a leggere la query */
+        if (readNsQuery((struct query*)buffer, &msgBody.answer.query) != 0)
+        {
+            free(buffer);
+            return -1;
+        }
+        /* fornisce i puntatori alla chiamante */
+        *query = (struct query*)buffer;
+        *answer = NULL;
+        break;
+    case MESSAGES_REPLY_DATA_OK:
+        /* Ricevuta una risposta valida! */
+        /* byte nella parte di lunghezza variabile */
+        length = (size_t)ntohl(msgBody.answer.lenght)*sizeof(msgBody.answer.data[0]);
+        if (length == 0) /* questa parte non ha senso che sia 0 */
+            return -1;
+        /* alloca un buffer abbastanza grande per tenere tutti i dati */
+        buffer = malloc(sizeof(struct ns_answer) + length);
+        if (buffer == NULL)
+            return -1;
+        /* azzera tutto per sicurezza */
+        memset(buffer, 0, sizeof(struct ns_answer) + length);
+        /* inserisce nel buffer la parte iniziale della risposta */
+        *(struct ns_answer*)buffer = msgBody.answer;
+        /* puntatore dove salvare la parte fissa della variabile */
+        data = &(((struct ns_answer*)buffer)->data[0]);
+        /* legge quello che serve */
+        if ((ssize_t)length != recv(sockfd, data, length, 0))
+        {
+            free(buffer);
+            return -1;
+        }
+        /* ottiene la risposta in un formato "valido" */
+        if (readNsAnswer(answer, buffer, sizeof(struct ns_answer) + length))
+        {
+            free(buffer);
+            return -1;
+        }
+        /* ora il buffer non serve più */
+        free(buffer);
+        /* prepara il puntatore alla risposta e ha finito
+         * soluzione "fantasiosa" dato che conosco il
+         * formato delle strutture struct answer */
+        *query = (struct query*)*answer;
+        break;
+    default:
+        /* stato non riconosciuto */
+        return -1;
+    }
+    /* fornisce lo stato al chiamante */
+    *status = teStatus;
+
+    return teStatus;
 }

@@ -1,5 +1,6 @@
 #define _XOPEN_SOURCE 500  /* per strptime */
 #define _POSIX_C_SOURCE 1 /* per localtime_r */
+#define _GNU_SOURCE
 
 #include "register.h"
 #include <time.h>
@@ -48,6 +49,36 @@ struct entry
      * un valore non negativo */
     int signature;
 };
+
+int ns_entry_from_entry(struct ns_entry* ns, const struct entry* E)
+{
+    if (ns == NULL || E == NULL)
+        return -1;
+
+    if (time_init_ns_tm(&ns->date, &E->e_time) == -1)
+        return -1;
+
+    ns->type = htonl(E->type);
+    ns->totale = htonl(E->counter);
+    ns->signature = htonl(E->signature);
+
+    return 0;
+}
+
+int entry_from_ns_entry(struct entry* E, const struct ns_entry* ns)
+{
+    if (ns == NULL || E == NULL)
+        return -1;
+
+    if (time_read_ns_tm(&E->e_time, &ns->date) == -1)
+        return -1;
+
+    E->type = ntohl(ns->type);
+    E->counter = ntohl(ns->totale);
+    E->signature = ntohl(ns->signature);
+
+    return 0;
+}
 
 struct e_register
 {
@@ -1077,6 +1108,7 @@ struct e_register* register_read(
         {
             ans->modified = 0; /* è pari al suo file */
             ans->defaultSignature = defaultSignature;
+            ans->date = tmpDate;/* imposta la data */
         }
     }
 
@@ -1194,4 +1226,184 @@ int register_is_closed(const struct e_register* R)
         return -1;
 
     return R->closed == 1;
+}
+
+/** Struttura dati ausiliaria per
+ * far funzionare register_as_ns_array.
+ */
+struct registerAsArray
+{
+    const struct e_register* R;
+    struct ns_entry* tmpArr;
+    size_t tmpLen;
+    const struct set* skip; /* firme da ignorare */
+    struct set* choosen;
+};
+
+static void as_assay_helper(void* elem, void* base)
+{
+    struct entry* E;
+    struct registerAsArray* D;
+    int signature;
+
+    E = (struct entry*)elem;
+    D = (struct registerAsArray*)base;
+    signature = register_retrieve_entry_signature(E);
+    if (signature == 0)
+        signature = D->R->defaultSignature;
+
+    /* controlla se deve saltare questo elemento */
+    if (signature != 0 && D->skip != NULL && set_has(D->skip, signature))
+        return;
+    /* aggiunge all'insieme */
+    ns_entry_from_entry(&D->tmpArr[D->tmpLen++], E);
+    if (D->choosen != NULL)
+        set_add(D->choosen, signature);
+}
+
+int register_as_ns_array(
+            const struct e_register* R,
+            struct ns_entry** ns_array,
+            size_t* ns_lenght,
+            const struct set* skip,
+            struct set** choosen)
+{
+    struct ns_entry* tmpArr;
+    struct registerAsArray base;
+    size_t rLen;
+    struct set* S;
+
+    if (R == NULL || ns_array == NULL || ns_lenght == NULL)
+        return -1;
+
+    memset(&base, 0, sizeof(struct registerAsArray));
+    rLen = (size_t)register_size(R);
+    tmpArr = calloc(rLen, sizeof(struct ns_entry));
+    if (tmpArr == NULL)
+        return -1;
+
+    base.R = R; /* registro di riferimento */
+    base.tmpArr = tmpArr;/* tmpLen a 0 */
+    base.skip = skip;/* insieme da scartare */
+    if (choosen != NULL)
+    {
+        S = set_init(NULL);
+        if (S == NULL)
+        {
+            free(tmpArr);
+            return -1;
+        }
+        base.choosen = S;
+    }
+    else
+        S = NULL;
+
+    /* foreach per tutte le entry */
+    list_accumulate(R->l, &as_assay_helper, &base);
+    /* preparazione dei risultati */
+    tmpArr = reallocarray(base.tmpArr, base.tmpLen, sizeof(struct ns_entry));
+    if (tmpArr == NULL && base.tmpLen != 0) /* andata male */
+    {
+        free(base.tmpArr);
+        free(S);
+        return -1;
+    }
+    else if (base.tmpLen == 0)
+    {
+        free(tmpArr);
+        tmpArr = NULL;
+    }
+    /* passa ai risultati */
+    *ns_array = tmpArr;
+    *ns_lenght = base.tmpLen;
+    if (choosen != NULL)
+        *choosen = S;
+
+    return 0;
+}
+
+struct e_register* register_from_ns_array(
+            const struct tm* date,
+            const struct ns_entry* ns_arr,
+            size_t arrLen)
+{
+    struct e_register* R;
+    struct entry E;
+    size_t i;
+
+    if (arrLen != 0 && ns_arr == NULL)
+        return NULL;
+
+    R = register_create_date(NULL, 0, date);
+    if (R == NULL)
+        return NULL;
+
+    for (i = 0; i < arrLen; ++i)
+    {
+        entry_from_ns_entry(&E, &ns_arr[i]);
+        if (register_add_entry(R, &E) == -1)
+        {
+            register_destroy(R);
+            return NULL;
+        }
+    }
+
+    return R;
+}
+
+int register_print(const struct e_register* R)
+{
+    char date[20];
+
+    if (R == NULL)
+        return -1;
+
+    /* "introduzione" */
+    printf("Register [%s] signature[%d] size(%d) %s\n",
+        time_serialize_date(date, &R->date), R->defaultSignature,
+        (int)register_size(R), (R->closed ? "CLOSED" : ""));
+    /* stampa tutte le entry */
+    if (register_serialize(stdout, R, ENTRY_SIGNATURE_OPTIONAL) != 0)
+        errExit("*** register_print:register_serialize ***\n");
+
+    return 0;
+}
+
+/** Struttura dati ausiliaria per implementare
+ * facilmente register_owned_signatures */
+struct ROS_data
+{
+    int* array;
+    size_t pos;
+};
+/** Funzione ausiliaria per implementare
+ * register_owned_signatures */
+static void register_owned_signatures_helper(long int signature, void* base)
+{
+    struct ROS_data* data = (struct ROS_data*)base;
+    data->array[data->pos++] = (int)signature;
+}
+
+int register_owned_signatures(
+            const struct e_register* R,
+            int** signatures, size_t* lenght)
+{
+    int* ans;
+    ssize_t ansLen;
+    struct ROS_data base;
+
+    if (R == NULL || signatures == NULL || lenght == NULL)
+        return -1;
+    ansLen = set_size(R->allSignature);
+    if (ansLen == (ssize_t)-1)
+        return -1;
+    ans = calloc((size_t)ansLen, sizeof(int));
+    if (ans == NULL)
+        return -1;
+    base.array = ans;   base.pos = 0;
+    set_accumulate(R->allSignature, &register_owned_signatures_helper, &base);
+
+    *signatures = ans;
+    *lenght = (size_t)ansLen;
+    return 0;
 }

@@ -322,6 +322,59 @@ struct list* list_copy(const struct list* l, void* (*fun)(void*))
     return list_map(l, fun == NULL ? identity : fun, list_get_cleanup(l));
 }
 
+struct list* list_select(const struct list* l, int (*cmp)(void*,void*), void* base)
+{
+    struct list* ans;
+    elem* curr; /* puntatore all'elemento della */
+    int cmpRes; /* risultato della finalizzazione */
+
+    if (l == NULL || cmp == NULL)
+        return NULL;
+
+    ans = list_init(NULL);
+    if (ans == NULL)
+        return NULL;
+
+    for (curr = l->first; curr != NULL; curr = curr->next)
+    {
+        cmpRes = cmp((void*)curr->val, base);
+        if (cmpRes > 0) /* espande la nuova lista */
+        {
+            /* gestisce il disastro */
+            if (list_append(ans, (void*)curr->val) == -1)
+            {
+                list_destroy(ans);
+                return NULL;
+            }
+        }
+    }
+
+    return ans;
+}
+
+int list_find(const struct list* l, void** res, int (*cond)(void*,void*), void* base)
+{
+    int test;
+    elem* iter;
+
+    /* controllo dei parametri */
+    if (l == NULL || cond == NULL)
+        return -1;
+
+    for (iter = l->first; iter != NULL; iter = iter->next)
+    {
+        test = cond(iter->val, base);
+        if (test > 0) /* Trovato? */
+        {
+            if (res != NULL) /* il chiamante aspettava un valore? */
+                *res = iter->val;
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
 int list_prepend(struct list* l, void* val)
 {
     elem* new_e;
@@ -374,7 +427,7 @@ int list_append(struct list* l, void* val)
     return 0;
 }
 
-int list_first(struct list* l, void** val)
+int list_first(const struct list* l, void** val)
 {
     if (l == NULL || val == NULL)
         return -1;
@@ -390,7 +443,7 @@ int list_first(struct list* l, void** val)
     return 0;
 }
 
-int list_last(struct list* l, void** val)
+int list_last(const struct list* l, void** val)
 {
     if (l == NULL || val == NULL)
         return -1;

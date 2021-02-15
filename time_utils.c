@@ -1,9 +1,39 @@
 #define _POSIX_C_SOURCE 1
+#define _XOPEN_SOURCE /* per strptime */
 
 #include "time_utils.h"
 #include <errno.h>
 #include <string.h>
 #include <math.h>
+
+int time_init_ns_tm(struct ns_tm* ns_date, const struct tm* date)
+{
+    int year, month, day;
+    if (ns_date == NULL || date == NULL)
+        return -1;
+
+    memset(ns_date, 0, sizeof(struct ns_tm));
+    time_date_read(date, &year, &month, &day);
+    ns_date->year = htons(year);
+    ns_date->month = month;
+    ns_date->day = day;
+
+    return 0;
+}
+
+int time_read_ns_tm(struct tm* date, const struct ns_tm* ns_date)
+{
+    int year, month, day;
+    if (ns_date == NULL || date == NULL)
+        return -1;
+
+    year = ntohs(ns_date->year);
+    month = ns_date->month;
+    day = ns_date->day;
+    *date = time_date_init(year, month, day);
+
+    return 0;
+}
 
 struct tm time_date_now(void)
 {
@@ -11,8 +41,9 @@ struct tm time_date_now(void)
     time_t t;
 
     t = time(NULL);
-    (void)gmtime_r(&t, &ans);
-    return ans;}
+    (void)localtime_r(&t, &ans);
+    return ans;
+}
 
 struct tm time_date_today(void)
 {
@@ -126,6 +157,11 @@ struct tm time_date_add(const struct tm* date, int days)
     return ans;
 }
 
+struct tm time_date_sub(const struct tm* date, int days)
+{
+    return time_date_add(date, -days);
+}
+
 struct tm* time_date_inc(struct tm* date, int days)
 {
     struct tm tmp;
@@ -150,4 +186,49 @@ struct tm* time_date_dec(struct tm* date, int days)
     *date = time_date_add(&tmp, -days);
 
     return date;
+}
+
+int time_parse_date(const char* str, struct tm* date)
+{
+    char* res;
+    struct tm value, test;
+    time_t t;
+
+    if (date == NULL)
+        return -1;
+
+    memset(&value, 0, sizeof(struct tm));
+    memset(&test, 0, sizeof(struct tm));
+
+    /* parsing */
+    res = strptime(str, "%Y:%m:%d", &value);
+    if (res == NULL || *res != '\0')
+        return -1;
+    /* controllo dei dati */
+    test.tm_year = value.tm_year;
+    test.tm_mon = value.tm_mon;
+    test.tm_mday = value.tm_mday;
+    /* la data è corretta? */
+    t = mktime(&test);
+    localtime_r(&t, &test);
+    /* test */
+    if (test.tm_year != value.tm_year
+        || test.tm_mon != value.tm_mon
+        || test.tm_mday != value.tm_mday)
+        return -1;
+
+    *date = value;
+
+    return 0;
+}
+
+char* time_serialize_date(char* str, const struct tm* date)
+{
+    if (date == NULL)
+        return NULL;
+
+    if (strftime(str, 11, "%Y:%m:%d", date) == 0)
+        return NULL;
+
+    return str;
 }

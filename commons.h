@@ -9,8 +9,24 @@
 #ifndef COMMONS
 #define COMMONS
 
+/* sempre utili */
+int min(int x, int y);
+int max(int x, int y);
+
 /* Mostra un messaggio di errore e il termina il programma  */
 void errExit(const char *format, ...);
+
+/** Come fprintf(stderr, const char *format, ...)
+ * ma stampa il risultato i rosso.
+ * Fa uso delle opportune sequenze di escape ASII
+ */
+void printError(const char *format, ...);
+
+/* Qualcosa di gravissimo che mina la consistenza dello
+ * stato del programma è appena avvenuto - stampa varie
+ * informazioni utili al debugging dell'applicazione e
+ * termina forzatamente l'esecuzione invocando abort() */
+void fatal(const char *format, ...);
 
 /* Se l'argomento è 0 si blocca fino a che l'utente
  * non preme un tasto qualsiasi, se l'argomento non

@@ -130,7 +130,7 @@ uint8_t ns_host_addr_get_ip_version(const struct ns_host_addr*);
 /** Ottiene la famiglia di indirizzo IP
  * nell'oggetto struct ns_host_addr.
  *
- * Restituisce -1 in caso di errore.
+ * Restituisce 0 in caso di errore.
  */
 sa_family_t ns_host_addr_get_ip_family(const struct ns_host_addr*);
 
@@ -169,5 +169,15 @@ int ns_host_addr_update_addr(struct ns_host_addr*, const struct sockaddr*);
  * oppure -1 in caso di errore.
  */
 int ns_host_addr_send(int, const void*, size_t, int, const struct ns_host_addr*);
+
+/** Crea un socket TCP e cerca di
+ * connetterlo all'indirizzo fornito
+ * tramite l'oggetto struct ns_host_addr.
+ *
+ * Restituisce il file descriptor
+ * del nuovo socket in caso di
+ * successo e -1 in caso di errore.
+ */
+int connect_to_ns_host_addr(const struct ns_host_addr*);
 
 #endif

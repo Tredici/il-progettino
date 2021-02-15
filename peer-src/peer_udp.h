@@ -6,6 +6,8 @@
 #ifndef PEER_UDP
 #define PEER_UDP
 
+#include "../messages.h"
+
 /** Avvia il thread a gestione del socket
  * UDP e restituisce il numero di porta
  * su cui il processo ascolta.
@@ -39,5 +41,24 @@ int UDPstop(void);
  * non è attivo.
  */
 int UDPport(void);
+
+/** Cerca di contattare il server per
+ * scoprire quali siano ora i vicini
+ * del peer.
+ *
+ * Il tutto è svolto mediante l'impiego
+ * di messaggi di tipo
+ * MESSAGES_CHECK_REQ e MESSAGES_CHECK_ACK.
+ *
+ * Riempie l'array neighbours con le
+ * informazioni sui peer fornite dal
+ * server, il numero di vicini è
+ * inserito nella variabile puntata
+ * da length.
+ *
+ * Restituisce 0 in caso di successo e
+ * -1 in caso di errore (es. timeout).
+ */
+int UDPcheck(struct peer_data* neighbours, size_t* length);
 
 #endif
