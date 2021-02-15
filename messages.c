@@ -1076,6 +1076,41 @@ int messages_send_flood_ack(
     return 0;
 }
 
+int messages_send_empty_flood_ack(
+            int sockFd,
+            uint32_t authID,
+            uint32_t reqID,
+            const struct tm* date)
+{
+    struct flood_ack msg;
+    const size_t msgLen = sizeof(msg);
+    /* problema dell'allineamento */
+    struct ns_tm ns_date;
+
+    /* controllo parametry */
+    if (date == NULL)
+        return -1;
+
+    /* prepara il messaggio */
+    memset(&msg, 0, msgLen);
+    /* testa */
+    msg.head.type = htonl(MESSAGES_REQ_ENTRIES);
+    /* corpo */
+    msg.body.authorID = htonl(authID);
+    msg.body.reqID = htonl(reqID);
+    /* problema dell'allineamento */
+    if (time_init_ns_tm(&ns_date, date) != 0)
+        return -1;
+    msg.body.date = ns_date;
+    /* lenght è già a 0 perciò non ci sono problemi */
+
+    /* puà inviare il messaggio */
+    if (send(sockFd, (void*)&msg, msgLen, 0) != (ssize_t)msgLen)
+        return -1;
+
+    return 0;
+}
+
 int messages_read_flood_ack_body(
             int sockFd,
             uint32_t* authorID,

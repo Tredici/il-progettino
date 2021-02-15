@@ -988,6 +988,18 @@ int messages_send_flood_ack(int sockFd,
             const struct e_register*,
             const struct set*);
 
+/** Invia un messaggio di tipo MESSAGES_REQ_ENTRIES
+ * vuoto.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_send_empty_flood_ack(
+            int sockFd,
+            uint32_t authID,
+            uint32_t reqID,
+            const struct tm* date);
+
 /** Dato che in questa versione del progetto
  * si usano socket tcp per lo scambio di
  * dati trai i peer rirulta necessaria una
