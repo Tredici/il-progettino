@@ -999,7 +999,7 @@ int messages_read_flood_req_body(
             return -1;
 
         /* legge la parte variabile */
-        if (recv(sockfd, (void*)&array, (size_t)lenght, 0) != (ssize_t)lenght)
+        if (recv(sockfd, (void*)&array, (size_t)lenght*sizeof(uint32_t), 0) != (ssize_t)(lenght*sizeof(uint32_t)))
         {
             return -1;
         }
