@@ -438,6 +438,14 @@ FLOODINGdescriptor_findByHash(long int hash)
     return ans;
 }
 
+/** Risparmia la doppia chiamata a
+ * FLOODINGHash e FLOODINGdescriptor_findByHash */
+static struct FLOODINGdescriptor*
+FLOODINGdescriptor_findByIDs(uint32_t authID, uint32_t reqID)
+{
+    return FLOODINGdescriptor_findByHash(FLOODINGHash(authID, reqID));
+}
+
 /* Crea, inizializza e aggiunge un nuovo oggetto rappresentante
  * un'istanza del protocollo FLOODING alle opportune strutture dati */
 static long
