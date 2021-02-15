@@ -1663,6 +1663,9 @@ static void handle_MESSAGES_FLOOD_FOR_ENTRIES(struct peer_tcp* neighbour)
     uint32_t i, lenght;
     uint32_t* signatures;
     char dateStr[16];
+    /* per sapere se la richiesta è stata già gestita */
+    struct FLOODINGdescriptor* des;
+    long int hash;
 
     unified_io_push(UNIFIED_IO_NORMAL, "Reading body of [MESSAGES_FLOOD_FOR_ENTRIES] from socket (%d)...", neighbour->sockfd);
 
@@ -1687,7 +1690,51 @@ static void handle_MESSAGES_FLOOD_FOR_ENTRIES(struct peer_tcp* neighbour)
     unified_io_push(UNIFIED_IO_NORMAL, "\tSender own (%lu) signatures:", (unsigned long)lenght);
     for (i = 0; i != lenght; ++i)
         unified_io_push(UNIFIED_IO_NORMAL, "\t\t%ld) signature: [%ld]", (long)i, (long)signatures[i]);
-#pragma GCC warning "Salvare e propagare la richiesta se non è stata già ricevuta"
+
+    /* dovrebbe verificare se il messaggio è stato già ricevuto */
+    des = FLOODINGdescriptor_findByIDs(authorID, reqID);
+    if (des == NULL) /* prima volta che si riceve questa query */
+    {
+        /* bisogna creare un identificatore per questa istanza del protocollo di flooding */
+        unified_io_push(UNIFIED_IO_NORMAL, "NEW FLOODING Request received!");
+        /* crea una nuova istanza del protocollo */
+        des = FLOODINGdescriptor_newOther(authorID, reqID,
+                        neighbour->sockfd, &date,
+                        (size_t)lenght, signatures);
+        /* ATTENZIONE: SHALLOW COPY->signatures */
+        if (des == NULL)
+            fatal("FLOODINGdescriptor_newOther");
+
+        hash = FLOODINGdescriptorHash(des);
+        /* marca il socket corrente come "proprietario" della
+         * richiesta */
+        if (set_add(neighbour->FLOODINGreceived, hash) != 0)
+            fatal("set_add");
+        /* invia il comando di propagazione */
+        cmdPropagateFLOODING(hash);
+    }
+    else
+    {
+        /* liberare la memoria */
+        free(signatures);
+        /* la query era già stata ricevuta da un altro */
+        unified_io_push(UNIFIED_IO_NORMAL, "Request already received!");
+        /* invia una risposta vuota */
+        unified_io_push(UNIFIED_IO_NORMAL, "Sending empty response...");
+        if (messages_send_empty_flood_ack(neighbour->sockfd, authorID, reqID, &date) == -1)
+        {
+            /* è esploso tutto */
+            unified_io_push(UNIFIED_IO_ERROR, "Error while sending response via (%d)", neighbour->sockfd);
+            /* chiude la connessione */
+            closeConnection(neighbour);
+            /* avvia il protocollo di ripristino della rete */
+            sendCheckRequest();
+        }
+        else
+        {
+            unified_io_push(UNIFIED_IO_NORMAL, "Response sent!");
+        }
+    }
 }
 
 /** Gestisce la ricezione di un messaggio
