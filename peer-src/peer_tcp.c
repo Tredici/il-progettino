@@ -1777,6 +1777,104 @@ static void handle_MESSAGES_FLOOD_FOR_ENTRIES(struct peer_tcp* neighbour)
     }
 }
 
+/** Funzione ausiliaria per gestire la ricezione
+ * di messaggi di tipo MESSAGES_REQ_ENTRIES.
+ * Questi messaggi contengono delle entry che il peer
+ * corrente dovrebbe associare a quelle che già possiede.
+ */
+static void handle_MESSAGES_REQ_ENTRIES(struct peer_tcp* neighbour)
+{
+    /* contenuto del messaggio */
+    uint32_t authID, reqID;
+    struct tm date;
+    struct e_register* R;
+    /* descrittore della richiesta */
+    struct FLOODINGdescriptor* des;
+    long int hash;
+    /* per l'output */
+    char dateStr[16];
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Reading body of [MESSAGES_REQ_ENTRIES] from socket (%d)...", neighbour->sockfd);
+    /* legger il corpo di un messaggio */
+    if (messages_read_flood_ack_body(neighbour->sockfd, &authID, &reqID,
+        &date, &R) != 0)
+    {
+        /* è saltato tutto */
+        unified_io_push(UNIFIED_IO_ERROR, "Error whiler reading body of [MESSAGES_REQ_ENTRIES] from socket (%d)!", neighbour->sockfd);
+        /* chiude il canale */
+        closeConnection(neighbour);
+        /* avvia il protocollo di ripristino */
+        sendCheckRequest();
+        return;
+    }
+    unified_io_push(UNIFIED_IO_NORMAL, "Success reading [MESSAGES_REQ_ENTRIES] body!");
+
+    /* stampa delle informazioni riassuntive sul messaggio */
+    if (time_serialize_date(dateStr, &date) == NULL)
+        fatal("time_serialize_date");
+    unified_io_push(UNIFIED_IO_NORMAL, "[MESSAGES_REQ_ENTRIES]: "
+        "[Auth:%lu][Req:%lu] %s", (unsigned long)authID, (unsigned long)reqID, dateStr);
+
+    /* carica i dati se ci sono */
+    if (R != NULL)
+    {
+        unified_io_push(UNIFIED_IO_NORMAL, "Adding new data to peer registers!");
+        /* se non è vuoto aggiunge il contenuto ai dati posseduti dal peer */
+        /* fonde questo registro con quelli già posseduti */
+        if (mergeRegisterContent(R) != 0)
+            fatal("mergeRegisterContent");
+        /* ora libera la memoria */
+        register_destroy(R);
+        R = NULL;
+    }
+    else
+    {
+        unified_io_push(UNIFIED_IO_ERROR, "Message [MESSAGES_REQ_ENTRIES] was empty!");
+    }
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Searching request descriptor...");
+    /* pesca il descrittore della query per vedere se abbia senso la ricezione */
+    des = FLOODINGdescriptor_findByIDs(authID, reqID);
+    /* valuta se è vuoto */
+    if (des != NULL)
+    {
+        /* calcola l'hash */
+        hash = FLOODINGdescriptorHash(des);
+        if (set_has(des->socketSet, neighbour->sockfd) == 1)
+        {
+            /* rimuove il socket da quelli associati alla query */
+            if (set_remove(des->socketSet, neighbour->sockfd) != 0)
+                fatal("set_remove");
+            /* controlla se si aspettano altri messaggi per soddisfare la query */
+            if (set_size(des->socketSet) == 0)
+            {
+                unified_io_push(UNIFIED_IO_NORMAL, "All responses for original request received!");
+                /* verifica se la query era stata generata dal peer corrente */
+                if (des->mine)
+                {
+                    /* Sì: è andato tutto bene - possiamo considerare il protocollo terminato */
+                    unified_io_push(UNIFIED_IO_NORMAL, "FLOODING protocol instance successfully terminated!");
+                    FLOODINGdescriptor_remove(des);
+                }
+                else
+                {
+                    /* NO: se non se ne aspettano si può rispondere a chi l'ha inviata */
+                    unified_io_push(UNIFIED_IO_NORMAL, "FLOODING RESPONSE will be sent to requester!");
+                    cmdResponseFLOODING(hash);
+                }
+            }
+        } /* situazione molto strana - non ha senso, abortire? */
+        else
+        {
+            unified_io_push(UNIFIED_IO_ERROR, "UNREQUESTED RESPONSE RECEIVED!!!");
+        }
+    } /* altrimenti non ha senso - si potrebbe sfruttare per il push dei dati */
+    else
+    {
+        unified_io_push(UNIFIED_IO_ERROR, "No request descriptor found! Maybe is it a push?");
+    }
+}
+
 /** Gestisce la ricezione di un messaggio
  * e l'eventuale aggiornamento dello stato
  * da parte di un socket
@@ -1847,6 +1945,10 @@ static void handleNeighbour(struct peer_tcp* neighbour)
     case MESSAGES_FLOOD_FOR_ENTRIES:
         unified_io_push(UNIFIED_IO_NORMAL, "Received [MESSAGES_FLOOD_FOR_ENTRIES] from (%d)", sockfd);
         handle_MESSAGES_FLOOD_FOR_ENTRIES(neighbour);
+        break;
+    case MESSAGES_REQ_ENTRIES:
+        unified_io_push(UNIFIED_IO_NORMAL, "Received [MESSAGES_REQ_ENTRIES] from (%d)", sockfd);
+        handle_MESSAGES_REQ_ENTRIES(neighbour);
         break;
     }
 }
