@@ -1109,7 +1109,7 @@ int messages_read_flood_ack_body(
             uint32_t* authorID,
             uint32_t* reqID,
             struct tm* date,
-            const struct e_register** R
+            struct e_register** R
             )
 {
     struct flood_ack_body body;

@@ -1023,7 +1023,7 @@ int messages_read_flood_ack_body(
             uint32_t* authorID,
             uint32_t* reqID,
             struct tm* date, /* può essere NULL */
-            const struct e_register** R
+            struct e_register** R
             );
 
 /** Inizializza e fornisce un messaggio
