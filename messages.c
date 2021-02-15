@@ -1094,7 +1094,7 @@ int messages_send_empty_flood_ack(
     /* prepara il messaggio */
     memset(&msg, 0, msgLen);
     /* testa */
-    msg.head.type = htonl(MESSAGES_REQ_ENTRIES);
+    msg.head.type = htons(MESSAGES_REQ_ENTRIES);
     /* corpo */
     msg.body.authorID = htonl(authID);
     msg.body.reqID = htonl(reqID);
