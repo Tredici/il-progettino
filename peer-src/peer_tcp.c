@@ -2236,6 +2236,98 @@ static void handle_TCP_COMMAND_FLOODING(
     }
 }
 
+/** In seguito alla ricezione di un comando TCP_COMMAND_SEND_FLOOD_RESPONSE
+ * invia al socket mittente una risposta per il protocollo FLOODING.
+ */
+static void handle_TCP_COMMAND_SEND_FLOOD_RESPONSE(
+            int cmdPipe,
+            struct peer_tcp reachedPeers[],
+            size_t* reachedNumber
+            )
+{
+    long int hash;
+    struct FLOODINGdescriptor* des;
+    size_t i, limit = *reachedNumber;
+    int sender; /* fd del socket da usare */
+    /* per inviare il messaggio */
+    struct ns_entry* entries;
+    size_t entryNum;
+    struct set* toSkip;
+
+    /* legge l'hash del messaggio da gesture */
+    if (read(cmdPipe, (void*)&hash, sizeof(long)) != (ssize_t)sizeof(long))
+        fatal("Error reading descriptor hash from pipe");
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Handling request: [HASH:%ld]", hash);
+
+    /* Cerca il descrittore */
+    des = FLOODINGdescriptor_findByHash(hash);
+    if (des == NULL)
+    {
+        /* Non dovrebbe mai accadere! */
+        unified_io_push(UNIFIED_IO_ERROR, "ERROR: request descriptor NOT FOUND!");
+        return;
+    }
+    /* controllo di consistenza */
+    if (set_size(des->socketSet) != 0)
+        fatal("set_size");
+    /* cerca il mittente */
+    sender = des->mainSockFd;
+    unified_io_push(UNIFIED_IO_ERROR, "Searching neighbour that required response!");
+    for (i = 0; i != limit; ++i)
+    {
+        if (reachedPeers[i].status == PCS_READY)
+        {
+            /* candidato mittente! */
+            if (reachedPeers[i].sockfd == sender)
+            {
+                /* ha trovato il socket da cui era giunto il messaggio */
+                unified_io_push(UNIFIED_IO_NORMAL, "SUCCESS: sender FOUND!");
+                /* pulizia - si leva la richiesta dal quelle associate al socket */
+                if (set_remove(reachedPeers[i].FLOODINGreceived, hash) != 0)
+                    fatal("set_remove");
+                break;
+            }
+        }
+    }
+    if (i == limit)
+    {
+        unified_io_push(UNIFIED_IO_ERROR, "ERROR: sender NOT FOUND!");
+        /* rimuove per pulizia */
+        FLOODINGdescriptor_remove(des);
+        /* non devono essere rimasti socket da cui si aspettano risposte */
+    }
+    else
+    {
+        /* insieme delle firme da evitare */
+        toSkip = make_set_from_uint32_t(des->signatures, des->numSignatures);
+        if (toSkip == NULL)
+            fatal("make_set_from_uint32_t");
+        /* invia il messaggio di risposta */
+        if (getNsRegisterData(&des->date, &entries, &entryNum, toSkip) != 0)
+            fatal("getNsRegisterData");
+        /* invia il messaggio di risposta */
+        if (messages_send_flood_ack(sender, des->authorID, des->reqID,
+            &des->date, entries, entryNum) != 0)
+        {
+            unified_io_push(UNIFIED_IO_NORMAL, "Error occurred while sending FLOODING response!");
+            /* chiude la connessione */
+            closeConnection(&reachedPeers[i]);
+            /* avvia la procedura di ripristino */
+            sendCheckRequest();
+        }
+        else
+        {
+            /* inviata con successo */
+            unified_io_push(UNIFIED_IO_NORMAL, "FLOODING RESPONSE SENT!");
+        }
+        /* libera sempre la memoria allocata */
+        free(entries);
+        /* distrugge il descrittore */
+        FLOODINGdescriptor_remove(des);
+    }
+}
+
 /** Funzione autiliaria per la gestione dei
  * comandi provenienti dalla pipe dei comandi.
  *
@@ -2282,6 +2374,11 @@ static int handle_pipe_command(
     case TCP_COMMAND_FLOODING:
         unified_io_push(UNIFIED_IO_NORMAL, "Cmd: TCP_COMMAND_FLOODING");
         handle_TCP_COMMAND_FLOODING(cmdPipe, reachedPeers, reachedNumber);
+        break;
+
+    case TCP_COMMAND_SEND_FLOOD_RESPONSE:
+        unified_io_push(UNIFIED_IO_NORMAL, "Cmd: TCP_COMMAND_SEND_FLOOD_RESPONSE");
+        handle_TCP_COMMAND_SEND_FLOOD_RESPONSE(cmdPipe, reachedPeers, reachedNumber);
         break;
 
     default:
