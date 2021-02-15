@@ -1842,6 +1842,9 @@ static void handle_MESSAGES_REQ_ENTRIES(struct peer_tcp* neighbour)
         hash = FLOODINGdescriptorHash(des);
         if (set_has(des->socketSet, neighbour->sockfd) == 1)
         {
+            /* rimuove anche dal descrittore del vicino */
+            if (set_remove(neighbour->FLOODINGsend, hash) != 0)
+                fatal("set_remove");
             /* rimuove il socket da quelli associati alla query */
             if (set_remove(des->socketSet, neighbour->sockfd) != 0)
                 fatal("set_remove");
