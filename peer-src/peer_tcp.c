@@ -111,6 +111,18 @@ enum tcp_commands
      * la query da gestire.
      */
     TCP_COMMAND_FLOODING,
+    /** È stato ricevuto un messaggio di tipo
+     * MESSAGES_FLOOD_FOR_ENTRIES da un vicino
+     * e bisogna propagarlo agli altri.
+     * Comanda al thread tcp di inviare agli
+     * altri vicini il messaggio ricevuto,
+     * identificato dall'hash che segue il comando.
+     *
+     * Il comando sarà seguito dall'hash della
+     * struttura FLOODINGdescriptor rappresentante
+     * la query da gestire.
+     */
+    TCP_COMMAND_PROPAGATE,
     /** Trucco per seplificare le azioni da svolgere
      * nella chiusura di una connessione, comanda
      * al thread TCP di inviare la risposta alla
@@ -589,6 +601,27 @@ int TCPstartFlooding(const struct tm* date)
 
     return 0;
 }
+/* Invia al thread il comando di propagare un'istanza
+ * del protocollo di flooding TCP_COMMAND_PROPAGATE */
+static void cmdPropagateFLOODING(long int hash)
+{
+    struct iovec iov[2];
+    uint8_t tmpCmd = TCP_COMMAND_PROPAGATE;
+
+    unified_io_push(UNIFIED_IO_NORMAL, "PROPAGATION: [hash:%ld]", hash);
+
+    /* comando */
+    iov[0].iov_base = (void*)&tmpCmd;
+    iov[0].iov_len = CMD_SIZE;
+    /* oggetto rappresentate l'hash */
+    iov[1].iov_base = (void*)&hash;
+    iov[1].iov_len = sizeof(hash);
+
+    /* write nella pipe */
+    if (writev(tcPipe_writeEnd, iov, 2) != (ssize_t)(iov[0].iov_len+iov[1].iov_len))
+        fatal("writev");
+}
+
 /* sfrutta FLOODINGmyInstances */
 int TCPendFlooding(void)
 {
