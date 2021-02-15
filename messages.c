@@ -1124,7 +1124,7 @@ int messages_read_flood_ack_body(
     struct ns_tm ns_date;
     struct tm tmpDate;
     /* per la parte variabile */
-    uint32_t i, lenght;
+    uint32_t lenght;
     struct ns_entry* entries;
     struct e_register* tmpReg = NULL;
 
