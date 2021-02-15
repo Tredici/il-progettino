@@ -480,6 +480,48 @@ FLOODINGdescriptor_newMine(const struct tm* date)
 
     return hash;
 }
+/** Funzione ausiliaria che genera un nuovo oggetto
+ * di tipo struct FLOODINGdescriptor e lo salva nella
+ * mappa per rappresentare un'istanza del protocollo
+ * iniziata da un altro peer di cui questo peer è venuto
+ * a conoscenza mediante un messaggio di tipo
+ * MESSAGES_FLOOD_FOR_ENTRIES. */
+static struct FLOODINGdescriptor*
+FLOODINGdescriptor_newOther(
+            uint32_t authID,
+            uint32_t reqID,
+            int originalFd, /* socket da cui la richiesta è giunta */
+            const struct tm* date)
+{
+    struct FLOODINGdescriptor* newDes;
+    long int hash;
+
+    newDes = FLOODINGdescriptor_create();
+    if (newDes == NULL)
+        fatal("FLOODINGdescriptor_create");
+
+    /* riempie tutti i campi del descrittore */
+    newDes->mine = 0;   /* ricevuto da altri */
+    newDes->authorID = authID;
+    newDes->reqID = reqID;
+    newDes->date = *date;
+    newDes->mainSockFd = originalFd;
+
+    hash = FLOODINGdescriptorHash(newDes); /* hash della richiesta */
+
+    /* SEZIONE CRITICA */
+    if (pthread_mutex_lock(&FLOODINGmutex) != 0)
+        fatal("pthread_mutex_lock");
+    /* aggiunge il nuovo descrittore all'insieme */
+    if (rb_tree_set(FLOODINGinstances, hash, newDes) == -1)
+        fatal("rb_tree_set");
+    /* termine sezione critica */
+    if (pthread_mutex_unlock(&FLOODINGmutex) != 0)
+        fatal("pthread_mutex_unlock");
+
+    return newDes;
+}
+
 /** Rimuove il descrittore dalla mappa FLOODINGinstances.
  * Abortisce in caso di errore.
  * ATTENZIONE:
