@@ -12,6 +12,8 @@
 #include <sys/socket.h>
 #include "../unified_io.h"
 #include "../commons.h"
+#include "../rb_tree.h"
+#include "../set.h"
 #include <signal.h>
 #include <fcntl.h>
 #include <sys/select.h>
@@ -102,6 +104,34 @@ enum tcp_commands
      * prelevare e gestire.
      */
     TCP_COMMAND_QUERY,
+    /** Comanda al thread TCP di avviare una
+     * esecuzione del protocollo di flooding.
+     * Il comando sarà seguito dall'hash della
+     * struttura FLOODINGdescriptor rappresentante
+     * la query da gestire.
+     */
+    TCP_COMMAND_FLOODING,
+    /** Trucco per seplificare le azioni da svolgere
+     * nella chiusura di una connessione, comanda
+     * al thread TCP di inviare la risposta alla
+     * istanza del protocollo identificata dal
+     * codice hash che segue il messaggio.
+     * Questo comando può essere inviato solo dopo
+     * che tutte le risposte che si attendevano da
+     * protocollo sono state ricevute o le
+     * connessioni sono saltate.
+     */
+    TCP_COMMAND_SEND_FLOOD_REQ,
+    /** La connessione attraverso la quale si sarebbe
+     * dovuto inviare il messaggio di risposta del
+     * protocollo è saltata, pertanto bisogna
+     * rimuovere il suo identificativo dall'insieme
+     * delle istanze del protocollo associate ai
+     * socket ancora attivi.
+     * È seguito dall'hash che identifica l'istanza
+     * del protocollo fallita.
+     */
+    TCP_COMMAND_CLOSE_FLOODING,
     /** Comanda al thread TCP di avviare
      * la procedura di terminazione
      */
@@ -162,6 +192,15 @@ struct peer_tcp
     enum peer_conn_status status;
     /* istante di creazione - per evitare starvation */
     time_t creation_time;
+    /* per il protocollo FLOODING - validi solo da quando
+     * lo stato diviene PCS_READY */
+        /* da qui si è ricevuto un messaggio MESSAGES_FLOOD_FOR_ENTRIES
+         * e alla fine bisognerà inviare una risposta */
+    struct set* FLOODINGreceived;
+        /* si ha inviato da questo socket un messaggio
+         * MESSAGES_FLOOD_FOR_ENTRIES e si aspetta una
+         * risposta MESSAGES_REQ_ENTRIES */
+    struct set* FLOODINGsend;
 };
 
 /** Pipe per passare in modo semplice dei
@@ -176,6 +215,363 @@ static int tcPipe_writeEnd;
  * era stato avviato con successo.
  */
 static volatile int running;
+
+/** Raccolta di strutture dati e funzioni utilizzate
+ * durante l'esecuzione del protocollo detto FLOODING.
+ * Tale protocollo è quello messo in atto da un peer per
+ * richiedere agli altri peer connessi se posseggano
+ * delle entry che a lui mancano.
+ *
+ * Il protocollo è necessariamente molto complicato e
+ * asincrono. Di seguito sarà descritto il suo funzionamento
+ * nel dettaglio.
+ *
+ * A SOMMI CAPI:
+ *  in estrema sintesi si può dire che il protocollo FLOODING
+ *  esegua "breadth-first search" tra i peer connessi alla rete,
+ *  li accorgimenti che saranno messi in pratica infatti
+ *  sono molto simili a quelli utilizzati nell'implementare una
+ *  normale ricerca in ampiezza su un grafo.
+ *
+ * COMPLICAZIONI:
+ *  l'algoritmo da implementare è chiaramente distribuito e deve
+ *  poter essere eseguito in maniera asincrona e "concorrente"
+ *  poiché non è pensabile di impedire a più peer di iniziare
+ *  un'istanza del protocollo contemporaneamente poiché questo
+ *  richiederebbe l'introduzione di protocolli di sincronizzazione
+ *  distribuiti (ben al di sopra delle mie capacità).
+ *  Inoltre, è possibile che la topologia della rete cambi durante
+ *  l'esecuzione del protocollo. In un'applicazione reale ciò
+ *  richiederebbe di ricominciare l'esecuzione del protocollo ma,
+ *  per semplicità, in questo contesto ci si limiterà a segnalare
+ *  l'errore senza proseguire con ulteriori accorgimenti.
+ *
+ * PARTECIPANTI:
+ *  la corretta esecuzione del protocollo comporta l'intervento
+ *  collaborativo di più processi e, all'interno di ogni processo,
+ *  di più thread.
+ *
+ * STRUTTURE DI CONTROLLO:
+ *  1) un insieme che elenca le esecuzioni del protocollo iniziate
+ *      dal processo corrente e non ancora completate;
+ *  2) un insieme che elenca le istanze del protocollo che il
+ *      processo sta attualmente gestendo iniziate da altri;
+ *  3) un contatore che permette di assegnare un codice univoco a
+ *      ciascuna delle richieste iniziate dal peer corrente.
+ *
+ * .
+ */
+/** Struttura dati ausiliaria per permettere la memorizzazione
+ * dei
+ */
+struct FLOODINGdescriptor
+{
+    /* flag che indica che la richiesta è stata generata
+     * dal processo corrente - "is mine?" */
+    int mine;
+    /* ID del peer che ha avviato il protocollo - ignorato
+     * se l'esecuzione è stata iniziata dal peer corrente */
+    uint32_t authorID;
+    /* ID che identifica univocamente l'istanza del protocollo
+     * insieme al campo authorID */
+    uint32_t reqID;
+    /* descrittore di file da cui si ha ricevuto la richiesta -
+     * -1 se la richiesta */
+    int mainSockFd;
+    struct set* socketSet;
+    /* data associata alla richiesta */
+    struct tm date;
+    /* array di firme da ignorare */
+    size_t numSignatures;
+    uint32_t* signatures;
+};
+/* "costruttore" di un oggetto di tipo struct FLOODINGdescriptor */
+static struct FLOODINGdescriptor*
+FLOODINGdescriptor_create()
+{
+    struct FLOODINGdescriptor* ans;
+    struct set* S;
+
+    ans = malloc(sizeof(struct FLOODINGdescriptor));
+    if (ans == NULL)
+        return NULL;
+    memset(ans, 0, sizeof(struct FLOODINGdescriptor));
+    S = set_init(NULL);
+    if (S == NULL)
+    {
+        free(ans);
+        return NULL;
+    }
+    ans->socketSet = S;
+    return ans;
+}
+/* "distruttore" degli oggetti di tipo FLOODINGdescriptor */
+static void FLOODINGdescriptor_destroy(struct FLOODINGdescriptor* el)
+{
+    if (el == NULL)
+        fatal("FLOODINGdescriptor_destroy(NULL)");
+    set_destroy(el->socketSet); el->socketSet = NULL;
+    free(el->signatures);   el->signatures = NULL;
+    free(el);
+}
+/* wrapper da assegnare come funzione di cleanup per FLOODINGinstances. */
+static void FLOODINGdescriptor_destroy_wrapper(void* el)
+{
+    FLOODINGdescriptor_destroy((struct FLOODINGdescriptor*)el);
+}
+/* fornisce una stringa rappresentate il contenuto del descrittore
+ * fornito */
+static char* FLOODINGdescriptor_stringify(const struct FLOODINGdescriptor* el, char* buffer, size_t bufLen)
+{
+    char tmpBuffer[80], date[16];
+    char* pos = tmpBuffer;
+    int offset = 0, res;
+
+    if (time_serialize_date(date, &el->date) == NULL)
+        fatal("time_serialize_date");
+
+    /* "titolo" */
+    res = sprintf(pos, "[FLOODING] ");
+    if (res < 0)
+        fatal("sprintf");
+    offset += res;      pos = pos+res;
+
+    /* chiarisce se l'autore è il peer corrente */
+    if (el->mine)
+    {
+        res = sprintf(pos, "[MINE] ");
+        if (res < 0)
+            fatal("sprintf");
+        offset += res;  pos = pos+res;
+    }
+    else
+    {
+        /* socket originale */
+        res = sprintf(pos, "socket:(%d) ", el->mainSockFd);
+        if (res < 0)
+            fatal("sprintf");
+        offset += res;  pos = pos+res;
+    }
+    /* identificatori della richiesta */
+    res = sprintf(pos, "[AUTH:%u][REQ:%u] ", el->authorID, el->reqID);
+    if (res < 0)
+        fatal("sprintf");
+    offset += res;      pos = pos+res;
+    /* data */
+    res = sprintf(pos, "%s", date);
+    if (res < 0)
+        fatal("sprintf");
+    offset += res;      pos = pos+res;
+
+    if ((size_t)offset+1 > bufLen) /* manca lo spazio */
+        return NULL;
+
+    return strcpy(buffer, tmpBuffer);
+}
+/* stampa la rappresentazione di una query */
+__attribute__ ((unused))
+static void FLOODINGdescriptor_print(const struct FLOODINGdescriptor* el)
+{
+    char buffer[80];
+
+    if (FLOODINGdescriptor_stringify(el, buffer, sizeof(buffer)) == NULL)
+        fatal("FLOODINGdescriptor_stringify");
+
+    unified_io_push(UNIFIED_IO_NORMAL, "%s", buffer);
+}
+/** Funzione ausiliaria che permette di ottenere un
+ * identificativo univoco dell'istanza del protocollo dati
+ * l'id dell'autore e della richiesta
+ */
+static long int FLOODINGHash(uint32_t authorID, uint32_t reqID)
+{
+    long int ans;
+/* si assicura di funzionare anche in ambienti a 32 bit */
+#if __SIZEOF_LONG__ == 4
+    ans = ((long)authorID << 16) + (long)reqID;
+#elif __SIZEOF_LONG__ > 4
+    ans = ((long)authorID << 32) + (long)reqID;
+#else /*__SIZEOF_LONG__ < 4*/
+#error "sizeof(long) is too small!"
+#endif
+    return ans;
+}
+/* "shorthand for FLOODINGHash" */
+static long int FLOODINGdescriptorHash(const struct FLOODINGdescriptor* fd)
+{
+    return FLOODINGHash(fd->authorID, fd->reqID);
+}
+/** Mutex e variabile di condizione da utilizzare per le operazioni
+ * di sincronizzazione tra thread nell'esecuzione del protocollo
+ * FLOODING */
+static pthread_mutex_t FLOODINGmutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t FLOODINGcond = PTHREAD_COND_INITIALIZER;
+
+/** Map<hash<struct FLOODINGdescriptor>, struct FLOODINGdescriptor>
+ * mappa che contiene tutte le istanze del protocollo richieste
+ * FLOODING al momento gestite dal peer corrente. */
+static struct rb_tree* FLOODINGinstances;
+/** Contatore degli elementi dentro la mappa FLOODINGinstances
+ * che si riferiscono a richieste iniziate dal peer corrente */
+static size_t FLOODINGmyInstances; /* zero di default */
+/** Contatore per assegnare un ID univoco a tutte le richieste
+ * generate dal peer corrente. - lo modfica solo il thread principale */
+static uint32_t FLOODINGcounter;
+
+/** Trova un descrittore nella mappa FLOODINGinstances
+ * dato il suo hash */
+static struct FLOODINGdescriptor*
+FLOODINGdescriptor_findByHash(long int hash)
+{
+    struct FLOODINGdescriptor* ans;
+
+    /* SEZIONE CRITICA */
+    if (pthread_mutex_lock(&FLOODINGmutex) != 0)
+        fatal("pthread_mutex_lock");
+    /* aggiunge il nuovo descrittore all'insieme */
+    if (rb_tree_get(FLOODINGinstances, hash, (void**)&ans) == -1)
+        ans = NULL;
+    /* termine sezione critica */
+    if (pthread_mutex_unlock(&FLOODINGmutex) != 0)
+        fatal("pthread_mutex_unlock");
+
+    return ans;
+}
+
+/* Crea, inizializza e aggiunge un nuovo oggetto rappresentante
+ * un'istanza del protocollo FLOODING alle opportune strutture dati */
+static long
+FLOODINGdescriptor_newMine(const struct tm* date)
+{
+    struct FLOODINGdescriptor* newDes;
+    long hash;
+
+    newDes = FLOODINGdescriptor_create();
+    if (newDes == NULL)
+        fatal("FLOODINGdescriptor_create");
+
+    newDes->mine = 1;                  /* io sono l'autore */
+    newDes->authorID = peerID;         /* usa il mio ID */
+    newDes->reqID = ++FLOODINGcounter; /* ID progressivo della richiesta */
+    newDes->date = *date;              /* assegna la data da gestore */
+    newDes->mainSockFd = -1;           /* per evitare spiacevoli incidenti */
+
+    hash = FLOODINGdescriptorHash(newDes); /* hash della richiesta */
+
+    /* SEZIONE CRITICA */
+    if (pthread_mutex_lock(&FLOODINGmutex) != 0)
+        fatal("pthread_mutex_lock");
+    /* aggiunge il nuovo descrittore all'insieme */
+    if (rb_tree_set(FLOODINGinstances, hash, newDes) == -1)
+        fatal("rb_tree_set");
+    /* il chiamante ha iniziato una nuova esecuzione */
+    ++FLOODINGmyInstances;
+    /* termine sezione critica */
+    if (pthread_mutex_unlock(&FLOODINGmutex) != 0)
+        fatal("pthread_mutex_unlock");
+
+    return hash;
+}
+/** Rimuove il descrittore dalla mappa FLOODINGinstances.
+ * Abortisce in caso di errore.
+ * ATTENZIONE:
+ *  va invocata solo quando non sono rimasti più socket
+ *  coinvolti in una esecuzione del protocollo.
+ */
+static void FLOODINGdescriptor_remove(struct FLOODINGdescriptor* des)
+{
+    long int hash;
+
+    if (des == NULL)
+        fatal("FLOODINGdescriptor_remove");
+
+    hash = FLOODINGdescriptorHash(des);
+    /* SEZIONE CRITICA */
+    if (pthread_mutex_lock(&FLOODINGmutex) != 0)
+        fatal("pthread_mutex_lock");
+    if (des->mine) /* era stata iniziata dal peer corrente */
+    {
+        --FLOODINGmyInstances;
+        if (FLOODINGmyInstances == 0)
+        {   /* FINITO! Tutte le richieste del peer sono soddisfatte */
+            if (pthread_cond_broadcast(&FLOODINGcond) != 0)
+                fatal("pthread_cond_broadcast");
+        }
+    }
+    /* rimuove il descrittore */
+    if (rb_tree_remove(FLOODINGinstances, hash, NULL) == -1)
+        fatal("rb_tree_remove");
+    if (pthread_mutex_unlock(&FLOODINGmutex) != 0)
+        fatal("pthread_mutex_unlock");
+}
+
+/* comanda al thread tcp di avviare l'esecuzione del protocollo
+ * di flooding con un comando di tipo TCP_COMMAND_FLOODING */
+int TCPstartFlooding(const struct tm* date)
+{
+    struct iovec iov[2];
+    uint8_t tmpCmd = TCP_COMMAND_FLOODING;
+    long hash;
+
+    /* non si accettano */
+    if (date == NULL)
+        fatal("date == NULL");
+
+    /* costruisce l'oggetto rappresentante la query */
+    hash = FLOODINGdescriptor_newMine(date);
+
+    /* comando */
+    iov[0].iov_base = (void*)&tmpCmd;
+    iov[0].iov_len = CMD_SIZE;
+    /* oggetto rappresentate la data */
+    iov[1].iov_base = (void*)&hash;
+    iov[1].iov_len = sizeof(hash);
+
+    /* write nella pipe */
+    if (writev(tcPipe_writeEnd, iov, 2) != (ssize_t)(iov[0].iov_len+iov[1].iov_len))
+        fatal("writev");
+
+    return 0;
+}
+/* sfrutta FLOODINGmyInstances */
+int TCPendFlooding(void)
+{
+    int ans = 0;
+    /* man pthread_cond_timedwait per capirne l'utilizzo */
+    struct timeval now;
+    struct timespec timeout;
+    int retcode;
+
+    unified_io_push(UNIFIED_IO_NORMAL, "Wait until all my FLOODING instances are terminated");
+
+    /* SEZIONE CRITICA */
+    if (pthread_mutex_lock(&FLOODINGmutex) != 0)
+        fatal("pthread_mutex_lock");
+
+    /* controlla che siano finite le esecuzioni */
+    gettimeofday(&now, NULL);
+    timeout.tv_sec = now.tv_sec + STARVATION_TIMEOUT;
+    timeout.tv_nsec = now.tv_usec * 1000;
+    retcode = 0;
+    while (FLOODINGmyInstances > 0 && retcode != ETIMEDOUT) {
+        retcode = pthread_cond_timedwait(&FLOODINGcond, &FLOODINGmutex, &timeout);
+    }
+    if (retcode == ETIMEDOUT)
+        ans = -1;
+    else if (retcode != 0)
+        fatal("pthread_cond_timedwait");
+
+    /* termine sezione critica */
+    if (pthread_mutex_unlock(&FLOODINGmutex) != 0)
+        fatal("pthread_mutex_unlock");
+
+    if (ans == 0)
+        unified_io_push(UNIFIED_IO_NORMAL, "FLOODING: success!");
+    else
+        unified_io_push(UNIFIED_IO_ERROR, "FLOODING: timeout!");
+
+    return ans;
+}
 
 /** Raccolta di strutture dati per gestire
  * l'esecuzione del protocollo REQ_DATA.
@@ -419,6 +815,86 @@ static void closeConnection_REQ_DATA(int sockfd)
         fatal("pthread_mutex_unlock");
 }
 
+/* L'istanza del protocollo FLOODING identificata dall'hash fornito
+ * è fallita - bisogna operare per ripristinare la consistenza delle
+ * strutture dati coinvolte */
+static void send_TCP_COMMAND_CLOSE_FLOODING(long int hash)
+{
+    struct iovec iov[2];
+    uint8_t tmpCmd = TCP_COMMAND_CLOSE_FLOODING;
+
+    /* "header" del comando */
+    iov[0].iov_base = (void*)&tmpCmd;
+    iov[0].iov_len = CMD_SIZE;
+    /* argomento del comando */
+    iov[1].iov_base = (void*)&hash;
+    iov[1].iov_len = sizeof(hash);
+    /* invio del comando */
+    if (writev(tcPipe_writeEnd, iov, 2) != (ssize_t)(iov[0].iov_len + iov[1].iov_len))
+        fatal("writing to command pipe");
+}
+
+/** Tutti i dati necessari a rispondere alla query ricevuta
+ *  sono stati raccolti e non resta che inviare la risposta
+ */
+static void send_TCP_COMMAND_SEND_FLOOD_REQ(long int hash)
+{
+    struct iovec iov[2];
+    uint8_t tmpCmd = TCP_COMMAND_SEND_FLOOD_REQ;
+
+    /* "header" del comando */
+    iov[0].iov_base = (void*)&tmpCmd;
+    iov[0].iov_len = CMD_SIZE;
+    /* argomento del comando */
+    iov[1].iov_base = (void*)&hash;
+    iov[1].iov_len = sizeof(hash);
+    /* invio del comando */
+    if (writev(tcPipe_writeEnd, iov, 2) != (ssize_t)(iov[0].iov_len + iov[1].iov_len))
+        fatal("writing to command pipe");
+}
+
+/** Funzione ausiliaria da invocare nel
+ * momento in cui bisogna chiudere una
+ * connessione per ripristinare la
+ * consistenza di tutte le strutture
+ * dati usate nel protocollo FLOODING
+ */
+static void closeConnection_FLOODING(struct peer_tcp* conn)
+{
+    long int hash;
+    struct FLOODINGdescriptor* des;
+    int sockfd = conn->sockfd;
+
+    /* cerca tutte le connessioni fallite */
+    set_foreach(conn->FLOODINGreceived, &send_TCP_COMMAND_CLOSE_FLOODING);
+    /* uno in meno partecipa a questa istanza della connessione */
+    while (set_min(conn->FLOODINGsend, &hash) == 0)
+    {
+        /* rimuove dall'insieme l'elemento */
+        if (set_remove(conn->FLOODINGsend, hash) != 0)
+            fatal("set_remove");
+#pragma GCC warning "TODO: rimozione dalle connessioni attive"
+        /* pesca la connessione associata all'hash */
+        des = FLOODINGdescriptor_findByHash(hash);
+        if (des == NULL)   /* Inconsistenza! */
+            fatal("FLOODINGdescriptor_findByHash");
+        /* rimuove il socket corrente */
+        if (set_remove(des->socketSet, sockfd) != 0)   /* Inconsistenza! */
+            fatal("set_remove");
+        /* verifica se rimanga altro da fare o si può considerare
+         * chiusa */
+        if (set_size(des->socketSet) == 0)
+        {
+            /* null'altro da fare - si lavora per inviare la risposta */
+            send_TCP_COMMAND_SEND_FLOOD_REQ(hash);
+        }
+    }
+
+    /* chiude gli insiemi */
+    set_destroy(conn->FLOODINGreceived);
+    set_destroy(conn->FLOODINGsend);
+    conn->FLOODINGreceived = NULL;  conn->FLOODINGsend = NULL;
+}
 /** Funzione ausiliaria che chiude il socket e svolge
  * tutto il necessario cleanup e pulizia delle strutture
  * dati globali - va invocata al posto di tutte le
@@ -448,6 +924,8 @@ static void closeConnection(struct peer_tcp* conn)
     case PCS_ERROR: /* successo un pasticcio */
         /* il socket era aperto, potrebbe essere necessario
          * operare su alcune strutture dati */
+        /* svolge tutte le azioni richieste dal protocollo FLOODING */
+        closeConnection_FLOODING(conn);
         /* il socket era usato per una esecuzione del protocollo REQ_DATA? */
         closeConnection_REQ_DATA(conn->sockfd);
         break;
@@ -507,6 +985,13 @@ int TCPinit(int port)
     /* controlla che il sistema non sia già stato avviato */
     if (activated)
         return -1;
+
+    /* prepara la struttura per gestire il protocollo
+     * FLOODING */
+    FLOODINGinstances = rb_tree_init(NULL);
+    if (FLOODINGinstances == NULL)
+        fatal("rb_tree_init");
+    rb_tree_set_cleanup_f(FLOODINGinstances, &FLOODINGdescriptor_destroy_wrapper);
 
     /* prepara la struttura per gestire il protocollo
      * REQ_DATA */
@@ -852,6 +1337,11 @@ static void handle_MESSAGES_PEER_HELLO_REQ(struct peer_tcp* neighbour)
         {
             neighbour->data = currentNeighbours[i];
             neighbour->status = PCS_READY;
+            /* prepara le strutture dati */
+            neighbour->FLOODINGreceived = set_init(NULL);
+            neighbour->FLOODINGsend = set_init(NULL);
+            if (neighbour->FLOODINGreceived == NULL || neighbour->FLOODINGsend == NULL)
+                fatal("set_init");
             goto onSuccess;
         }
     }
@@ -1120,6 +1610,11 @@ static void handleNeighbour(struct peer_tcp* neighbour)
         else
         {
             neighbour->status = PCS_READY;
+            /* prepara le strutture dati */
+            neighbour->FLOODINGreceived = set_init(NULL);
+            neighbour->FLOODINGsend = set_init(NULL);
+            if (neighbour->FLOODINGreceived == NULL || neighbour->FLOODINGsend == NULL)
+                fatal("set_init");
             unified_io_push(UNIFIED_IO_NORMAL, "Successfully connected to socket (%d)", sockfd);
         }
         break;
@@ -1633,6 +2128,8 @@ int TCPclose(void)
 
     set_destroy(REQ_DATAsocket);
     REQ_DATAsocket = NULL;
+    rb_tree_destroy(FLOODINGinstances);
+    FLOODINGinstances = NULL;
 
     tcpFd = 0;
     activated = 0;
