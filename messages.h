@@ -988,6 +988,29 @@ int messages_send_flood_ack(int sockFd,
             const struct e_register*,
             const struct set*);
 
+/** Dato che in questa versione del progetto
+ * si usano socket tcp per lo scambio di
+ * dati trai i peer rirulta necessaria una
+ * funzione per leggere il corpo di un
+ * messaggio di tipo MESSAGES_REQ_ENTRIES.
+ *
+ * Per semplicità, se il messaggio ha
+ * lunghezza 0 non spreca risorse per
+ * generare un registro e lasciarlo vuoto
+ * ma associa NULL al puntatore al registro
+ * per comunicare al chiamante che il
+ * messaggio era vuoto.
+ *
+ * Restituisce 0 in caso di successo
+ * e -1 in caso di errore.
+ */
+int messages_read_flood_ack_body(
+            int sockFd,
+            uint32_t* authorID,
+            uint32_t* reqID,
+            struct tm* date, /* può essere NULL */
+            const struct e_register** R
+            );
 
 /** Inizializza e fornisce un messaggio
  * di tipo MESSAGES_REQ_DATA con l'ID

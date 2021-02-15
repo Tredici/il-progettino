@@ -1076,6 +1076,66 @@ int messages_send_flood_ack(
     return 0;
 }
 
+int messages_read_flood_ack_body(
+            int sockFd,
+            uint32_t* authorID,
+            uint32_t* reqID,
+            struct tm* date,
+            const struct e_register** R
+            )
+{
+    struct flood_ack_body body;
+    size_t bodyLen = sizeof(body), entriesLen;
+    struct ns_tm ns_date;
+    struct tm tmpDate;
+    /* per la parte variabile */
+    uint32_t i, lenght;
+    struct ns_entry* entries;
+    struct e_register* tmpReg = NULL;
+
+    /* controlla i parametri */
+    if (authorID == NULL || reqID == NULL || R == NULL)
+        return -1;
+
+    /* legge il corpo */
+    if (recv(sockFd, (void*)&body, bodyLen, MSG_DONTWAIT) != (ssize_t)bodyLen)
+        return -1;
+
+    /* accede alla data */
+    ns_date = body.date;
+    /* aggira il problema dell'allineamento */
+    if (time_read_ns_tm(&tmpDate, &ns_date) != 0)
+        return -1;
+
+    lenght = ntohl(body.length);
+    if (lenght > 0)
+    {
+        entriesLen = lenght*sizeof(struct ns_entry);
+        entries = calloc(lenght, sizeof(struct ns_entry));
+        if (entries == NULL)
+            return -1;
+        if (recv(sockFd, (void*)entries, entriesLen, 0) != (ssize_t)entriesLen)
+           return -1;
+        tmpReg = register_from_ns_array(&tmpDate, entries, lenght);
+        if (tmpReg == NULL)
+        {
+            free(entries);
+            return -1;
+        }
+        free(entries);
+    }
+
+    /* passaggio dei dati */
+    *authorID = ntohl(body.authorID);
+    *reqID = ntohl(body.reqID);
+    /* passaggio della data */
+    if (date != NULL)
+        *date = tmpDate;
+    *R = tmpReg;
+
+    return 0;
+}
+
 int messages_make_req_data(
             struct req_data** req,
             size_t* reqLen,
