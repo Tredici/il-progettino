@@ -709,6 +709,15 @@ struct answer* calcEntryQuery(const struct query* query)
             printf("Stampa dei registri scelti:\n");
             list_foreach(l, &register_print_helper);
             #endif
+            if (pthread_mutex_unlock(&REGISTERguard) != 0)
+                fatal("pthread_mutex_unlock");
+            unified_io_push(UNIFIED_IO_NORMAL, "Starting FLOODING protocol...");
+            /* serve sbloccare il mutex */
+            list_foreach(l, &startFlooding);
+            unified_io_push(UNIFIED_IO_NORMAL, "Wait for FLOODING termination...");
+            (void)TCPendFlooding();
+            if (pthread_mutex_lock(&REGISTERguard) != 0)
+                fatal("pthread_mutex_lock");
 
             if (calcAnswer(&ans, query, l) != 0)
                 errExit("*** calcEntryQuery:calcAnswer ***\n");
