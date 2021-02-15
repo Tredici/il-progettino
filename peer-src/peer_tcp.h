@@ -58,4 +58,26 @@ int TCPgetSocket(void);
  */
 int TCPreqData(const struct query* query);
 
+/** Avvia una esecuzione del protocollo
+ * FLOODING per ricercare tutte le entry
+ * che dovrebbero appartenere alla data
+ * indicata.
+ *
+ * Restituisce 0 in caso di successe e -1
+ * in caso di errore.
+ */
+int TCPstartFlooding(const struct tm* date);
+
+/** Sospende il chiamante per un po' fino
+ * a che tutte le istanze del protocollo
+ * FLOODING iniziate dal chiamante non
+ * sono terminate - oppure scade il
+ * timeout imposto.
+ *
+ * Ritorna 0 in caso di successo (tutto
+ * è terminato correttamente) e -1 in
+ * caso di timeout.
+ */
+int TCPendFlooding(void);
+
 #endif
