@@ -621,6 +621,25 @@ static void cmdPropagateFLOODING(long int hash)
     if (writev(tcPipe_writeEnd, iov, 2) != (ssize_t)(iov[0].iov_len+iov[1].iov_len))
         fatal("writev");
 }
+/* invia a se stesso TCP_COMMAND_SEND_FLOOD_RESPONSE - hash query da gestire */
+static void cmdResponseFLOODING(long int hash)
+{
+    struct iovec iov[2];
+    uint8_t tmpCmd = TCP_COMMAND_SEND_FLOOD_RESPONSE;
+
+    unified_io_push(UNIFIED_IO_NORMAL, "RESPONSE: [hash:%ld]", hash);
+
+    /* comando */
+    iov[0].iov_base = (void*)&tmpCmd;
+    iov[0].iov_len = CMD_SIZE;
+    /* oggetto rappresentate l'hash */
+    iov[1].iov_base = (void*)&hash;
+    iov[1].iov_len = sizeof(hash);
+
+    /* write nella pipe */
+    if (writev(tcPipe_writeEnd, iov, 2) != (ssize_t)(iov[0].iov_len+iov[1].iov_len))
+        fatal("writev");
+}
 
 /* sfrutta FLOODINGmyInstances */
 int TCPendFlooding(void)
