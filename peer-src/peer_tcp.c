@@ -966,10 +966,10 @@ static void send_TCP_COMMAND_CLOSE_FLOODING(long int hash)
 /** Tutti i dati necessari a rispondere alla query ricevuta
  *  sono stati raccolti e non resta che inviare la risposta
  */
-static void send_TCP_COMMAND_SEND_FLOOD_REQ(long int hash)
+static void send_TCP_COMMAND_SEND_FLOOD_RESPONSE(long int hash)
 {
     struct iovec iov[2];
-    uint8_t tmpCmd = TCP_COMMAND_SEND_FLOOD_REQ;
+    uint8_t tmpCmd = TCP_COMMAND_SEND_FLOOD_RESPONSE;
 
     /* "header" del comando */
     iov[0].iov_base = (void*)&tmpCmd;
@@ -1015,7 +1015,7 @@ static void closeConnection_FLOODING(struct peer_tcp* conn)
         if (set_size(des->socketSet) == 0)
         {
             /* null'altro da fare - si lavora per inviare la risposta */
-            send_TCP_COMMAND_SEND_FLOOD_REQ(hash);
+            send_TCP_COMMAND_SEND_FLOOD_RESPONSE(hash);
         }
     }
 
