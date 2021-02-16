@@ -742,6 +742,33 @@ struct answer* calcEntryQuery(const struct query* query)
     return ans;
 }
 
+int closeRegister(const struct tm* date)
+{
+    const struct e_register* R;
+    int ans;
+
+    if (date == NULL)
+        return -1;
+
+    /* sezione critica! */
+    if (pthread_mutex_lock(&REGISTERguard) != 0)
+        fatal("pthread_mutex_lock");
+
+    ans = 0;
+    R = findRegisterByDate(date);
+    if (R == NULL)
+    {
+        ans = -1;
+    }
+    else if (register_close(R) != 0)
+            fatal("register_close");
+
+    if (pthread_mutex_unlock(&REGISTERguard) != 0)
+        fatal("pthread_mutex_unlock");
+
+    return ans;
+}
+
 int getNsRegisterData(const struct tm* date,
             struct ns_entry** buffer, size_t* bufLen,
             const struct set* skip)

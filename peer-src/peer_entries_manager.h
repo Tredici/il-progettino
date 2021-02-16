@@ -131,6 +131,15 @@ int getNsRegisterData(const struct tm* date,
             struct ns_entry** buffer, size_t* bufLen,
             const struct set* skip);
 
+/** Chiude il registro associato alla data
+ * fornita, se qualcosa di irreparabile
+ * avviene abortisce.
+ *
+ * Restituisce 0 in caso di successo e -1
+ * in caso di errore.
+ */
+int closeRegister(const struct tm* date);
+
 /** Cerca il registro corrispondente alla data
  * fornita e restituisce un array di uint32_t
  * contenente tutte le firme possedute dal
