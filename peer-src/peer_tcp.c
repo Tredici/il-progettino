@@ -2221,7 +2221,7 @@ static void handle_TCP_COMMAND_FLOODING(
             }
             else
             {
-                unified_io_push(UNIFIED_IO_ERROR, "Message successfully sent!");
+                unified_io_push(UNIFIED_IO_NORMAL, "Message successfully sent!");
                 any |= 1;   /* accendiamo il flag */
                 /* da questo socket si aspetta una risposta per questa query */
                 if (set_add(reachedPeers[i].FLOODINGsend, floodingCmdHash) == -1)
