@@ -2394,6 +2394,8 @@ static void handle_TCP_COMMAND_SEND_FLOOD_RESPONSE(
         /* invia il messaggio di risposta */
         if (getNsRegisterData(&des->date, &entries, &entryNum, toSkip) != 0)
             fatal("getNsRegisterData");
+        /* distrugge l'insieme */
+        set_destroy(toSkip);    toSkip = NULL;
         /* invia il messaggio di risposta */
         if (messages_send_flood_ack(sender, des->authorID, des->reqID,
             &des->date, entries, entryNum) != 0)
