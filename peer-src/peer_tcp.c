@@ -1818,7 +1818,7 @@ static void handle_MESSAGES_REQ_ENTRIES(struct peer_tcp* neighbour)
     /* carica i dati se ci sono */
     if (R != NULL)
     {
-        unified_io_push(UNIFIED_IO_NORMAL, "Adding new data to peer registers!");
+        unified_io_push(UNIFIED_IO_NORMAL, "Adding new data to peer registers! [%ld] new entries!", (long)register_size(R));
         /* se non è vuoto aggiunge il contenuto ai dati posseduti dal peer */
         /* fonde questo registro con quelli già posseduti */
         if (mergeRegisterContent(R) != 0)
@@ -2394,6 +2394,8 @@ static void handle_TCP_COMMAND_SEND_FLOOD_RESPONSE(
         /* invia il messaggio di risposta */
         if (getNsRegisterData(&des->date, &entries, &entryNum, toSkip) != 0)
             fatal("getNsRegisterData");
+        /* Quanti ne ha trovati? */
+        unified_io_push(UNIFIED_IO_NORMAL, "Found [%ld] entries!", entryNum);
         /* distrugge l'insieme */
         set_destroy(toSkip);    toSkip = NULL;
         /* invia il messaggio di risposta */
