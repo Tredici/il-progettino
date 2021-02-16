@@ -1176,7 +1176,7 @@ int register_merge(struct e_register* R1, const struct e_register* R2)
     /* altrimenti si lavora */
     base.diff = news;
     base.Rdst = R1;
-    base.Rsrc = R1;
+    base.Rsrc = R2;
     list_accumulate(R2->l, &merge_helper, (void*)&base);
     set_destroy(news);
 
