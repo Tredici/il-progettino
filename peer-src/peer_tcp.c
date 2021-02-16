@@ -580,6 +580,9 @@ static void FLOODINGdescriptor_remove(struct FLOODINGdescriptor* des)
         fatal("pthread_mutex_lock");
     if (des->mine) /* era stata iniziata dal peer corrente */
     {
+        /* si può considerare chiuso il registro associato */
+        if (closeRegister(&des->date) != 0)
+            fatal("closeRegister");
         --FLOODINGmyInstances;
         if (FLOODINGmyInstances == 0)
         {   /* FINITO! Tutte le richieste del peer sono soddisfatte */
