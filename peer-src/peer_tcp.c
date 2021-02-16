@@ -2361,7 +2361,7 @@ static void handle_TCP_COMMAND_SEND_FLOOD_RESPONSE(
         fatal("set_size");
     /* cerca il mittente */
     sender = des->mainSockFd;
-    unified_io_push(UNIFIED_IO_ERROR, "Searching neighbour that required response!");
+    unified_io_push(UNIFIED_IO_NORMAL, "Searching neighbour that required response...");
     for (i = 0; i != limit; ++i)
     {
         if (reachedPeers[i].status == PCS_READY)
