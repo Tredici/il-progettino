@@ -2199,7 +2199,6 @@ static void handle_TCP_COMMAND_FLOODING(
     for(j = 0; j != sigNumber; ++j)
         unified_io_push(UNIFIED_IO_NORMAL, "\t%u) [%u]", j, signatures[j]);
 
-#pragma GCC warning "TODO: completa il lavoro"
     /* cerca tutti i vicini */
     for (i = 0; i != limit; ++i)
     {
