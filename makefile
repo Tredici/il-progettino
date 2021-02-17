@@ -30,7 +30,7 @@ run:
 
 #invoca il comando wc su tutti i file sorgenti scritti
 wc:
-	cat *.[hc] */*.[hc] | wc
+	wc *.[hc] */*.[hc]
 
 #copiata dal .pdf di Abeni su make all'indirizzo:
 #	http://retis.santannapisa.it/luca/makefiles.pdf

@@ -1176,7 +1176,7 @@ int register_merge(struct e_register* R1, const struct e_register* R2)
     /* altrimenti si lavora */
     base.diff = news;
     base.Rdst = R1;
-    base.Rsrc = R1;
+    base.Rsrc = R2;
     list_accumulate(R2->l, &merge_helper, (void*)&base);
     set_destroy(news);
 
@@ -1255,6 +1255,8 @@ static void as_assay_helper(void* elem, void* base)
     /* controlla se deve saltare questo elemento */
     if (signature != 0 && D->skip != NULL && set_has(D->skip, signature))
         return;
+    /* aggiunge la firma all'entry */
+    E->signature = signature;
     /* aggiunge all'insieme */
     ns_entry_from_entry(&D->tmpArr[D->tmpLen++], E);
     if (D->choosen != NULL)

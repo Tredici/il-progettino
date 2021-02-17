@@ -580,6 +580,9 @@ static void FLOODINGdescriptor_remove(struct FLOODINGdescriptor* des)
         fatal("pthread_mutex_lock");
     if (des->mine) /* era stata iniziata dal peer corrente */
     {
+        /* si può considerare chiuso il registro associato */
+        if (closeRegister(&des->date) != 0)
+            fatal("closeRegister");
         --FLOODINGmyInstances;
         if (FLOODINGmyInstances == 0)
         {   /* FINITO! Tutte le richieste del peer sono soddisfatte */
@@ -1818,7 +1821,7 @@ static void handle_MESSAGES_REQ_ENTRIES(struct peer_tcp* neighbour)
     /* carica i dati se ci sono */
     if (R != NULL)
     {
-        unified_io_push(UNIFIED_IO_NORMAL, "Adding new data to peer registers!");
+        unified_io_push(UNIFIED_IO_NORMAL, "Adding new data to peer registers! [%ld] new entries!", (long)register_size(R));
         /* se non è vuoto aggiunge il contenuto ai dati posseduti dal peer */
         /* fonde questo registro con quelli già posseduti */
         if (mergeRegisterContent(R) != 0)
@@ -2221,7 +2224,7 @@ static void handle_TCP_COMMAND_FLOODING(
             }
             else
             {
-                unified_io_push(UNIFIED_IO_ERROR, "Message successfully sent!");
+                unified_io_push(UNIFIED_IO_NORMAL, "Message successfully sent!");
                 any |= 1;   /* accendiamo il flag */
                 /* da questo socket si aspetta una risposta per questa query */
                 if (set_add(reachedPeers[i].FLOODINGsend, floodingCmdHash) == -1)
@@ -2361,7 +2364,7 @@ static void handle_TCP_COMMAND_SEND_FLOOD_RESPONSE(
         fatal("set_size");
     /* cerca il mittente */
     sender = des->mainSockFd;
-    unified_io_push(UNIFIED_IO_ERROR, "Searching neighbour that required response!");
+    unified_io_push(UNIFIED_IO_NORMAL, "Searching neighbour that required response...");
     for (i = 0; i != limit; ++i)
     {
         if (reachedPeers[i].status == PCS_READY)
@@ -2394,6 +2397,10 @@ static void handle_TCP_COMMAND_SEND_FLOOD_RESPONSE(
         /* invia il messaggio di risposta */
         if (getNsRegisterData(&des->date, &entries, &entryNum, toSkip) != 0)
             fatal("getNsRegisterData");
+        /* Quanti ne ha trovati? */
+        unified_io_push(UNIFIED_IO_NORMAL, "Found [%ld] entries!", entryNum);
+        /* distrugge l'insieme */
+        set_destroy(toSkip);    toSkip = NULL;
         /* invia il messaggio di risposta */
         if (messages_send_flood_ack(sender, des->authorID, des->reqID,
             &des->date, entries, entryNum) != 0)
