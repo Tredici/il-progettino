@@ -2195,7 +2195,7 @@ static void handle_TCP_COMMAND_FLOODING(
     if (getRegisterSignatures(&des->date, &signatures, &sigNumber) != 0)
         fatal("getRegisterSignatures");
 
-    unified_io_push(UNIFIED_IO_NORMAL, "Already owned signatures: %u", sigNumber);
+    unified_io_push(UNIFIED_IO_NORMAL, "Already owned signatures: %u", (unsigned int)sigNumber);
     for(j = 0; j != sigNumber; ++j)
         unified_io_push(UNIFIED_IO_NORMAL, "\t%u) [%u]", j, signatures[j]);
 
