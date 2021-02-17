@@ -2155,7 +2155,7 @@ static void handle_TCP_COMMAND_QUERY(
 }
 
 /** Funzione ausiliaria che si occupa di gestire
- * la fase iniziare di una esecuzione del
+ * la fase iniziale di una esecuzione del
  * protocollo FLOODING
  */
 static void handle_TCP_COMMAND_FLOODING(
