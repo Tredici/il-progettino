@@ -2129,7 +2129,10 @@ static void handle_TCP_COMMAND_QUERY(
                 if (messages_send_req_data(reachedPeers[i].sockfd, peerID, &query) == -1)
                 {
                     unified_io_push(UNIFIED_IO_ERROR, "No neighbours to ask quesy result!");
-#pragma GCC warning "TODO: manca la fase di pulizia!"
+                    /* chiude la connessione */
+                    closeConnection(&reachedPeers[i]);
+                    /* avvia la fase di ripristino */
+                    sendCheckRequest();
                     continue; /* al prossimo socket! */
                 }
                 /* aggiunge il descrittore a quelli controllati */
