@@ -1571,13 +1571,11 @@ static void handle_MESSAGES_REQ_DATA(struct peer_tcp* neighbour)
 onSend:
     unified_io_push(UNIFIED_IO_ERROR, "Error occurred while sending [MESSAGES_REPLY_DATA] via socket (%d)", sockfd);
 onError:
-#pragma GCC warning "Usare una nuova funzione per chiudere i socket"
     /* cambia lo stato */
     neighbour->status = PCS_ERROR;
-    /* chiude il socket */
-    unified_io_push(UNIFIED_IO_ERROR, "Closing socket (%d)", sockfd);
-    if (close(sockfd) != 0)
-        unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket (%d)", sockfd);
+    closeConnection(neighbour);
+    /* avvia la procedura di ripristino */
+    sendCheckRequest();
 }
 
 /** Gestisce la parte del protocollo REQ_DATA
