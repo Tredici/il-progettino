@@ -1489,8 +1489,6 @@ onSuccess:
     if (messages_send_hello_ack(sockfd, MESSAGES_HELLO_OK) != 0)
     {
         unified_io_push(UNIFIED_IO_ERROR, "Error sending [MESSAGES_PEER_HELLO_ACK] via socket (%d)", sockfd);
-        /* TODO : se fallisce bisogna ricontrollare i vicini */
-#pragma GCC warning "TODO: ricontrollare i vicini in caso di fallimento dell'accettazione di un vicino"
         goto onError;
     }
     unified_io_push(UNIFIED_IO_NORMAL, "Ack sent!");
@@ -1498,9 +1496,10 @@ onSuccess:
     return;
 onError:
     neighbour->status = PCS_ERROR;
-    unified_io_push(UNIFIED_IO_ERROR, "Closing socket (%d)", sockfd);
-    if (close(sockfd) != 0)
-        unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket (%d)", sockfd);
+    /* chiude la connessione */
+    closeConnection(neighbour);
+    /* avvia la fase di ripristino */
+    sendCheckRequest();
 }
 
 /** Funzione ausiliaria per gestire la ricezione
