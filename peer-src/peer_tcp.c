@@ -2638,7 +2638,6 @@ static void* TCP(void* args)
                 }
             }
             /* gestisce la ricezione di eventuali comandi */
-#pragma GCC warning "Gestire la pipe dei comandi"
             if (FD_ISSET(tcPipe_readEnd, &readfd))
             {
                 if (handle_pipe_command(tcPipe_readEnd,
