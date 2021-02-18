@@ -1504,9 +1504,7 @@ onError:
  */
 static void handle_MESSAGES_DETATCH(struct peer_tcp* neighbour)
 {
-    int sockfd = neighbour->sockfd;
     /* ATTENZIONE! Potrebbe dover gestire la fase di riconnessione */
-
     /* chiude correttamente il socket e libera le risorse connesse */
     closeConnection(neighbour);
     /* ora bisogna controllare se ci sono nuovi vicini */
