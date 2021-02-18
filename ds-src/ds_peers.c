@@ -374,6 +374,8 @@ static void print_showneighbour(long int node, void* arg)
         if (ns_host_addr_as_string(currStr, sizeof(currStr), &value->ns_addr) == -1)
             errExit("print_showneighbour fault [ns_host_addr_as_string]\n");
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
         switch (length)
         {
         case 2:
@@ -384,6 +386,7 @@ static void print_showneighbour(long int node, void* arg)
             if (ns_host_addr_as_string(prevStr, sizeof(prevStr), &neighbours[0]->ns_addr) == -1)
                 errExit("print_showneighbour fault [ns_host_addr_as_string]\n");
         }
+#pragma GCC diagnostic pop
 
         printf("\t%ld - %s: {%s%s%s}\n", node, currStr, (length>0 ? prevStr : ""),
                 (length>1 ? ", " : ""), (length>1 ? nextStr : ""));
