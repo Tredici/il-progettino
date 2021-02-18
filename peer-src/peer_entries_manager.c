@@ -744,7 +744,7 @@ struct answer* calcEntryQuery(const struct query* query)
 
 int closeRegister(const struct tm* date)
 {
-    const struct e_register* R;
+    struct e_register* R;
     int ans;
 
     if (date == NULL)

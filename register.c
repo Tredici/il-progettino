@@ -167,6 +167,22 @@ register_new_entry(struct entry* E,
     return ans;
 }
 
+struct entry*
+register_new_entry_date(struct entry* E,
+                enum entry_type type,
+                int counter,
+                int signature,
+                struct tm* date)
+{
+    E = register_new_entry(E, type, counter, signature);
+    if (E == NULL)
+        return NULL;
+
+    E->e_time = *date;
+
+    return E;
+}
+
 struct entry* register_clone_entry(const struct entry* E, struct entry* E2)
 {
     struct entry* ans;
@@ -401,6 +417,8 @@ char* register_serialize_entry(const struct entry* E, char* buf, size_t len, enu
     }
 
     /* controllo del flag */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
     switch (flag)
     {
     case ENTRY_SIGNATURE_OMITTED:
@@ -418,6 +436,7 @@ char* register_serialize_entry(const struct entry* E, char* buf, size_t len, enu
     default:    /* parametro invalido */
         return NULL;
     }
+#pragma GCC diagnostic pop
 
     if (buf != NULL)
     {
@@ -1109,6 +1128,12 @@ struct e_register* register_read(
             ans->modified = 0; /* è pari al suo file */
             ans->defaultSignature = defaultSignature;
             ans->date = tmpDate;/* imposta la data */
+            /* se non vuoto possiede di sicuro la sua una firma */
+            if (defaultSignature != 0)
+            {
+                if (set_add(ans->allSignature, defaultSignature) == -1)
+                    fatal("set_add");
+            }
         }
     }
 
@@ -1399,11 +1424,19 @@ int register_owned_signatures(
     ansLen = set_size(R->allSignature);
     if (ansLen == (ssize_t)-1)
         return -1;
-    ans = calloc((size_t)ansLen, sizeof(int));
-    if (ans == NULL)
-        return -1;
-    base.array = ans;   base.pos = 0;
-    set_accumulate(R->allSignature, &register_owned_signatures_helper, &base);
+    if (ansLen > 0)
+    {
+        ans = calloc((size_t)ansLen, sizeof(int));
+        if (ans == NULL)
+            return -1;
+        base.array = ans;   base.pos = 0;
+        set_accumulate(R->allSignature, &register_owned_signatures_helper, &base);
+    }
+    else
+    {
+        /* non perde tempo se non ci sono forme */
+        ans = NULL;
+    }
 
     *signatures = ans;
     *lenght = (size_t)ansLen;

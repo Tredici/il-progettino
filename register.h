@@ -96,6 +96,14 @@ enum ENTRY_SERIALIZE_RULE
  */
 struct entry* register_new_entry(struct entry*, enum entry_type, int, int);
 
+/** Come register_new_entry ma permette anche
+ * di specificare la data da associare
+ * all'entry - a scopo di debugging.
+ *
+ * Restituisce NULL in caso di errore.
+ */
+struct entry* register_new_entry_date(struct entry* E, enum entry_type type, int counter, int signature, struct tm* date);
+
 /** Copia una entry in un'altra, eventualmente allocando lo spazio
  * necessario in memoria dinamica.
  *

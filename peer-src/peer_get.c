@@ -10,6 +10,7 @@
 #include "../time_utils.h"
 #include "../unified_io.h"
 #include "../commons.h"
+#include "peer_udp.h"
 
 static int
 parsePeriod(const char* args,
@@ -19,6 +20,8 @@ parsePeriod(const char* args,
     char buffer[32] = "";
     char* end;
     struct tm a, b;
+    struct tm lowerDate = firstRegisterClosed();
+    struct tm upperDate = lastRegisterClosed();
 
     strncpy(buffer, args, sizeof(buffer)-1);
     end = strchr(buffer, '-');
@@ -29,15 +32,19 @@ parsePeriod(const char* args,
 
     /* La data iniziale è "*"? */
     if (buffer[0] == '*' && buffer[1] == '\0')
-        memset(&a, 0, sizeof(struct tm));
+        a = lowerDate;
     else if (time_parse_date(buffer, &a) == -1)
+        return -1;
+    else if (time_date_cmp(&a, &lowerDate) < 0) /* la data è troppo vecchia */
         return -1;
     /* la prima data è segnata */
 
     ++end; /* punta alla seconda data */
     if (end[0] == '*' && end[1] == '\0')
-        memset(&b, 0, sizeof(struct tm));
+        b = upperDate;
     else if (time_parse_date(end, &b) == -1)
+        return -1;
+    else if (time_date_cmp(&b, &upperDate) > 0) /* la data è troppo vecchia */
         return -1;
     /* la seconda data è segnata */
 
@@ -61,6 +68,13 @@ int get(const char* args)
     struct answer* ans;
     char strQuery[128];
     enum unified_io_mode saved_mode;
+
+    /* controlla che sia connesso al network */
+    if (!UDPisConnected())
+    {
+        printError("ERRORE: il peer non è connesso al network!\n");
+        return WRN_CONTINUE;
+    }
 
     ret = sscanf(args, "%15s %15s %31s", aggr, type, period);
     if (ret < 2)

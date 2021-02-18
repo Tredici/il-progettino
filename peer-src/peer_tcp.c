@@ -60,6 +60,15 @@
  */
 #define QUERY_TIMEOUT 5
 
+/** Massima attesa per aspettare che tutte le istanze
+ * del protocollo FLOODING terminino.
+ * È grande poiché il protocollo è particolarmente
+ * complesso e potrebbe richiedere molto tempo per
+ * venire completato. In un contesto reale potrebbe
+ * non essere sufficiente nemmeno questo limite.
+ */
+#define FLOODING_TIMEOUT 15
+
 /** Flag che permette di riconoscere se
  * il thread TCP è già stato avviato.
  */
@@ -682,7 +691,7 @@ int TCPendFlooding(void)
 
     /* controlla che siano finite le esecuzioni */
     gettimeofday(&now, NULL);
-    timeout.tv_sec = now.tv_sec + STARVATION_TIMEOUT;
+    timeout.tv_sec = now.tv_sec + FLOODING_TIMEOUT;
     timeout.tv_nsec = now.tv_usec * 1000;
     retcode = 0;
     while (FLOODINGmyInstances > 0 && retcode != ETIMEDOUT) {
@@ -1005,7 +1014,6 @@ static void closeConnection_FLOODING(struct peer_tcp* conn)
         /* rimuove dall'insieme l'elemento */
         if (set_remove(conn->FLOODINGsend, hash) != 0)
             fatal("set_remove");
-#pragma GCC warning "TODO: rimozione dalle connessioni attive"
         /* pesca la connessione associata all'hash */
         des = FLOODINGdescriptor_findByHash(hash);
         if (des == NULL)   /* Inconsistenza! */
@@ -1036,8 +1044,6 @@ static void closeConnection(struct peer_tcp* conn)
 {
     if (conn == NULL)
         fatal("closeConnection(NULL)");
-#pragma GCC warning "TODO: agire sulle strtture dati presenti"
-    ;
 
     unified_io_push(UNIFIED_IO_ERROR, "Status of socket (%d): %s",
         conn->sockfd, statusAsString(conn->status));
@@ -1187,7 +1193,6 @@ static int handlePeerDetach(struct peer_tcp* peer)
     switch (peer->status)
     {
     case PCS_READY:
-#pragma GCC warning "Pulire la coda dei messaggi"
         /* messaggio di detatch */
         unified_io_push(UNIFIED_IO_NORMAL, "Sending [MESSAGES_DETATCH] via socket (%d)", sockfd);
         if (messages_send_detatch_message(sockfd, MESSAGES_DETATCH_OK) != 0)
@@ -1205,9 +1210,7 @@ static int handlePeerDetach(struct peer_tcp* peer)
         fatal("unexpected status: %s", statusAsString(peer->status));
     }
     /* chiusura del socket */
-    unified_io_push(UNIFIED_IO_NORMAL, "Closing socket (%d)", sockfd);
-    if (close(sockfd) != 0)
-        unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket!");
+    closeConnection(peer);
     /* azzera lo slot */
     memset(peer, 0, sizeof(*peer));
 
@@ -1489,8 +1492,6 @@ onSuccess:
     if (messages_send_hello_ack(sockfd, MESSAGES_HELLO_OK) != 0)
     {
         unified_io_push(UNIFIED_IO_ERROR, "Error sending [MESSAGES_PEER_HELLO_ACK] via socket (%d)", sockfd);
-        /* TODO : se fallisce bisogna ricontrollare i vicini */
-#pragma GCC warning "TODO: ricontrollare i vicini in caso di fallimento dell'accettazione di un vicino"
         goto onError;
     }
     unified_io_push(UNIFIED_IO_NORMAL, "Ack sent!");
@@ -1498,9 +1499,10 @@ onSuccess:
     return;
 onError:
     neighbour->status = PCS_ERROR;
-    unified_io_push(UNIFIED_IO_ERROR, "Closing socket (%d)", sockfd);
-    if (close(sockfd) != 0)
-        unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket (%d)", sockfd);
+    /* chiude la connessione */
+    closeConnection(neighbour);
+    /* avvia la fase di ripristino */
+    sendCheckRequest();
 }
 
 /** Funzione ausiliaria per gestire la ricezione
@@ -1508,14 +1510,9 @@ onError:
  */
 static void handle_MESSAGES_DETATCH(struct peer_tcp* neighbour)
 {
-    int sockfd = neighbour->sockfd;
     /* ATTENZIONE! Potrebbe dover gestire la fase di riconnessione */
-
-    neighbour->status = PCS_CLOSED;
-    unified_io_push(UNIFIED_IO_NORMAL, "Closing socket (%d)", sockfd);
-    if (close(sockfd) != 0)
-        unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket (%d)", sockfd);
-#pragma GCC warning "Pulire la coda dei messaggi"
+    /* chiude correttamente il socket e libera le risorse connesse */
+    closeConnection(neighbour);
     /* ora bisogna controllare se ci sono nuovi vicini */
     sendCheckRequest(); /* "self invoking" command */
 }
@@ -1571,13 +1568,11 @@ static void handle_MESSAGES_REQ_DATA(struct peer_tcp* neighbour)
 onSend:
     unified_io_push(UNIFIED_IO_ERROR, "Error occurred while sending [MESSAGES_REPLY_DATA] via socket (%d)", sockfd);
 onError:
-#pragma GCC warning "Usare una nuova funzione per chiudere i socket"
     /* cambia lo stato */
     neighbour->status = PCS_ERROR;
-    /* chiude il socket */
-    unified_io_push(UNIFIED_IO_ERROR, "Closing socket (%d)", sockfd);
-    if (close(sockfd) != 0)
-        unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket (%d)", sockfd);
+    closeConnection(neighbour);
+    /* avvia la procedura di ripristino */
+    sendCheckRequest();
 }
 
 /** Gestisce la parte del protocollo REQ_DATA
@@ -1685,8 +1680,11 @@ static void handle_MESSAGES_REPLY_DATA(struct peer_tcp* neighbour)
 
     case -1:
         /* errore che compromette la connessione */
-#pragma GCC warning "Usare una nuova funzione per chiudere i socket"
         unified_io_push(UNIFIED_IO_ERROR, "Error occurred while reading MESSAGES_REPLY_DATA body");
+        /* chiude la connessione */
+        closeConnection(neighbour);
+        /* avvia la procedura di ripristino */
+        sendCheckRequest();
         return;
 
     default:
@@ -1898,12 +1896,11 @@ static void handleNeighbour(struct peer_tcp* neighbour)
     {
     case -1:
         /* si segna l'errore - il socket è ora invalidato */
-#pragma GCC warning "Pulire la coda dei messaggi"
         neighbour->status = PCS_ERROR;
         unified_io_push(UNIFIED_IO_ERROR, "Failed read data from socket (%d), maybe EOF reached?", sockfd);
-        unified_io_push(UNIFIED_IO_ERROR, "Closing socket (%d).", sockfd);
-        if (close(sockfd) != 0)
-            unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket (%d).", sockfd);
+        /* chiude correttamente le risorse associate al socket */
+        closeConnection(neighbour);
+        /* gestisce il ripristino della connessione */
         sendCheckRequest(); /* "self invoking" command */
         break;
     case MESSAGES_PEER_HELLO_REQ:
@@ -1919,10 +1916,11 @@ static void handleNeighbour(struct peer_tcp* neighbour)
         {
             /* il socket è andato, ciao! */
             unified_io_push(UNIFIED_IO_ERROR, "Error while reading data from socket (%d)", sockfd);
-            unified_io_push(UNIFIED_IO_ERROR, "Closing socket (%d)", sockfd);
             neighbour->status = PCS_ERROR;
-            if (close(sockfd) != 0)
-                unified_io_push(UNIFIED_IO_ERROR, "Error closing socket (%d)", sockfd);
+            /* chiude la connessione */
+            closeConnection(neighbour);
+            /* gestisce la fase di riconnessione */
+            sendCheckRequest();
         }
         else
         {
@@ -1955,6 +1953,13 @@ static void handleNeighbour(struct peer_tcp* neighbour)
     case MESSAGES_REQ_ENTRIES:
         unified_io_push(UNIFIED_IO_NORMAL, "Received [MESSAGES_REQ_ENTRIES] from (%d)", sockfd);
         handle_MESSAGES_REQ_ENTRIES(neighbour);
+        break;
+    default:
+        /* nel caso si ricevano messaggi di tipo sconosciuto: */
+        /* chiude la connessione */
+        closeConnection(neighbour);
+        /* cerca di ripristinare la connessione */
+        sendCheckRequest();
         break;
     }
 }
@@ -2131,7 +2136,10 @@ static void handle_TCP_COMMAND_QUERY(
                 if (messages_send_req_data(reachedPeers[i].sockfd, peerID, &query) == -1)
                 {
                     unified_io_push(UNIFIED_IO_ERROR, "No neighbours to ask quesy result!");
-#pragma GCC warning "TODO: manca la fase di pulizia!"
+                    /* chiude la connessione */
+                    closeConnection(&reachedPeers[i]);
+                    /* avvia la fase di ripristino */
+                    sendCheckRequest();
                     continue; /* al prossimo socket! */
                 }
                 /* aggiunge il descrittore a quelli controllati */
@@ -2157,7 +2165,7 @@ static void handle_TCP_COMMAND_QUERY(
 }
 
 /** Funzione ausiliaria che si occupa di gestire
- * la fase iniziare di una esecuzione del
+ * la fase iniziale di una esecuzione del
  * protocollo FLOODING
  */
 static void handle_TCP_COMMAND_FLOODING(
@@ -2197,11 +2205,10 @@ static void handle_TCP_COMMAND_FLOODING(
     if (getRegisterSignatures(&des->date, &signatures, &sigNumber) != 0)
         fatal("getRegisterSignatures");
 
-    unified_io_push(UNIFIED_IO_NORMAL, "Already owned signatures: %u", sigNumber);
+    unified_io_push(UNIFIED_IO_NORMAL, "Already owned signatures: %u", (unsigned int)sigNumber);
     for(j = 0; j != sigNumber; ++j)
         unified_io_push(UNIFIED_IO_NORMAL, "\t%u) [%u]", j, signatures[j]);
 
-#pragma GCC warning "TODO: completa il lavoro"
     /* cerca tutti i vicini */
     for (i = 0; i != limit; ++i)
     {
@@ -2636,7 +2643,6 @@ static void* TCP(void* args)
                 }
             }
             /* gestisce la ricezione di eventuali comandi */
-#pragma GCC warning "Gestire la pipe dei comandi"
             if (FD_ISSET(tcPipe_readEnd, &readfd))
             {
                 if (handle_pipe_command(tcPipe_readEnd,

@@ -20,6 +20,14 @@
  */
 int UDPstart(int);
 
+/** Restituisce 1 se il peer è al
+ * momento connesso al network oppure
+ * 0 se non lo è.
+ *
+ * Non fallisce mai.
+ */
+int UDPisConnected();
+
 /** Metodo utilizzabile SOLO dal thread
  * principale!
  *
