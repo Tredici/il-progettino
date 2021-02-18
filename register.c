@@ -167,6 +167,22 @@ register_new_entry(struct entry* E,
     return ans;
 }
 
+struct entry*
+register_new_entry_date(struct entry* E,
+                enum entry_type type,
+                int counter,
+                int signature,
+                struct tm* date)
+{
+    E = register_new_entry(E, type, counter, signature);
+    if (E == NULL)
+        return NULL;
+
+    E->e_time = *date;
+
+    return E;
+}
+
 struct entry* register_clone_entry(const struct entry* E, struct entry* E2)
 {
     struct entry* ans;
