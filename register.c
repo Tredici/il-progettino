@@ -417,6 +417,8 @@ char* register_serialize_entry(const struct entry* E, char* buf, size_t len, enu
     }
 
     /* controllo del flag */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
     switch (flag)
     {
     case ENTRY_SIGNATURE_OMITTED:
@@ -434,6 +436,7 @@ char* register_serialize_entry(const struct entry* E, char* buf, size_t len, enu
     default:    /* parametro invalido */
         return NULL;
     }
+#pragma GCC diagnostic pop
 
     if (buf != NULL)
     {
