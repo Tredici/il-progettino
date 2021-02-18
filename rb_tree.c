@@ -969,7 +969,9 @@ int rb_tree_accumulate(struct rb_tree* tree, void(*fun)(long int, void*, void*),
 #include <stdio.h>
 static void p_elem(const struct rb_tree* T, elem* p, int h)
 {
-    for(int i=0; i<h; ++i)
+    int i;
+
+    for(i=0; i<h; ++i)
     {
         printf("  ");
     }
