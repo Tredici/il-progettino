@@ -1036,8 +1036,6 @@ static void closeConnection(struct peer_tcp* conn)
 {
     if (conn == NULL)
         fatal("closeConnection(NULL)");
-#pragma GCC warning "TODO: agire sulle strtture dati presenti"
-    ;
 
     unified_io_push(UNIFIED_IO_ERROR, "Status of socket (%d): %s",
         conn->sockfd, statusAsString(conn->status));
