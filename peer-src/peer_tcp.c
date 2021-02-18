@@ -1682,8 +1682,11 @@ static void handle_MESSAGES_REPLY_DATA(struct peer_tcp* neighbour)
 
     case -1:
         /* errore che compromette la connessione */
-#pragma GCC warning "Usare una nuova funzione per chiudere i socket"
         unified_io_push(UNIFIED_IO_ERROR, "Error occurred while reading MESSAGES_REPLY_DATA body");
+        /* chiude la connessione */
+        closeConnection(neighbour);
+        /* avvia la procedura di ripristino */
+        sendCheckRequest();
         return;
 
     default:
