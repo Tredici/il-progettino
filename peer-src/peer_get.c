@@ -30,14 +30,14 @@ parsePeriod(const char* args,
 
     /* La data iniziale è "*"? */
     if (buffer[0] == '*' && buffer[1] == '\0')
-        memset(&a, 0, sizeof(struct tm));
+        a = firstRegisterClosed();
     else if (time_parse_date(buffer, &a) == -1)
         return -1;
     /* la prima data è segnata */
 
     ++end; /* punta alla seconda data */
     if (end[0] == '*' && end[1] == '\0')
-        memset(&b, 0, sizeof(struct tm));
+        b = lastRegisterClosed();
     else if (time_parse_date(end, &b) == -1)
         return -1;
     /* la seconda data è segnata */
