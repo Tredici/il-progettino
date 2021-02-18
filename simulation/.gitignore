@@ -1,0 +1,4 @@
+# file da ignorare in questa cartella
+
+generate-register
+*.txt

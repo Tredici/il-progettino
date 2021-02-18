@@ -19,14 +19,7 @@ run:
 #comando che si occupa di lanciare una nuova sessione tmux,
 #dividere la finestra in 6 parti e lancia in ognuna di queste
 #un'istanza del server e 5 dei peer
-	tmux new-session -d -y 512 -x 64 "./ds 0; sleep 5" \;\
-    split-window "./peer 0; sleep 5" \;\
-    split-window "./peer 0; sleep 5" \;\
-    split-window "./peer 0; sleep 5" \;\
-    split-window "./peer 0; sleep 5" \;\
-    split-window "./peer 0; sleep 5" \;\
-    select-layout tiled \;\
-    attach
+	bash start-simulation.sh
 
 #invoca il comando wc su tutti i file sorgenti scritti
 wc:
