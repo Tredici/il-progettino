@@ -60,6 +60,15 @@
  */
 #define QUERY_TIMEOUT 5
 
+/** Massima attesa per aspettare che tutte le istanze
+ * del protocollo FLOODING terminino.
+ * È grande poiché il protocollo è particolarmente
+ * complesso e potrebbe richiedere molto tempo per
+ * venire completato. In un contesto reale potrebbe
+ * non essere sufficiente nemmeno questo limite.
+ */
+#define FLOODING_TIMEOUT 15
+
 /** Flag che permette di riconoscere se
  * il thread TCP è già stato avviato.
  */
@@ -682,7 +691,7 @@ int TCPendFlooding(void)
 
     /* controlla che siano finite le esecuzioni */
     gettimeofday(&now, NULL);
-    timeout.tv_sec = now.tv_sec + STARVATION_TIMEOUT;
+    timeout.tv_sec = now.tv_sec + FLOODING_TIMEOUT;
     timeout.tv_nsec = now.tv_usec * 1000;
     retcode = 0;
     while (FLOODINGmyInstances > 0 && retcode != ETIMEDOUT) {
