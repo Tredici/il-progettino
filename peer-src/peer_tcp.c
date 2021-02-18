@@ -1507,11 +1507,8 @@ static void handle_MESSAGES_DETATCH(struct peer_tcp* neighbour)
     int sockfd = neighbour->sockfd;
     /* ATTENZIONE! Potrebbe dover gestire la fase di riconnessione */
 
-    neighbour->status = PCS_CLOSED;
-    unified_io_push(UNIFIED_IO_NORMAL, "Closing socket (%d)", sockfd);
-    if (close(sockfd) != 0)
-        unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket (%d)", sockfd);
-#pragma GCC warning "Pulire la coda dei messaggi"
+    /* chiude correttamente il socket e libera le risorse connesse */
+    closeConnection(neighbour);
     /* ora bisogna controllare se ci sono nuovi vicini */
     sendCheckRequest(); /* "self invoking" command */
 }
