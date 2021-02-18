@@ -825,7 +825,7 @@ int messages_make_flood_req(
     size_t i;
     struct ns_tm ns_date;
 
-    if (req == NULL || reqLen == NULL || date == NULL || (!length ^ !signatures))
+    if (req == NULL || reqLen == NULL || date == NULL || (length != 0 && signatures == NULL))
         return -1;
 
     /* controllo che l'array di dimensione 0
