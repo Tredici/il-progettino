@@ -1910,10 +1910,11 @@ static void handleNeighbour(struct peer_tcp* neighbour)
         {
             /* il socket è andato, ciao! */
             unified_io_push(UNIFIED_IO_ERROR, "Error while reading data from socket (%d)", sockfd);
-            unified_io_push(UNIFIED_IO_ERROR, "Closing socket (%d)", sockfd);
             neighbour->status = PCS_ERROR;
-            if (close(sockfd) != 0)
-                unified_io_push(UNIFIED_IO_ERROR, "Error closing socket (%d)", sockfd);
+            /* chiude la connessione */
+            closeConnection(neighbour);
+            /* gestisce la fase di riconnessione */
+            sendCheckRequest();
         }
         else
         {
