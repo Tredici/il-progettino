@@ -20,6 +20,8 @@ parsePeriod(const char* args,
     char buffer[32] = "";
     char* end;
     struct tm a, b;
+    struct tm lowerDate = firstRegisterClosed();
+    struct tm upperDate = lastRegisterClosed();
 
     strncpy(buffer, args, sizeof(buffer)-1);
     end = strchr(buffer, '-');
@@ -30,15 +32,19 @@ parsePeriod(const char* args,
 
     /* La data iniziale è "*"? */
     if (buffer[0] == '*' && buffer[1] == '\0')
-        a = firstRegisterClosed();
+        a = lowerDate;
     else if (time_parse_date(buffer, &a) == -1)
+        return -1;
+    else if (time_date_cmp(&a, &lowerDate) < 0) /* la data è troppo vecchia */
         return -1;
     /* la prima data è segnata */
 
     ++end; /* punta alla seconda data */
     if (end[0] == '*' && end[1] == '\0')
-        b = lastRegisterClosed();
+        b = upperDate;
     else if (time_parse_date(end, &b) == -1)
+        return -1;
+    else if (time_date_cmp(&b, &upperDate) > 0) /* la data è troppo vecchia */
         return -1;
     /* la seconda data è segnata */
 
