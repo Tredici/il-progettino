@@ -45,11 +45,11 @@ static int help(const char* args)
     (void)args;
 
     /* descrizione di help stesso */
-    printf(" %s:\n\t%s\n", "help", "stampa nome e descrizione dei comandi disponibili");
+    printf(" 0)%s:\t%s\n", "help", "stampa nome e descrizione dei comandi disponibili");
     /* ciclo per la descrizione degli
      * altri comandi */
     for (i = 0; i != commN; ++i)
-        printf(" %s:\n\t%s\n", commV[i].command, commV[i].description != NULL ? commV[i].description : "N.D.");
+        printf(" %d)%s:\t%s\n", i+1, commV[i].command, commV[i].description != NULL ? commV[i].description : "N.D.");
 
     return OK_CONTINUE;
 }
