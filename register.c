@@ -1415,11 +1415,19 @@ int register_owned_signatures(
     ansLen = set_size(R->allSignature);
     if (ansLen == (ssize_t)-1)
         return -1;
-    ans = calloc((size_t)ansLen, sizeof(int));
-    if (ans == NULL)
-        return -1;
-    base.array = ans;   base.pos = 0;
-    set_accumulate(R->allSignature, &register_owned_signatures_helper, &base);
+    if (ansLen > 0)
+    {
+        ans = calloc((size_t)ansLen, sizeof(int));
+        if (ans == NULL)
+            return -1;
+        base.array = ans;   base.pos = 0;
+        set_accumulate(R->allSignature, &register_owned_signatures_helper, &base);
+    }
+    else
+    {
+        /* non perde tempo se non ci sono forme */
+        ans = NULL;
+    }
 
     *signatures = ans;
     *lenght = (size_t)ansLen;
