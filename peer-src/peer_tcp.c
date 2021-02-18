@@ -67,7 +67,7 @@
  * venire completato. In un contesto reale potrebbe
  * non essere sufficiente nemmeno questo limite.
  */
-#define FLOODING_TIMEOUT 15
+#define FLOODING_TIMEOUT 60
 
 /** Flag che permette di riconoscere se
  * il thread TCP è già stato avviato.
