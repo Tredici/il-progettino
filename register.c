@@ -1328,7 +1328,7 @@ int register_as_ns_array(
     /* foreach per tutte le entry */
     list_accumulate(R->l, &as_assay_helper, &base);
     /* preparazione dei risultati */
-    tmpArr = reallocarray(base.tmpArr, base.tmpLen, sizeof(struct ns_entry));
+    tmpArr = realloc(base.tmpArr, base.tmpLen * sizeof(struct ns_entry));
     if (tmpArr == NULL && base.tmpLen != 0) /* andata male */
     {
         free(base.tmpArr);
