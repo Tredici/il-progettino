@@ -1890,12 +1890,11 @@ static void handleNeighbour(struct peer_tcp* neighbour)
     {
     case -1:
         /* si segna l'errore - il socket è ora invalidato */
-#pragma GCC warning "Pulire la coda dei messaggi"
         neighbour->status = PCS_ERROR;
         unified_io_push(UNIFIED_IO_ERROR, "Failed read data from socket (%d), maybe EOF reached?", sockfd);
-        unified_io_push(UNIFIED_IO_ERROR, "Closing socket (%d).", sockfd);
-        if (close(sockfd) != 0)
-            unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket (%d).", sockfd);
+        /* chiude correttamente le risorse associate al socket */
+        closeConnection(neighbour);
+        /* gestisce il ripristino della connessione */
         sendCheckRequest(); /* "self invoking" command */
         break;
     case MESSAGES_PEER_HELLO_REQ:
