@@ -788,6 +788,11 @@ int UDPstart(int port)
     return listeningOn;
 }
 
+int UDPisConnected()
+{
+    return ISPeerConnected;
+}
+
 /* utilizza startPipe */
 int UDPconnect(const char* hostname, const char* portname)
 {
