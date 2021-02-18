@@ -10,6 +10,7 @@
 #include "../time_utils.h"
 #include "../unified_io.h"
 #include "../commons.h"
+#include "peer_udp.h"
 
 static int
 parsePeriod(const char* args,
@@ -61,6 +62,13 @@ int get(const char* args)
     struct answer* ans;
     char strQuery[128];
     enum unified_io_mode saved_mode;
+
+    /* controlla che sia connesso al network */
+    if (!UDPisConnected())
+    {
+        printError("ERRORE: il peer non è connesso al network!\n");
+        return WRN_CONTINUE;
+    }
 
     ret = sscanf(args, "%15s %15s %31s", aggr, type, period);
     if (ret < 2)
