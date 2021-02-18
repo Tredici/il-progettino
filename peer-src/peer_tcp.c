@@ -1948,6 +1948,13 @@ static void handleNeighbour(struct peer_tcp* neighbour)
         unified_io_push(UNIFIED_IO_NORMAL, "Received [MESSAGES_REQ_ENTRIES] from (%d)", sockfd);
         handle_MESSAGES_REQ_ENTRIES(neighbour);
         break;
+    default:
+        /* nel caso si ricevano messaggi di tipo sconosciuto: */
+        /* chiude la connessione */
+        closeConnection(neighbour);
+        /* cerca di ripristinare la connessione */
+        sendCheckRequest();
+        break;
     }
 }
 
