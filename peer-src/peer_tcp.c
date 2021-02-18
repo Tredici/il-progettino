@@ -1184,7 +1184,6 @@ static int handlePeerDetach(struct peer_tcp* peer)
     switch (peer->status)
     {
     case PCS_READY:
-#pragma GCC warning "Pulire la coda dei messaggi"
         /* messaggio di detatch */
         unified_io_push(UNIFIED_IO_NORMAL, "Sending [MESSAGES_DETATCH] via socket (%d)", sockfd);
         if (messages_send_detatch_message(sockfd, MESSAGES_DETATCH_OK) != 0)
@@ -1202,9 +1201,7 @@ static int handlePeerDetach(struct peer_tcp* peer)
         fatal("unexpected status: %s", statusAsString(peer->status));
     }
     /* chiusura del socket */
-    unified_io_push(UNIFIED_IO_NORMAL, "Closing socket (%d)", sockfd);
-    if (close(sockfd) != 0)
-        unified_io_push(UNIFIED_IO_ERROR, "Error occurred while closing socket!");
+    closeConnection(peer);
     /* azzera lo slot */
     memset(peer, 0, sizeof(*peer));
 
