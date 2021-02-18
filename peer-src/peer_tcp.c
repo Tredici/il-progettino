@@ -1005,7 +1005,6 @@ static void closeConnection_FLOODING(struct peer_tcp* conn)
         /* rimuove dall'insieme l'elemento */
         if (set_remove(conn->FLOODINGsend, hash) != 0)
             fatal("set_remove");
-#pragma GCC warning "TODO: rimozione dalle connessioni attive"
         /* pesca la connessione associata all'hash */
         des = FLOODINGdescriptor_findByHash(hash);
         if (des == NULL)   /* Inconsistenza! */
