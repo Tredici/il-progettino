@@ -24,7 +24,7 @@ struct deque* deque_init(struct deque* d)
 
     if (d == NULL)
     {
-        ans = malloc(sizeof(struct deque));
+        ans = (struct deque*)malloc(sizeof(struct deque));
         if (ans == NULL)
             return NULL;
     }
@@ -107,7 +107,7 @@ static delem* delem_init(void* val)
 {
     delem* ans;
 
-    ans = malloc(sizeof(delem));
+    ans = (delem*)malloc(sizeof(delem));
     if (ans == NULL)
         return NULL;
 

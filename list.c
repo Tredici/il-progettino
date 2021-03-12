@@ -18,7 +18,7 @@ elem* elem_init(void* val)
 {
     elem* ans;
 
-    ans = malloc(sizeof(elem));
+    ans = (elem*)malloc(sizeof(elem));
     if (ans == NULL)
         return NULL;
 
@@ -41,7 +41,7 @@ struct list* list_init(struct list* l)
     struct list* ans;
     if (l == NULL)
     {
-        ans = malloc(sizeof(struct list));
+        ans = (struct list*)malloc(sizeof(struct list));
         if (ans == NULL)
         {
             return NULL;

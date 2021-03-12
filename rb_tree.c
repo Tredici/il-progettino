@@ -52,7 +52,7 @@ static elem* elem_init(struct rb_tree* tree, long int key, void* value)
 {
     elem* ans;
 
-    ans = malloc(sizeof(elem));
+    ans = (elem*)malloc(sizeof(elem));
     if (ans == NULL)
     {
         return NULL;
@@ -94,7 +94,7 @@ struct rb_tree* rb_tree_init(struct rb_tree* tree)
 
     if (tree == NULL)
     {
-        ans = malloc(sizeof(struct rb_tree));
+        ans = (struct rb_tree*)malloc(sizeof(struct rb_tree));
         if (ans == NULL)
         {
             return NULL;

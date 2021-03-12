@@ -13,7 +13,7 @@ static elem* elem_init(void* val)
 {
     elem* ans;
     
-    ans = malloc(sizeof(elem));
+    ans = (elem*)malloc(sizeof(elem));
     if (ans == NULL)
         return NULL;
     
@@ -45,7 +45,7 @@ struct queue* queue_init(struct queue* q, enum q_flag flag) {
     }
     else
     {
-        ans = malloc(sizeof(struct queue));
+        ans = (struct queue*)malloc(sizeof(struct queue));
         if (ans == NULL)
             return NULL;
     }
@@ -55,7 +55,7 @@ struct queue* queue_init(struct queue* q, enum q_flag flag) {
     {
     case Q_CONCURRENT:
         /* deve abilitare la struttura all'accesso concorrente */
-        ans->mutex = malloc(sizeof(pthread_mutex_t));
+        ans->mutex = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
         if (ans->mutex == NULL)
         {
             if (q == NULL)
@@ -72,7 +72,7 @@ struct queue* queue_init(struct queue* q, enum q_flag flag) {
             return NULL;
         }
 
-        ans->cond = malloc(sizeof(pthread_cond_t));
+        ans->cond = (pthread_cond_t*)malloc(sizeof(pthread_cond_t));
         if (ans->cond == NULL)
         {
             pthread_mutex_destroy(ans->mutex);

@@ -147,7 +147,7 @@ register_new_entry(struct entry* E,
 
     if (E == NULL)
     {
-        ans = malloc(sizeof(struct entry));
+        ans = (struct entry*)malloc(sizeof(struct entry));
         if (ans == NULL)
             return NULL;
     }
@@ -192,7 +192,7 @@ struct entry* register_clone_entry(const struct entry* E, struct entry* E2)
 
     if (E2 == NULL)
     {
-        ans = malloc(sizeof(struct entry));
+        ans = (struct entry*)malloc(sizeof(struct entry));
         if (ans == NULL)
             return NULL;
     }
@@ -232,7 +232,7 @@ struct entry* register_parse_entry(const char* s, struct entry* e, enum ENTRY_SE
 
     if (e == NULL)
     {
-        ans = malloc(sizeof(struct entry));
+        ans = (struct entry*)malloc(sizeof(struct entry));
         if (ans == NULL)
         {
             return NULL;
@@ -464,7 +464,7 @@ struct e_register* register_create(struct e_register* r, int defaultSignature)
 
     if (r == NULL)
     {
-        ans = malloc(sizeof(struct e_register));
+        ans = (struct e_register*)malloc(sizeof(struct e_register));
         if (ans == NULL)
             return NULL;
     }

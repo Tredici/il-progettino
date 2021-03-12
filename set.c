@@ -14,7 +14,7 @@ struct set* set_init(struct set* S)
 
     if (S == NULL)
     {
-        ans = malloc(sizeof(struct set));
+        ans = (struct set*)malloc(sizeof(struct set));
     }
     else
     {
@@ -212,7 +212,7 @@ struct set* set_clone(const struct set* S)
     if (S == NULL)
         return NULL;
 
-    ans = malloc(sizeof(struct set));
+    ans = (struct set*)malloc(sizeof(struct set));
     if (ans == NULL)
         return NULL;
 
