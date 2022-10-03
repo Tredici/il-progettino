@@ -82,6 +82,8 @@ int thread_semaphore_destroy(struct thread_semaphore* ts)
     if (pthread_mutex_destroy(&ts->mutex) != 0)
         return -1;
 
+    free(ts);
+
     return 0;
 }
 
@@ -154,6 +156,7 @@ int start_long_life_thread(pthread_t *thread, void*(*t_fun)(void *), void* args,
 
     if (thread_semaphore_destroy(ts) != 0)
         return -1;
+    ts = NULL;
 
     if (thread == NULL)
     {
