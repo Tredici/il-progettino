@@ -51,6 +51,7 @@ void set_destroy(struct set* S)
 
     rb_tree_destroy(S->T);
     S->T = NULL;
+    free(S);
 }
 
 int set_add(struct set* S, long int key)

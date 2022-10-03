@@ -10,10 +10,10 @@ do
 done
 # avvia la simulazione
 tmux new-session -d -y 512 -x 64 "../ds 3000; sleep 5" \;\
-    split-window "../peer 3001; sleep 5" \;\
-    split-window "../peer 3002; sleep 5" \;\
-    split-window "../peer 3003; sleep 5" \;\
-    split-window "../peer 3004; sleep 5" \;\
-    split-window "../peer 3005; sleep 5" \;\
+    split-window -l 10 "../peer 3001; sleep 5" \;\
+    split-window -l 8  "../peer 3002; sleep 5" \;\
+    split-window -l 6  "../peer 3003; sleep 5" \;\
+    split-window -l 4  "../peer 3004; sleep 5" \;\
+    split-window -l 2  "../peer 3005; sleep 5" \;\
     select-layout tiled \;\
     attach
