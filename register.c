@@ -567,6 +567,8 @@ void register_destroy(struct e_register* r)
 
     list_destroy(r->l);
     r->l = NULL;
+    set_destroy(r->allSignature);
+    r->allSignature = NULL;
     free(r);
 }
 
