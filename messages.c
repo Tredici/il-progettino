@@ -1440,7 +1440,7 @@ int messages_read_reply_data_body(
     case MESSAGES_REPLY_DATA_NOT_FOUND:
         /* nessuna risposta ma la query c'è */
         /* prova ad allocare lo spazio per la risposta */
-        buffer = malloc(sizeof(struct query));
+        buffer = (struct query*)malloc(sizeof(struct query));
         if (buffer == NULL)
             return -1;
         /* prova a leggere la query */
@@ -1460,7 +1460,7 @@ int messages_read_reply_data_body(
         if (length == 0) /* questa parte non ha senso che sia 0 */
             return -1;
         /* alloca un buffer abbastanza grande per tenere tutti i dati */
-        buffer = malloc(sizeof(struct ns_answer) + length);
+        buffer = (struct ns_answer*)malloc(sizeof(struct ns_answer) + length);
         if (buffer == NULL)
             return -1;
         /* azzera tutto per sicurezza */
