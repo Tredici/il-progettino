@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     char peerID[10];
 
     struct main_loop_command commands[] = {
-        { "start", &start, "<DS_addr DS_port> termina il peer" },
+        { "start", &start, "<DS_addr DS_port> connette il peer al DS" },
         { "add", &add, "{" ADD_SWAB "|" ADD_NEW_CASE "} <quantity> crea e inserisce una nuova entry nel registo di oggi" },
         { "get", &get, "{totale|variazione} {" ADD_SWAB "|" ADD_NEW_CASE "} [period] calcola l'aggregazione sull'intervallo specificato" },
         { "stop", &stop, "termina il peer" }
