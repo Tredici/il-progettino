@@ -11,3 +11,7 @@ test/*
 
 # ignora i file che contengono il contenuto dei registri
 *.txt
+
+# ignora gli eseguibili
+ds
+peer
