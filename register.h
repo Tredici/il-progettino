@@ -275,7 +275,7 @@ int register_serialize(FILE*, const struct e_register*, enum ENTRY_SERIALIZE_RUL
 int register_serialize_fd(int, const struct e_register*, enum ENTRY_SERIALIZE_RULE);
 
 /** Scrive tutto il contenuto del registro su file,
- * il comportamento varia a seconda sel valore del
+ * il comportamento varia a seconda del valore del
  * secondo argomento.
  *
  * Il registro deve avere specificato un valore
@@ -325,7 +325,7 @@ char* register_filename(const struct e_register*, char*, size_t);
 /** Svolge un lavoro complementare a quello
  * di register_serialize_fd leggendo al più
  * tante entry quante ne sono specificate
- * dall'ultimo parametro in un inserendole
+ * dall'ultimo parametro inserendole in un
  * nuovo registro.
  *
  * Affinché il tutto funzioni bene si
