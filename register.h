@@ -200,7 +200,7 @@ ssize_t register_size(const struct e_register*);
  *
  * Restituisce NULL in caso di errore e
  * il puntatore alla struttura date del
- * register.
+ * register il caso di successo.
  */
 const struct tm* register_date(const struct e_register*);
 
