@@ -1267,7 +1267,7 @@ struct registerAsArray
     struct set* choosen;
 };
 
-static void as_assay_helper(void* elem, void* base)
+static void as_array_helper(void* elem, void* base)
 {
     struct entry* E;
     struct registerAsArray* D;
@@ -1328,7 +1328,7 @@ int register_as_ns_array(
         S = NULL;
 
     /* foreach per tutte le entry */
-    list_accumulate(R->l, &as_assay_helper, &base);
+    list_accumulate(R->l, &as_array_helper, &base);
     /* preparazione dei risultati */
     tmpArr = realloc(base.tmpArr, base.tmpLen * sizeof(struct ns_entry));
     if (tmpArr == NULL && base.tmpLen != 0) /* andata male */
