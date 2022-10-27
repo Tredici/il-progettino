@@ -1164,7 +1164,7 @@ static void merge_helper(void* elem, void* base)
     E = (struct entry*)elem;
 
     signature = E->signature == 0 ?
-                        D->Rsrc->defaultSignature :
+                        (E->signature = D->Rsrc->defaultSignature) :
                         E->signature;
     /* bisogna aggiungerlo? */
     /* si assume che due registri con firma 0 siano
