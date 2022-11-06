@@ -246,7 +246,7 @@ struct set* make_set_from_uint32_t(uint32_t* array, size_t arrLen)
 }
 
 /** Pipe per passare in modo semplice dei
- * comandi al thread UDP
+ * comandi al thread TCP
  */
 static int tcPipe[2];
 /* alias di comodo per evitare di fare confusione */
