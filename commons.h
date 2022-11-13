@@ -17,6 +17,13 @@ int max(int x, int y);
 void errExit(const char *format, ...);
 
 /** Come fprintf(stderr, const char *format, ...)
+ * ma stampa il risultato in verde.
+ * Fa uso delle opportune sequenze di escape ASII
+ */
+void printSuccess(const char *format, ...);
+
+
+/** Come fprintf(stderr, const char *format, ...)
  * ma stampa il risultato i rosso.
  * Fa uso delle opportune sequenze di escape ASII
  */

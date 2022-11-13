@@ -39,6 +39,20 @@ void errExit(const char *format, ...)
     exit(EXIT_FAILURE);
 }
 
+void printSuccess(const char *format, ...)
+{
+    va_list args;
+
+    fflush(stdout);
+    /* per stampare il messaggio in verde */
+    fprintf(stderr, "\033[32m");
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    /* resetta lo status del terminale */
+    fprintf(stderr, "\033[0m");
+}
+
 void printError(const char *format, ...)
 {
     va_list args;
