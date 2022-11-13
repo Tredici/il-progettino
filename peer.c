@@ -10,6 +10,7 @@
 #include "peer-src/peer_start.h"
 #include "peer-src/peer_entries_manager.h"
 #include "peer-src/peer_tcp.h"
+#include "common-src/cmd_shell.h"
 #include "commons.h"
 #include "repl.h"
 #include "main_loop.h"
@@ -37,6 +38,7 @@ int main(int argc, char* argv[])
         { "start", &start, "<DS_addr DS_port> connette il peer al DS" },
         { "add", &add, "{" ADD_SWAB "|" ADD_NEW_CASE "} <quantity> crea e inserisce una nuova entry nel registo di oggi" },
         { "get", &get, "{totale|variazione} {" ADD_SWAB "|" ADD_NEW_CASE "} [period] calcola l'aggregazione sull'intervallo specificato" },
+        { "!", &shell, "esegue il comando passato con la shell di sistema" },
         { "stop", &stop, "termina il peer" }
     };
 

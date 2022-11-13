@@ -7,6 +7,7 @@
 #include "ds-src/ds_showpeers.h"
 #include "ds-src/ds_udp.h"
 #include "ds-src/ds_showneighbours.h"
+#include "common-src/cmd_shell.h"
 #include "commons.h"
 #include "repl.h"
 #include "main_loop.h"
@@ -32,6 +33,7 @@ int main(int argc, char* argv[])
         { "showneighbors", &showneighbours, "[peer] mostra i neighbor di un peer" },
         { "showneighbours", &showneighbours, "come showneighbors ma più british" },
         { "showpeers", &showpeers, "mostra un elenco dei peer connessi" },
+        { "!", &shell, "esegue il comando passato con la shell di sistema" },
         { "esc", &esc, "termina il server e tutti i peer" }
     };
 

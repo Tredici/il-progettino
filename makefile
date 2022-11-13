@@ -98,8 +98,11 @@ ns_host_addr.o:		ns_host_addr.h ns_host_addr.c
 messages.o:			messages.h messages.c
 time_utils.o:		time_utils.h time_utils.c
 
+cmd_shell.o: common-src/cmd_shell.c common-src/cmd_shell.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 # dipendenze del peer
-COMMONDEPS = list.o register.o repl.o socket_utils.o queue.o main_loop.o rb_tree.o set.o commons.o thread_semaphore.o unified_io.o ns_host_addr.o messages.o time_utils.o
+COMMONDEPS = list.o register.o repl.o socket_utils.o queue.o main_loop.o rb_tree.o set.o commons.o thread_semaphore.o unified_io.o ns_host_addr.o messages.o time_utils.o cmd_shell.o
 
 # main dei peer
 peer.o: peer.c
